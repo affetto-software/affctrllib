@@ -7,3 +7,9 @@ port = 50000
 [affetto.mock.local]
 ip = "localhost"
 port = 50010
+
+[affetto.mock.sensor]
+rate = 100
+
+[affetto.mock.valve]
+rate = 30

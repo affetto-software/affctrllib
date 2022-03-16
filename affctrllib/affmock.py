@@ -30,6 +30,7 @@ class AffettoMock(object):
     config_dict: dict[str, Any]
     local_node: Node
     remote_node: Node
+    sensor_rate: float
 
     def __init__(self) -> None:
         self.config_path = None
@@ -49,3 +50,5 @@ class AffettoMock(object):
         self.remote_node = Node()
         self.remote_node.ip = "localhost"
         self.remote_node.port = 50000
+
+        self.sensor_rate = 100
