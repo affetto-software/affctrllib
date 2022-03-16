@@ -1,0 +1,9 @@
+[affetto]
+[affetto.mock]
+[affetto.mock.remote]
+ip = "localhost"
+port = 50000
+
+[affetto.mock.local]
+ip = "localhost"
+port = 50010
