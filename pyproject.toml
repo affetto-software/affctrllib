@@ -26,6 +26,11 @@ extraPaths = [
     "__pypackages__/3.10/lib",
 ]
 
+[tool.pytest.ini_options]
+testpaths = [
+    "tests",
+]
+
 [build-system]
 requires = ["pdm-pep517"]
 build-backend = "pdm.pep517.api"
