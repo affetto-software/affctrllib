@@ -1,0 +1,9 @@
+[affetto]
+[affetto.comm]
+[affetto.comm.remote]
+ip = "192.168.1.1"
+port = 50010
+
+[affetto.comm.local]
+ip = "localhost"
+port = 50000
