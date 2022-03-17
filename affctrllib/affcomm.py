@@ -1,3 +1,4 @@
+import socket
 from pathlib import Path
 from typing import Any
 
@@ -49,3 +50,12 @@ class AffComm(object):
         self.local_node = Node()
         self.local_node.ip = "localhost"
         self.local_node.port = 50000
+
+    def listen(self) -> None:
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        target = (self.local_node.ip, self.local_node.port)
+        sock.bind(target)
+        bufsz = 1024
+        while True:
+            data, addr = sock.recvfrom(bufsz)
+            print(f"Recv {data} from {addr}")
