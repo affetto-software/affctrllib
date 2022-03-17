@@ -1,3 +1,5 @@
+import socket
+import time
 from pathlib import Path
 from typing import Any
 
@@ -52,3 +54,13 @@ class AffettoMock(object):
         self.remote_node.port = 50000
 
         self.sensor_rate = 100
+
+    def start(self) -> None:
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        target = (self.remote_node.ip, self.remote_node.port)
+        dt = 1.0 / self.sensor_rate
+        while True:
+            msg = str(time.time())
+            sz = sock.sendto(msg.encode(), target)
+            print(f"Sent '{msg}' to {target} ({sz} bytes)")
+            time.sleep(dt)
