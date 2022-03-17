@@ -45,3 +45,7 @@ class AffComm(object):
         self.remote_node = Node()
         self.remote_node.ip = "192.168.1.1"
         self.remote_node.port = 50010
+
+        self.local_node = Node()
+        self.local_node.ip = "localhost"
+        self.local_node.port = 50000
