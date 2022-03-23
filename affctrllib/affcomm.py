@@ -16,6 +16,8 @@ class AffComm(object):
     def __init__(self) -> None:
         self.config_path = None
         self.config_dict = {}
+        self.remote_addr = SockAddr()
+        self.local_addr = SockAddr()
 
     def __repr__(self) -> str:
         return "%s.%s()" % (self.__class__.__module__, self.__class__.__qualname__)
@@ -25,11 +27,9 @@ class AffComm(object):
         with open(self.config_path, "rb") as f:
             self.config_dict = tomli.load(f)
 
-        self.remote_addr = SockAddr()
         self.remote_addr.host = "192.168.1.1"
         self.remote_addr.port = 50010
 
-        self.local_addr = SockAddr()
         self.local_addr.host = "localhost"
         self.local_addr.port = 50000
 

@@ -1,5 +1,6 @@
 import os
 
+from affctrllib._sockutil import SockAddr
 from affctrllib.affcomm import AffComm
 
 config_dir_path = os.path.join(os.path.dirname(__file__), "config")
@@ -8,8 +9,10 @@ config_dir_path = os.path.join(os.path.dirname(__file__), "config")
 class TestAffComm:
     def test_init(self) -> None:
         acom = AffComm()
-        assert acom.config_path == None
+        assert acom.config_path is None
         assert acom.config_dict == {}
+        assert isinstance(acom.remote_addr, SockAddr)
+        assert isinstance(acom.local_addr, SockAddr)
 
     def test_repr(self) -> None:
         acom = AffComm()

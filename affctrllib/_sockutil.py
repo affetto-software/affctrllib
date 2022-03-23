@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Any
+
 
 class SockAddr(object):
     """Represents a socket address for internet communication.
@@ -13,7 +15,9 @@ class SockAddr(object):
     port: int | None
 
     def __init__(
-        self, addr: tuple[str, int] | str | None = None, port: int | None = None
+        self,
+        addr: tuple[str, int] | dict[str, Any] | str | None = None,
+        port: int | None = None,
     ) -> None:
         self.family = "AF_INET"
         self.host = None
@@ -21,9 +25,14 @@ class SockAddr(object):
         if isinstance(addr, tuple):
             self.host = addr[0]
             self.port = addr[1]
+        elif isinstance(addr, dict):
+            self.host = addr.get("host", None)
+            self.port = addr.get("port", None)
         elif isinstance(addr, str):
             self.host = addr
             self.port = port
+        elif addr is not None:
+            raise TypeError(f"unsupported type: {type(addr)}")
 
     @property
     def addr(self) -> tuple[str, int]:
