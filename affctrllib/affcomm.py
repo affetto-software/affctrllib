@@ -26,12 +26,8 @@ class AffComm(object):
         self.config_path = Path(config_path)
         with open(self.config_path, "rb") as f:
             self.config_dict = tomli.load(f)
-
-        self.remote_addr.host = "192.168.1.1"
-        self.remote_addr.port = 50010
-
-        self.local_addr.host = "localhost"
-        self.local_addr.port = 50000
+        self.remote_addr.set(self.config_dict["affetto"]["comm"]["remote"])
+        self.local_addr.set(self.config_dict["affetto"]["comm"]["local"])
 
     def listen(self) -> None:
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)

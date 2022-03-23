@@ -11,13 +11,15 @@ from ._sockutil import SockAddr
 class AffettoMock(object):
     config_path: Path | None
     config_dict: dict[str, Any]
-    local_addr: SockAddr
     remote_addr: SockAddr
+    local_addr: SockAddr
     sensor_rate: float
 
     def __init__(self) -> None:
         self.config_path = None
         self.config_dict = {}
+        self.remote_addr = SockAddr()
+        self.local_addr = SockAddr()
 
     def __repr__(self) -> str:
         return "affctrllib.affmock.AffettoMock()"
@@ -26,13 +28,8 @@ class AffettoMock(object):
         self.config_path = Path(config_path)
         with open(self.config_path, "rb") as f:
             self.config_dict = tomli.load(f)
-
-        self.local_addr = SockAddr()
-        self.local_addr.host = "localhost"
-        self.local_addr.port = 50010
-        self.remote_addr = SockAddr()
-        self.remote_addr.host = "localhost"
-        self.remote_addr.port = 50000
+        self.remote_addr.set(self.config_dict["affetto"]["mock"]["remote"])
+        self.local_addr.set(self.config_dict["affetto"]["mock"]["local"])
 
         self.sensor_rate = 100
 
