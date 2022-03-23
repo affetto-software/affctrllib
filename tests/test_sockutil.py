@@ -35,4 +35,11 @@ class TestSockAddr:
         sa = SockAddr()
         with pytest.raises(RuntimeError) as excinfo:
             _ = sa.addr
-        assert "SockAddr: host or port is not set" in str(excinfo.value)
+        assert "SockAddr: no host is provided" in str(excinfo.value)
+
+    def test_get_addr_with_no_port(self) -> None:
+        sa = SockAddr()
+        sa.host = "192.168.1.1"
+        with pytest.raises(RuntimeError) as excinfo:
+            _ = sa.addr
+        assert "SockAddr: no port is provided for '192.168.1.1'" in str(excinfo.value)

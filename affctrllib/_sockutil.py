@@ -22,6 +22,8 @@ class SockAddr(object):
 
     @property
     def addr(self) -> tuple[str, int]:
-        if self.host is None or self.port is None:
-            raise RuntimeError("SockAddr: host or port is not set")
+        if self.host is None:
+            raise RuntimeError("SockAddr: no host is provided")
+        if self.port is None:
+            raise RuntimeError(f"SockAddr: no port is provided for '{self.host}'")
         return (self.host, self.port)
