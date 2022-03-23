@@ -24,23 +24,6 @@ class TestAffettoMock:
         mock.load_config(os.path.join(CONFIG_DIR_PATH, "mock.toml"))
         assert isinstance(mock.config_dict, dict)
 
-    def test_load_config_local(self) -> None:
-        mock = AffettoMock()
-        mock.load_config(os.path.join(CONFIG_DIR_PATH, "mock.toml"))
-        assert mock.local_addr.host == "localhost"
-        assert mock.local_addr.port == 50010
-
-    def test_load_config_remote(self) -> None:
-        mock = AffettoMock()
-        mock.load_config(os.path.join(CONFIG_DIR_PATH, "mock.toml"))
-        assert mock.remote_addr.host == "localhost"
-        assert mock.remote_addr.port == 50000
-
-    def test_load_config_sensor(self) -> None:
-        mock = AffettoMock()
-        mock.load_config(os.path.join(CONFIG_DIR_PATH, "mock.toml"))
-        assert mock.sensor_rate == 100
-
     def test_load_config_default(self) -> None:
         mock = AffettoMock()
         mock.load_config(os.path.join(CONFIG_DIR_PATH, "mock.toml"))
@@ -64,3 +47,8 @@ class TestAffettoMock:
         # local_addr
         assert mock.local_addr.host == "192.168.11.2"
         assert mock.local_addr.port == 70010
+
+    def test_load_config_sensor(self) -> None:
+        mock = AffettoMock()
+        mock.load_config(os.path.join(CONFIG_DIR_PATH, "mock.toml"))
+        assert mock.sensor_rate == 100
