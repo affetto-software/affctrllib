@@ -11,18 +11,12 @@ class TestAffComm:
     def test_init(self) -> None:
         acom = AffComm()
         assert acom.config_path is None
-        assert acom.config_dict == {}
         assert isinstance(acom.remote_addr, SockAddr)
         assert isinstance(acom.local_addr, SockAddr)
 
     def test_repr(self) -> None:
         acom = AffComm()
         assert repr(acom) == "affctrllib.affcomm.AffComm()"
-
-    def test_load_config(self) -> None:
-        acom = AffComm()
-        acom.load_config(os.path.join(CONFIG_DIR_PATH, "default.toml"))
-        assert isinstance(acom.config_dict, dict)
 
     def test_load_config_default(self) -> None:
         acom = AffComm()

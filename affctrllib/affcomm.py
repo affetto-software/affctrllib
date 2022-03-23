@@ -9,13 +9,11 @@ from ._sockutil import SockAddr
 
 class AffComm(object):
     config_path: Path | None
-    config_dict: dict[str, Any]
     remote_addr: SockAddr
     local_addr: SockAddr
 
     def __init__(self) -> None:
         self.config_path = None
-        self.config_dict = {}
         self.remote_addr = SockAddr()
         self.local_addr = SockAddr()
 
@@ -25,9 +23,10 @@ class AffComm(object):
     def load_config(self, config_path: str | Path) -> None:
         self.config_path = Path(config_path)
         with open(self.config_path, "rb") as f:
-            self.config_dict = tomli.load(f)
-        self.remote_addr.set(self.config_dict["affetto"]["comm"]["remote"])
-        self.local_addr.set(self.config_dict["affetto"]["comm"]["local"])
+            config_dict = tomli.load(f)
+        comm_config_dict = config_dict["affetto"]["comm"]
+        self.remote_addr.set(comm_config_dict["remote"])
+        self.local_addr.set(comm_config_dict["local"])
 
     def listen(self) -> None:
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)

@@ -11,18 +11,12 @@ class TestAffettoMock:
     def test_init(self) -> None:
         mock = AffettoMock()
         assert mock.config_path == None
-        assert mock.config_dict == {}
         assert isinstance(mock.remote_addr, SockAddr)
         assert isinstance(mock.local_addr, SockAddr)
 
     def test_repr(self) -> None:
         mock = AffettoMock()
         assert repr(mock) == "affctrllib.affmock.AffettoMock()"
-
-    def test_load_config(self) -> None:
-        mock = AffettoMock()
-        mock.load_config(os.path.join(CONFIG_DIR_PATH, "mock.toml"))
-        assert isinstance(mock.config_dict, dict)
 
     def test_load_config_default(self) -> None:
         mock = AffettoMock()
