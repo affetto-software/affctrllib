@@ -37,9 +37,10 @@ class TestSockAddr:
             _ = sa.addr
         assert "SockAddr: no host is provided" in str(excinfo.value)
 
-    def test_get_addr_with_no_port(self) -> None:
+    @pytest.mark.parametrize("host", ["192.168.11.3", "192.168.11.4"])
+    def test_get_addr_with_no_port(self, host) -> None:
         sa = SockAddr()
-        sa.host = "192.168.1.1"
+        sa.host = host
         with pytest.raises(RuntimeError) as excinfo:
             _ = sa.addr
-        assert "SockAddr: no port is provided for '192.168.1.1'" in str(excinfo.value)
+        assert f"SockAddr: no port is provided for '{host}'" in str(excinfo.value)
