@@ -61,6 +61,54 @@ class TestSockAddr:
         sa.port = 2002
         assert sa.port == 2002
 
+    def test_set_with_tuple(self) -> None:
+        sa = SockAddr()
+        sa.set(("localhost", 10101))
+        assert sa.host == "localhost"
+        assert sa.port == 10101
+
+    def test_set_with_two_args(self) -> None:
+        sa = SockAddr()
+        sa.set("172.16.11.1", 5555)
+        assert sa.host == "172.16.11.1"
+        assert sa.port == 5555
+
+    def test_set_with_two_args_error(self) -> None:
+        sa = SockAddr()
+        sa.set("172.16.11.2")
+        assert sa.host == "172.16.11.2"
+        assert sa.port is None
+        with pytest.raises(RuntimeError) as excinfo:
+            _ = sa.addr
+        assert f"SockAddr: no port is provided for '172.16.11.2'" in str(excinfo.value)
+
+    def test_set_with_dict(self) -> None:
+        confdict = {"host": "10.0.0.1", "port": 11111}
+        sa = SockAddr()
+        sa.set(confdict)
+        assert sa.host == "10.0.0.1"
+        assert sa.port == 11111
+
+    def test_set_pwith_dict_error_no_host(self) -> None:
+        confdict = {}
+        sa = SockAddr()
+        sa.set(confdict)
+        assert sa.host is None
+        assert sa.port is None
+        with pytest.raises(RuntimeError) as excinfo:
+            _ = sa.addr
+        assert f"SockAddr: no host is provided" in str(excinfo.value)
+
+    def test_set_with_dict_error_no_port(self) -> None:
+        confdict = {"host": "192.168.1.4"}
+        sa = SockAddr()
+        sa.set(confdict)
+        assert sa.host == "192.168.1.4"
+        assert sa.port is None
+        with pytest.raises(RuntimeError) as excinfo:
+            _ = sa.addr
+        assert f"SockAddr: no port is provided for '192.168.1.4'" in str(excinfo.value)
+
     @pytest.mark.parametrize(
         "host,port", [("192.168.11.1", 80808), ("192.168.11.2", 80810)]
     )

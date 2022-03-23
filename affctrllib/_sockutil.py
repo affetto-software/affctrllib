@@ -22,6 +22,12 @@ class SockAddr(object):
         self.family = "AF_INET"
         self.host = None
         self.port = None
+        if addr is not None:
+            self.set(addr, port)
+
+    def set(
+        self, addr: tuple[str, int] | dict[str, Any] | str, port: int | None = None
+    ) -> None:
         if isinstance(addr, tuple):
             self.host = addr[0]
             self.port = addr[1]
@@ -31,7 +37,7 @@ class SockAddr(object):
         elif isinstance(addr, str):
             self.host = addr
             self.port = port
-        elif addr is not None:
+        else:
             raise TypeError(f"unsupported type: {type(addr)}")
 
     @property
