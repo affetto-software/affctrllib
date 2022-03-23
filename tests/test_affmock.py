@@ -23,14 +23,14 @@ class TestAffComm:
     def test_load_config_local(self) -> None:
         mock = AffettoMock()
         mock.load_config(os.path.join(config_dir_path, "mock.toml"))
-        assert mock.local_node.ip == "localhost"
-        assert mock.local_node.port == 50010
+        assert mock.local_addr.host == "localhost"
+        assert mock.local_addr.port == 50010
 
     def test_load_config_remote(self) -> None:
         mock = AffettoMock()
         mock.load_config(os.path.join(config_dir_path, "mock.toml"))
-        assert mock.remote_node.ip == "localhost"
-        assert mock.remote_node.port == 50000
+        assert mock.remote_addr.host == "localhost"
+        assert mock.remote_addr.port == 50000
 
     def test_load_config_sensor(self) -> None:
         mock = AffettoMock()

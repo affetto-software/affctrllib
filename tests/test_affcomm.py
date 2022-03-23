@@ -23,11 +23,11 @@ class TestAffComm:
     def test_load_config_remote(self) -> None:
         acom = AffComm()
         acom.load_config(os.path.join(config_dir_path, "default.toml"))
-        assert acom.remote_node.ip == "192.168.1.1"
-        assert acom.remote_node.port == 50010
+        assert acom.remote_addr.host == "192.168.1.1"
+        assert acom.remote_addr.port == 50010
 
     def test_load_config_local(self) -> None:
         acom = AffComm()
         acom.load_config(os.path.join(config_dir_path, "default.toml"))
-        assert acom.local_node.ip == "localhost"
-        assert acom.local_node.port == 50000
+        assert acom.local_addr.host == "localhost"
+        assert acom.local_addr.port == 50000
