@@ -30,8 +30,7 @@ class AffettoMock(object):
             self.config_dict = tomli.load(f)
         self.remote_addr.set(self.config_dict["affetto"]["mock"]["remote"])
         self.local_addr.set(self.config_dict["affetto"]["mock"]["local"])
-
-        self.sensor_rate = 100
+        self.sensor_rate = self.config_dict["affetto"]["mock"]["sensor"]["rate"]
 
     def start(self) -> None:
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)

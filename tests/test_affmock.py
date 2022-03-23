@@ -36,6 +36,9 @@ class TestAffettoMock:
         assert mock.local_addr.host == "localhost"
         assert mock.local_addr.port == 50010
 
+        # sensor
+        assert mock.sensor_rate == 100
+
     def test_load_config_alternative(self) -> None:
         mock = AffettoMock()
         mock.load_config(os.path.join(CONFIG_DIR_PATH, "altmock.toml"))
@@ -47,6 +50,9 @@ class TestAffettoMock:
         # local_addr
         assert mock.local_addr.host == "192.168.11.2"
         assert mock.local_addr.port == 70010
+
+        # sensor
+        assert mock.sensor_rate == 60
 
     def test_load_config_sensor(self) -> None:
         mock = AffettoMock()
