@@ -27,6 +27,7 @@ class SockAddr(object):
 
     @property
     def addr(self) -> tuple[str, int]:
+        """Returns a socket address as a tuple of host and port."""
         if self.host is None:
             raise RuntimeError("SockAddr: no host is provided")
         if self.port is None:
