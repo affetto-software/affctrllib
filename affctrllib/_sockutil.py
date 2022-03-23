@@ -12,13 +12,18 @@ class SockAddr(object):
     host: str | None
     port: int | None
 
-    def __init__(self, addr: tuple[str, int] | None = None) -> None:
+    def __init__(
+        self, addr: tuple[str, int] | str | None = None, port: int | None = None
+    ) -> None:
         self.family = "AF_INET"
         self.host = None
         self.port = None
-        if addr is not None:
+        if isinstance(addr, tuple):
             self.host = addr[0]
             self.port = addr[1]
+        elif isinstance(addr, str):
+            self.host = addr
+            self.port = port
 
     @property
     def addr(self) -> tuple[str, int]:

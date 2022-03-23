@@ -14,6 +14,18 @@ class TestSockAddr:
         assert sa.host == "localhost"
         assert sa.port == 10101
 
+    def test_init_two_args(self) -> None:
+        sa = SockAddr("172.16.11.1", 5555)
+        assert sa.host == "172.16.11.1"
+        assert sa.port == 5555
+
+    def test_init_two_args_error(self) -> None:
+        sa = SockAddr("172.16.11.2")
+        assert sa.host == "172.16.11.2"
+        with pytest.raises(RuntimeError) as excinfo:
+            _ = sa.addr
+        assert f"SockAddr: no port is provided for '172.16.11.2'" in str(excinfo.value)
+
     def test_set_host(self) -> None:
         sa = SockAddr()
         sa.host = "192.168.1.1"
