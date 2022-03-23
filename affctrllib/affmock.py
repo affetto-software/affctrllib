@@ -22,7 +22,7 @@ class AffettoMock(object):
         self.local_addr = SockAddr()
 
     def __repr__(self) -> str:
-        return "affctrllib.affmock.AffettoMock()"
+        return "%s.%s()" % (self.__class__.__module__, self.__class__.__qualname__)
 
     def load_config(self, config_path: str | Path) -> None:
         self.config_path = Path(config_path)
