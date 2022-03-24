@@ -1,6 +1,6 @@
 import socket
 from pathlib import Path
-from typing import Any
+from typing import Callable
 
 import tomli
 
@@ -32,6 +32,13 @@ class AffComm(object):
         comm_config_dict = config_dict["affetto"]["comm"]
         self.remote_addr.set(comm_config_dict["remote"])
         self.local_addr.set(comm_config_dict["local"])
+
+    def process_received_bytes(
+        self, data: bytes, function: Callable = float, sep: str | None = None
+    ) -> list[float]:
+        """Returns a list of values converted from received bytes."""
+        decoded_data = data.decode().strip(sep)
+        return list(map(function, decoded_data.split(sep)))
 
     def listen(self) -> None:
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
