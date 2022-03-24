@@ -14,10 +14,15 @@ class AffettoMock(object):
     local_addr: SockAddr
     sensor_rate: float
 
-    def __init__(self) -> None:
+    def __init__(self, config_path: Path | str | None = None) -> None:
         self.config_path = None
+        if config_path is not None:
+            self.config_path = Path(config_path)
         self.remote_addr = SockAddr()
         self.local_addr = SockAddr()
+
+        if self.config_path:
+            self.load_config(self.config_path)
 
     def __repr__(self) -> str:
         return "%s.%s()" % (self.__class__.__module__, self.__class__.__qualname__)

@@ -14,6 +14,14 @@ class TestAffettoMock:
         assert isinstance(mock.remote_addr, SockAddr)
         assert isinstance(mock.local_addr, SockAddr)
 
+    @pytest.mark.parametrize(
+        "config_file,remote_host",
+        [("mock.toml", "localhost"), ("altmock.toml", "192.168.11.1")],
+    )
+    def test_init_load_config(self, config_file, remote_host) -> None:
+        mock = AffettoMock(os.path.join(CONFIG_DIR_PATH, config_file))
+        assert mock.remote_addr.host == remote_host
+
     def test_repr(self) -> None:
         mock = AffettoMock()
         assert repr(mock) == "affctrllib.affmock.AffettoMock()"
