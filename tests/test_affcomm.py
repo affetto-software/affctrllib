@@ -14,6 +14,14 @@ class TestAffComm:
         assert isinstance(acom.remote_addr, SockAddr)
         assert isinstance(acom.local_addr, SockAddr)
 
+    @pytest.mark.parametrize(
+        "config_file,remote_host",
+        [("default.toml", "192.168.1.1"), ("alternative.toml", "192.168.5.10")],
+    )
+    def test_init_load_config(self, config_file, remote_host) -> None:
+        acom = AffComm(os.path.join(CONFIG_DIR_PATH, config_file))
+        assert acom.remote_addr.host == remote_host
+
     def test_repr(self) -> None:
         acom = AffComm()
         assert repr(acom) == "affctrllib.affcomm.AffComm()"
