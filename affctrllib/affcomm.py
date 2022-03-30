@@ -12,6 +12,7 @@ class AffComm(object):
     remote_addr: SockAddr
     local_addr: SockAddr
     sensory_socket: socket.socket
+    command_socket: socket.socket
 
     def __init__(self, config_path: Path | str | None = None) -> None:
         self.config_path = None
@@ -50,6 +51,10 @@ class AffComm(object):
         else:
             self.sensory_socket.bind(self.local_addr.addr)
         return self.sensory_socket
+
+    def create_command_socket(self) -> socket.socket:
+        self.command_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        return self.command_socket
 
     def listen(self) -> None:
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
