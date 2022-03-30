@@ -11,6 +11,7 @@ class AffComm(object):
     config_path: Path | None
     remote_addr: SockAddr
     local_addr: SockAddr
+    sensory_socket: socket.socket
 
     def __init__(self, config_path: Path | str | None = None) -> None:
         self.config_path = None
@@ -39,6 +40,16 @@ class AffComm(object):
         """Returns a list of values converted from received bytes."""
         decoded_data = data.decode().strip(sep)
         return list(map(function, decoded_data.split(sep)))
+
+    def create_sensory_socket(
+        self, addr: tuple[str, int] | None = None
+    ) -> socket.socket:
+        self.sensory_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        if addr is not None:
+            self.sensory_socket.bind(addr)
+        else:
+            self.sensory_socket.bind(self.local_addr.addr)
+        return self.sensory_socket
 
     def listen(self) -> None:
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)

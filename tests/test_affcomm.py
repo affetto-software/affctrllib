@@ -1,4 +1,5 @@
 import os
+import socket
 
 import pytest
 from affctrllib._sockutil import SockAddr
@@ -95,3 +96,16 @@ class TestAffComm:
         acom = AffComm()
         arr = acom.process_received_bytes(data, sep=sep)
         assert arr == expected_array
+
+    @pytest.mark.skip
+    def test_create_sensory_socket(self) -> None:
+        acom = AffComm()
+        address = ("localhost", 11111)
+        bufsize = 1024
+        ssock = acom.create_sensory_socket(address)
+        data, _ = ssock.recvfrom(bufsize)
+        assert data.decode() == "hello world"
+
+        # sender = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        # msg = b"hello world"
+        # sender.sendto(msg, address)
