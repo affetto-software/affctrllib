@@ -42,6 +42,20 @@ class AffComm(object):
         decoded_data = data.decode().strip(sep)
         return list(map(function, decoded_data.split(sep)))
 
+    def process_array_to_string(
+        self,
+        array: list[float] | list[int],
+        sep: str = " ",
+        f_spec: str = ".0f",
+        precision: int | None = None,
+    ) -> str:
+        """Returns a string of array joined with specific format."""
+        if precision is None:
+            formatted_array = [f"{x:{f_spec}}" for x in array]
+        else:
+            formatted_array = [f"{x:.{precision}f}" for x in array]
+        return sep.join(formatted_array)
+
     def create_sensory_socket(
         self, addr: tuple[str, int] | None = None
     ) -> socket.socket:
