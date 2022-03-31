@@ -7,7 +7,7 @@ import tomli
 from ._sockutil import SockAddr
 
 
-def split_received_bytes(
+def split_received_msg(
     data: bytes | str,
     function: Callable = float,
     sep: str | None = None,

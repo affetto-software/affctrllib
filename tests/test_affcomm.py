@@ -3,7 +3,7 @@ import socket
 
 import pytest
 from affctrllib._sockutil import SockAddr
-from affctrllib.affcomm import AffComm, convert_array_to_string, split_received_bytes
+from affctrllib.affcomm import AffComm, convert_array_to_string, split_received_msg
 
 CONFIG_DIR_PATH = os.path.join(os.path.dirname(__file__), "config")
 
@@ -16,8 +16,8 @@ CONFIG_DIR_PATH = os.path.join(os.path.dirname(__file__), "config")
         (b"  1  2  3  4  5  6 ", [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]),
     ],
 )
-def test_split_received_bytes(data, expected_array) -> None:
-    arr = split_received_bytes(data)
+def test_split_received_msg(data, expected_array) -> None:
+    arr = split_received_msg(data)
     assert arr == expected_array
 
 
@@ -28,8 +28,8 @@ def test_split_received_bytes(data, expected_array) -> None:
         (b"1 2 3 4 5 ", str, ["1", "2", "3", "4", "5"]),
     ],
 )
-def test_split_received_bytes_alternate_mapping(data, func, expected_array) -> None:
-    arr = split_received_bytes(data, function=func)
+def test_split_received_msg_alternate_mapping(data, func, expected_array) -> None:
+    arr = split_received_msg(data, function=func)
     assert arr == expected_array
 
 
@@ -42,8 +42,8 @@ def test_split_received_bytes_alternate_mapping(data, func, expected_array) -> N
         (b"1,2,3,4,5,", ",", [1.0, 2.0, 3.0, 4.0, 5.0]),
     ],
 )
-def test_split_received_bytes_alternate_sep(data, sep, expected_array) -> None:
-    arr = split_received_bytes(data, sep=sep)
+def test_split_received_msg_alternate_sep(data, sep, expected_array) -> None:
+    arr = split_received_msg(data, sep=sep)
     assert arr == expected_array
 
 
@@ -55,8 +55,8 @@ def test_split_received_bytes_alternate_sep(data, sep, expected_array) -> None:
         ("  1  2  3  4  5  6 ", [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]),
     ],
 )
-def test_split_received_bytes_provide_string(data, expected_array) -> None:
-    arr = split_received_bytes(data)
+def test_split_received_msg_provide_string(data, expected_array) -> None:
+    arr = split_received_msg(data)
     assert arr == expected_array
 
 
@@ -68,8 +68,8 @@ def test_split_received_bytes_provide_string(data, expected_array) -> None:
         ("1,2,3,", ",", ["1", "2", "3", ""]),
     ],
 )
-def test_split_received_bytes_no_strip(data, sep, expected_array) -> None:
-    arr = split_received_bytes(data, function=str, sep=sep, strip=False)
+def test_split_received_msg_no_strip(data, sep, expected_array) -> None:
+    arr = split_received_msg(data, function=str, sep=sep, strip=False)
     assert arr == expected_array
 
 
