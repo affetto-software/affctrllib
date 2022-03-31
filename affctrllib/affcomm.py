@@ -7,7 +7,7 @@ import tomli
 from ._sockutil import SockAddr
 
 
-def process_received_bytes(
+def split_received_bytes(
     data: bytes, function: Callable = float, sep: str | None = None
 ) -> list[float]:
     """Returns a list of values converted from received bytes."""
@@ -15,7 +15,7 @@ def process_received_bytes(
     return list(map(function, decoded_data.split(sep)))
 
 
-def process_array_to_string(
+def convert_array_to_string(
     array: list[float] | list[int],
     sep: str = " ",
     f_spec: str = ".0f",

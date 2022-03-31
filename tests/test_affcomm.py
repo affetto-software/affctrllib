@@ -3,7 +3,7 @@ import socket
 
 import pytest
 from affctrllib._sockutil import SockAddr
-from affctrllib.affcomm import AffComm, process_array_to_string, process_received_bytes
+from affctrllib.affcomm import AffComm, convert_array_to_string, split_received_bytes
 
 CONFIG_DIR_PATH = os.path.join(os.path.dirname(__file__), "config")
 
@@ -16,8 +16,8 @@ CONFIG_DIR_PATH = os.path.join(os.path.dirname(__file__), "config")
         (b"  1  2  3  4  5  6 ", [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]),
     ],
 )
-def test_process_received_bytes(data, expected_array) -> None:
-    arr = process_received_bytes(data)
+def test_split_received_bytes(data, expected_array) -> None:
+    arr = split_received_bytes(data)
     assert arr == expected_array
 
 
@@ -28,8 +28,8 @@ def test_process_received_bytes(data, expected_array) -> None:
         (b"1 2 3 4 5 ", str, ["1", "2", "3", "4", "5"]),
     ],
 )
-def test_process_received_bytes_alternate_mapping(data, func, expected_array) -> None:
-    arr = process_received_bytes(data, function=func)
+def test_split_received_bytes_alternate_mapping(data, func, expected_array) -> None:
+    arr = split_received_bytes(data, function=func)
     assert arr == expected_array
 
 
@@ -42,8 +42,8 @@ def test_process_received_bytes_alternate_mapping(data, func, expected_array) ->
         (b"1,2,3,4,5,", ",", [1.0, 2.0, 3.0, 4.0, 5.0]),
     ],
 )
-def test_process_received_bytes_alternate_sep(data, sep, expected_array) -> None:
-    arr = process_received_bytes(data, sep=sep)
+def test_split_received_bytes_alternate_sep(data, sep, expected_array) -> None:
+    arr = split_received_bytes(data, sep=sep)
     assert arr == expected_array
 
 
@@ -56,8 +56,8 @@ def test_process_received_bytes_alternate_sep(data, sep, expected_array) -> None
         ([0.5, 1.5, 2.5, 3.5, 4.5], "0 2 2 4 4"),
     ],
 )
-def test_process_array_to_string(arr, expected_str) -> None:
-    s = process_array_to_string(arr)
+def test_convert_array_to_string(arr, expected_str) -> None:
+    s = convert_array_to_string(arr)
     assert s == expected_str
 
 
@@ -69,8 +69,8 @@ def test_process_array_to_string(arr, expected_str) -> None:
         ([0, 1, 2], "  ", "0  1  2"),
     ],
 )
-def test_process_array_to_string_specify_sep(arr, sep, expected_str) -> None:
-    s = process_array_to_string(arr, sep=sep)
+def test_convert_array_to_string_specify_sep(arr, sep, expected_str) -> None:
+    s = convert_array_to_string(arr, sep=sep)
     assert s == expected_str
 
 
@@ -82,8 +82,8 @@ def test_process_array_to_string_specify_sep(arr, sep, expected_str) -> None:
         ([1.333, 3.28, 5.5, 10.215], "05.2f", "01.33 03.28 05.50 10.21"),
     ],
 )
-def test_process_array_to_string_specify_f_spec(arr, f_spec, expected_str) -> None:
-    s = process_array_to_string(arr, f_spec=f_spec)
+def test_convert_array_to_string_specify_f_spec(arr, f_spec, expected_str) -> None:
+    s = convert_array_to_string(arr, f_spec=f_spec)
     assert s == expected_str
 
 
@@ -95,10 +95,10 @@ def test_process_array_to_string_specify_f_spec(arr, f_spec, expected_str) -> No
         ([0.54892, 1.289285, 2.889013], "5", "0.54892 1.28929 2.88901"),
     ],
 )
-def test_process_array_to_string_specify_precision(
+def test_convert_array_to_string_specify_precision(
     arr, precision, expected_str
 ) -> None:
-    s = process_array_to_string(arr, precision=precision)
+    s = convert_array_to_string(arr, precision=precision)
     assert s == expected_str
 
 
