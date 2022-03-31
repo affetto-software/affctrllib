@@ -39,6 +39,16 @@ def convert_array_to_string(
     return sep.join(formatted_array)
 
 
+def convert_array_to_bytes(
+    array: list[float] | list[int],
+    sep: str = " ",
+    f_spec: str = ".0f",
+    precision: int | None = None,
+) -> bytes:
+    """Returns bytes encoded array joined with specific format."""
+    return convert_array_to_string(array, sep, f_spec, precision).encode()
+
+
 class AffComm(object):
     config_path: Path | None
     remote_addr: SockAddr

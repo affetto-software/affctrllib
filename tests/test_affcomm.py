@@ -3,7 +3,12 @@ import socket
 
 import pytest
 from affctrllib._sockutil import SockAddr
-from affctrllib.affcomm import AffComm, convert_array_to_string, split_received_msg
+from affctrllib.affcomm import (
+    AffComm,
+    convert_array_to_bytes,
+    convert_array_to_string,
+    split_received_msg,
+)
 
 CONFIG_DIR_PATH = os.path.join(os.path.dirname(__file__), "config")
 
@@ -126,6 +131,20 @@ def test_convert_array_to_string_specify_precision(
 ) -> None:
     s = convert_array_to_string(arr, precision=precision)
     assert s == expected_str
+
+
+@pytest.mark.parametrize(
+    "arr,expected_bytes",
+    [
+        ([0, 1, 2], b"0 1 2"),
+        ([0, 1, 2, 3, 4], b"0 1 2 3 4"),
+        ([1.2, 3.2, 0.4, 8.7, 5.5], b"1 3 0 9 6"),
+        ([0.5, 1.5, 2.5, 3.5, 4.5], b"0 2 2 4 4"),
+    ],
+)
+def test_convert_array_to_bytes(arr, expected_bytes) -> None:
+    b = convert_array_to_bytes(arr)
+    assert b == expected_bytes
 
 
 class TestAffComm:
