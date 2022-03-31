@@ -7,6 +7,28 @@ import tomli
 from ._sockutil import SockAddr
 
 
+def process_received_bytes(
+    data: bytes, function: Callable = float, sep: str | None = None
+) -> list[float]:
+    """Returns a list of values converted from received bytes."""
+    decoded_data = data.decode().strip(sep)
+    return list(map(function, decoded_data.split(sep)))
+
+
+def process_array_to_string(
+    array: list[float] | list[int],
+    sep: str = " ",
+    f_spec: str = ".0f",
+    precision: int | None = None,
+) -> str:
+    """Returns a string of array joined with specific format."""
+    if precision is None:
+        formatted_array = [f"{x:{f_spec}}" for x in array]
+    else:
+        formatted_array = [f"{x:.{precision}f}" for x in array]
+    return sep.join(formatted_array)
+
+
 class AffComm(object):
     config_path: Path | None
     remote_addr: SockAddr
@@ -34,27 +56,6 @@ class AffComm(object):
         comm_config_dict = config_dict["affetto"]["comm"]
         self.remote_addr.set(comm_config_dict["remote"])
         self.local_addr.set(comm_config_dict["local"])
-
-    def process_received_bytes(
-        self, data: bytes, function: Callable = float, sep: str | None = None
-    ) -> list[float]:
-        """Returns a list of values converted from received bytes."""
-        decoded_data = data.decode().strip(sep)
-        return list(map(function, decoded_data.split(sep)))
-
-    def process_array_to_string(
-        self,
-        array: list[float] | list[int],
-        sep: str = " ",
-        f_spec: str = ".0f",
-        precision: int | None = None,
-    ) -> str:
-        """Returns a string of array joined with specific format."""
-        if precision is None:
-            formatted_array = [f"{x:{f_spec}}" for x in array]
-        else:
-            formatted_array = [f"{x:.{precision}f}" for x in array]
-        return sep.join(formatted_array)
 
     def create_sensory_socket(
         self, addr: tuple[str, int] | None = None
