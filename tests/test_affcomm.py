@@ -48,6 +48,32 @@ def test_split_received_bytes_alternate_sep(data, sep, expected_array) -> None:
 
 
 @pytest.mark.parametrize(
+    "data,expected_array",
+    [
+        ("1 2 3", [1.0, 2.0, 3.0]),
+        ("1.1 2.2 3.3 4.4 5.5 ", [1.1, 2.2, 3.3, 4.4, 5.5]),
+        ("  1  2  3  4  5  6 ", [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]),
+    ],
+)
+def test_split_received_bytes_provide_string(data, expected_array) -> None:
+    arr = split_received_bytes(data)
+    assert arr == expected_array
+
+
+@pytest.mark.parametrize(
+    "data,sep,expected_array",
+    [
+        ("1 2 3 ", None, ["1", "2", "3"]),
+        (" 1 2 3 ", " ", ["", "1", "2", "3", ""]),
+        ("1,2,3,", ",", ["1", "2", "3", ""]),
+    ],
+)
+def test_split_received_bytes_no_strip(data, sep, expected_array) -> None:
+    arr = split_received_bytes(data, function=str, sep=sep, strip=False)
+    assert arr == expected_array
+
+
+@pytest.mark.parametrize(
     "arr,expected_str",
     [
         ([0, 1, 2], "0 1 2"),

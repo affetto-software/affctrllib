@@ -8,10 +8,20 @@ from ._sockutil import SockAddr
 
 
 def split_received_bytes(
-    data: bytes, function: Callable = float, sep: str | None = None
+    data: bytes | str,
+    function: Callable = float,
+    sep: str | None = None,
+    strip: bool = True,
 ) -> list[float]:
     """Returns a list of values converted from received bytes."""
-    decoded_data = data.decode().strip(sep)
+    if isinstance(data, bytes):
+        decoded_data = data.decode()
+    elif isinstance(data, str):
+        decoded_data = data
+    else:
+        raise TypeError(f"unsupported type: {type(data)}")
+    if strip:
+        decoded_data = decoded_data.strip(sep)
     return list(map(function, decoded_data.split(sep)))
 
 
