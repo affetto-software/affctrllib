@@ -1,6 +1,6 @@
 import socket
 from pathlib import Path
-from typing import Any, Callable, overload
+from typing import Any, Callable, TypeVar, overload
 
 import numpy as np
 import numpy.typing as npt
@@ -8,13 +8,15 @@ import tomli
 
 from ._sockutil import SockAddr
 
+R = TypeVar("R")
+
 
 def split_received_msg(
     data: bytes | str,
-    function: Callable = float,
+    function: Callable[[str], R] = float,
     sep: str | None = None,
     strip: bool = True,
-) -> list[float]:
+) -> list[R]:
     """Returns a list of values converted from received bytes."""
     if isinstance(data, bytes):
         decoded_data = data.decode()
