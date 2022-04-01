@@ -1,6 +1,6 @@
 import socket
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any, Callable, overload
 
 import numpy as np
 import numpy.typing as npt
@@ -61,6 +61,25 @@ def reshape_array_for_unzip(
 def unzip_array(array: list[float] | list[int], n: int = 3) -> list[Any]:
     reshaped = reshape_array_for_unzip(array, ncol=n)
     return reshaped.tolist()  # type: ignore
+
+
+def zip_arrays_as_ndarray(*arrays: list[float] | list[int]) -> npt.ArrayLike:
+    stacked = np.stack(arrays, axis=1)
+    return stacked.flatten()
+
+
+@overload
+def zip_arrays(*arrays: list[float]) -> list[float]:
+    ...
+
+
+@overload
+def zip_arrays(*arrays: list[int]) -> list[int]:
+    ...
+
+
+def zip_arrays(*arrays: list[float] | list[int]) -> list[float] | list[int]:
+    return list(zip_arrays_as_ndarray(*arrays))  # type: ignore
 
 
 class AffComm(object):

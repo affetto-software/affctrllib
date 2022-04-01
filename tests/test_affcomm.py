@@ -11,6 +11,7 @@ from affctrllib.affcomm import (
     reshape_array_for_unzip,
     split_received_msg,
     unzip_array,
+    zip_arrays,
 )
 from numpy.testing import assert_array_equal
 
@@ -213,6 +214,35 @@ def test_unzip_array(arr, expected) -> None:
 )
 def test_reshape_unzip_specify_ncol(arr, ncol, expected) -> None:
     ret = unzip_array(list(arr), n=ncol)
+    assert ret == expected
+
+
+@pytest.mark.parametrize(
+    "arr1,arr2,expected",
+    [
+        ([0, 1, 2], [3, 4, 5], [0, 3, 1, 4, 2, 5]),
+        (range(5), range(5, 10), [0, 5, 1, 6, 2, 7, 3, 8, 4, 9]),
+    ],
+)
+def test_zip_arrays(arr1, arr2, expected) -> None:
+    ret = zip_arrays(arr1, arr2)
+    assert ret == expected
+
+
+@pytest.mark.parametrize(
+    "arr1,arr2,arr3,expected",
+    [
+        ([0, 1, 2], [3, 4, 5], [6, 7, 8], [0, 3, 6, 1, 4, 7, 2, 5, 8]),
+        (
+            range(5),
+            range(5, 10),
+            range(10, 15),
+            [0, 5, 10, 1, 6, 11, 2, 7, 12, 3, 8, 13, 4, 9, 14],
+        ),
+    ],
+)
+def test_zip_arrays_3args(arr1, arr2, arr3, expected) -> None:
+    ret = zip_arrays(arr1, arr2, arr3)
     assert ret == expected
 
 
