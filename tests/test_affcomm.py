@@ -8,7 +8,7 @@ from affctrllib.affcomm import (
     AffComm,
     convert_array_to_bytes,
     convert_array_to_string,
-    reshape_array,
+    reshape_array_for_unzip,
     split_received_msg,
     unzip_array,
 )
@@ -160,8 +160,8 @@ def test_convert_array_to_bytes(arr, expected_bytes) -> None:
         (np.arange(9), np.arange(9).reshape(3, 3).T),
     ],
 )
-def test_reshape_array(arr, expected) -> None:
-    ret = reshape_array(arr)
+def test_reshape_array_for_unzip(arr, expected) -> None:
+    ret = reshape_array_for_unzip(arr)
     assert_array_equal(ret, expected)
 
 
@@ -172,9 +172,9 @@ def test_reshape_array(arr, expected) -> None:
         (range(10), np.array([[0, 3, 6, 9], [1, 4, 7, 0], [2, 5, 8, 0]])),
     ],
 )
-def test_reshape_array_not_divisible(arr, _) -> None:
+def test_reshape_array_for_unzip_not_divisible(arr, _) -> None:
     with pytest.raises(ValueError) as excinfo:
-        _ = reshape_array(arr)
+        _ = reshape_array_for_unzip(arr)
     assert "cannot reshape array of size" in str(excinfo.value)
 
 
@@ -185,8 +185,8 @@ def test_reshape_array_not_divisible(arr, _) -> None:
         (range(8), 2, np.array([[0, 2, 4, 6], [1, 3, 5, 7]])),
     ],
 )
-def test_reshape_array_specify_ncol(arr, ncol, expected) -> None:
-    ret = reshape_array(list(arr), ncol=ncol)
+def test_reshape_array_for_unzip_specify_ncol(arr, ncol, expected) -> None:
+    ret = reshape_array_for_unzip(list(arr), ncol=ncol)
     assert_array_equal(ret, expected)
 
 

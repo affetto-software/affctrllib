@@ -51,13 +51,15 @@ def convert_array_to_bytes(
     return convert_array_to_string(array, sep, f_spec, precision).encode()
 
 
-def reshape_array(array: list[float] | list[int], ncol: int = 3) -> npt.ArrayLike:
+def reshape_array_for_unzip(
+    array: list[float] | list[int], ncol: int = 3
+) -> npt.ArrayLike:
     ret = np.array(array).reshape((int(len(array) / ncol), ncol))
     return ret.T
 
 
 def unzip_array(array: list[float] | list[int], n: int = 3) -> list[Any]:
-    reshaped = reshape_array(array, ncol=n)
+    reshaped = reshape_array_for_unzip(array, ncol=n)
     return reshaped.tolist()  # type: ignore
 
 
