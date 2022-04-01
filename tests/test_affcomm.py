@@ -21,9 +21,9 @@ CONFIG_DIR_PATH = os.path.join(os.path.dirname(__file__), "config")
 @pytest.mark.parametrize(
     "data,expected_array",
     [
-        (b"1 2 3", [1.0, 2.0, 3.0]),
-        (b"1.1 2.2 3.3 4.4 5.5 ", [1.1, 2.2, 3.3, 4.4, 5.5]),
-        (b"  1  2  3  4  5  6 ", [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]),
+        (b"1 2 3", [1, 2, 3]),
+        (b"1 2 3 4 5 ", [1, 2, 3, 4, 5]),
+        (b"  1  2  3  4  5  6 ", [1, 2, 3, 4, 5, 6]),
     ],
 )
 def test_split_received_msg(data, expected_array) -> None:
@@ -34,7 +34,7 @@ def test_split_received_msg(data, expected_array) -> None:
 @pytest.mark.parametrize(
     "data,func,expected_array",
     [
-        (b"1 2 3", int, [1, 2, 3]),
+        (b"1 2 3", float, [1.0, 2.0, 3.0]),
         (b"1 2 3 4 5 ", str, ["1", "2", "3", "4", "5"]),
     ],
 )
@@ -46,10 +46,10 @@ def test_split_received_msg_alternate_mapping(data, func, expected_array) -> Non
 @pytest.mark.parametrize(
     "data,sep,expected_array",
     [
-        (b"1 2 3", " ", [1.0, 2.0, 3.0]),
-        (b"1 2 3 ", " ", [1.0, 2.0, 3.0]),
-        (b"1,2,3,4,5", ",", [1.0, 2.0, 3.0, 4.0, 5.0]),
-        (b"1,2,3,4,5,", ",", [1.0, 2.0, 3.0, 4.0, 5.0]),
+        (b"1 2 3", " ", [1, 2, 3]),
+        (b"1 2 3 ", " ", [1, 2, 3]),
+        (b"1,2,3,4,5", ",", [1, 2, 3, 4, 5]),
+        (b"1,2,3,4,5,", ",", [1, 2, 3, 4, 5]),
     ],
 )
 def test_split_received_msg_alternate_sep(data, sep, expected_array) -> None:
@@ -60,9 +60,9 @@ def test_split_received_msg_alternate_sep(data, sep, expected_array) -> None:
 @pytest.mark.parametrize(
     "data,expected_array",
     [
-        ("1 2 3", [1.0, 2.0, 3.0]),
-        ("1.1 2.2 3.3 4.4 5.5 ", [1.1, 2.2, 3.3, 4.4, 5.5]),
-        ("  1  2  3  4  5  6 ", [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]),
+        ("1 2 3", [1, 2, 3]),
+        ("1 2 3 4 5 ", [1, 2, 3, 4, 5]),
+        ("  1  2  3  4  5  6 ", [1, 2, 3, 4, 5, 6]),
     ],
 )
 def test_split_received_msg_provide_string(data, expected_array) -> None:

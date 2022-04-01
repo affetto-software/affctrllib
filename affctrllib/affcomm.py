@@ -13,7 +13,7 @@ R = TypeVar("R")
 
 def split_received_msg(
     data: bytes | str,
-    function: Callable[[str], R] = float,
+    function: Callable[[str], R] = int,
     sep: str | None = None,
     strip: bool = True,
 ) -> list[R]:
