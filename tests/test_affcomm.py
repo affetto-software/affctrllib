@@ -1,14 +1,18 @@
 import os
 import socket
 
+import numpy as np
 import pytest
 from affctrllib._sockutil import SockAddr
 from affctrllib.affcomm import (
     AffComm,
     convert_array_to_bytes,
     convert_array_to_string,
+    reshape_array,
     split_received_msg,
+    unzip_array,
 )
+from numpy.testing import assert_array_equal
 
 CONFIG_DIR_PATH = os.path.join(os.path.dirname(__file__), "config")
 
@@ -145,6 +149,71 @@ def test_convert_array_to_string_specify_precision(
 def test_convert_array_to_bytes(arr, expected_bytes) -> None:
     b = convert_array_to_bytes(arr)
     assert b == expected_bytes
+
+
+@pytest.mark.parametrize(
+    "arr,expected",
+    [
+        (range(6), np.array([[0, 3], [1, 4], [2, 5]])),
+        ([1, 3, 5, 7, 9, 11], np.array([[1, 7], [3, 9], [5, 11]])),
+        (range(15), np.array(range(15)).reshape(5, 3).T),
+        (np.arange(9), np.arange(9).reshape(3, 3).T),
+    ],
+)
+def test_reshape_array(arr, expected) -> None:
+    ret = reshape_array(arr)
+    assert_array_equal(ret, expected)
+
+
+@pytest.mark.parametrize(
+    "arr,_",
+    [
+        (range(5), np.array([[0, 3], [1, 4], [2, 0]])),
+        (range(10), np.array([[0, 3, 6, 9], [1, 4, 7, 0], [2, 5, 8, 0]])),
+    ],
+)
+def test_reshape_array_not_divisible(arr, _) -> None:
+    with pytest.raises(ValueError) as excinfo:
+        _ = reshape_array(arr)
+    assert "cannot reshape array of size" in str(excinfo.value)
+
+
+@pytest.mark.parametrize(
+    "arr,ncol,expected",
+    [
+        (range(8), 4, np.array([[0, 4], [1, 5], [2, 6], [3, 7]])),
+        (range(8), 2, np.array([[0, 2, 4, 6], [1, 3, 5, 7]])),
+    ],
+)
+def test_reshape_array_specify_ncol(arr, ncol, expected) -> None:
+    ret = reshape_array(list(arr), ncol=ncol)
+    assert_array_equal(ret, expected)
+
+
+@pytest.mark.parametrize(
+    "arr,expected",
+    [
+        (range(6), [[0, 3], [1, 4], [2, 5]]),
+        ([1, 3, 5, 7, 9, 11], [[1, 7], [3, 9], [5, 11]]),
+        (range(15), [[0, 3, 6, 9, 12], [1, 4, 7, 10, 13], [2, 5, 8, 11, 14]]),
+        (np.arange(9), [[0.0, 3.0, 6.0], [1.0, 4.0, 7.0], [2.0, 5.0, 8.0]]),
+    ],
+)
+def test_unzip_array(arr, expected) -> None:
+    ret = unzip_array(arr)
+    assert ret == expected
+
+
+@pytest.mark.parametrize(
+    "arr,ncol,expected",
+    [
+        (range(8), 4, [[0, 4], [1, 5], [2, 6], [3, 7]]),
+        (range(8), 2, [[0, 2, 4, 6], [1, 3, 5, 7]]),
+    ],
+)
+def test_reshape_unzip_specify_ncol(arr, ncol, expected) -> None:
+    ret = unzip_array(list(arr), n=ncol)
+    assert ret == expected
 
 
 class TestAffComm:

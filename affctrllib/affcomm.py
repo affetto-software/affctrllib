@@ -1,7 +1,9 @@
 import socket
 from pathlib import Path
-from typing import Callable
+from typing import Any, Callable
 
+import numpy as np
+import numpy.typing as npt
 import tomli
 
 from ._sockutil import SockAddr
@@ -47,6 +49,16 @@ def convert_array_to_bytes(
 ) -> bytes:
     """Returns bytes encoded array joined with specific format."""
     return convert_array_to_string(array, sep, f_spec, precision).encode()
+
+
+def reshape_array(array: list[float] | list[int], ncol: int = 3) -> npt.ArrayLike:
+    ret = np.array(array).reshape((int(len(array) / ncol), ncol))
+    return ret.T
+
+
+def unzip_array(array: list[float] | list[int], n: int = 3) -> list[Any]:
+    reshaped = reshape_array(array, ncol=n)
+    return reshaped.tolist()  # type: ignore
 
 
 class AffComm(object):
