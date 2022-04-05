@@ -268,6 +268,31 @@ class TestAffComm:
         acom = AffComm()
         assert repr(acom) == "affctrllib.affcomm.AffComm()"
 
+    def test_str(self) -> None:
+        acom = AffComm()
+        assert (
+            str(acom)
+            == """\
+AffComm configuration:
+  Config file: None
+   Receive at: None:None
+      Send to: None:None
+"""
+        )
+
+    def test_str_load_config(self) -> None:
+        cpath = os.path.join(CONFIG_DIR_PATH, "default.toml")
+        acom = AffComm(cpath)
+        assert (
+            str(acom)
+            == f"""\
+AffComm configuration:
+  Config file: {cpath}
+   Receive at: localhost:50000
+      Send to: 192.168.1.1:50010
+"""
+        )
+
     def test_load_config_default(self) -> None:
         acom = AffComm()
         acom.load_config(os.path.join(CONFIG_DIR_PATH, "default.toml"))

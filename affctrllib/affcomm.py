@@ -104,6 +104,14 @@ class AffComm(object):
     def __repr__(self) -> str:
         return "%s.%s()" % (self.__class__.__module__, self.__class__.__qualname__)
 
+    def __str__(self) -> str:
+        return f"""\
+AffComm configuration:
+  Config file: {str(self.config_path)}
+   Receive at: {str(self.local_addr)}
+      Send to: {str(self.remote_addr)}
+"""
+
     def load_config(self, config_path: str | Path) -> None:
         self.config_path = Path(config_path)
         with open(self.config_path, "rb") as f:
