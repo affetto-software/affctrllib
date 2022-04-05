@@ -25,6 +25,12 @@ class SockAddr(object):
         if addr is not None:
             self.set(addr, port)
 
+    def __repr__(self) -> str:
+        return f"SockAddr({str(self.host)}, {str(self.port)})"
+
+    def __str__(self) -> str:
+        return f"{str(self.host)}:{str(self.port)}"
+
     def set(
         self, addr: tuple[str, int] | dict[str, Any] | str, port: int | None = None
     ) -> None:

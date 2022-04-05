@@ -51,6 +51,30 @@ class TestSockAddr:
             _ = sa.addr
         assert f"SockAddr: no port is provided for '192.168.1.4'" in str(excinfo.value)
 
+    @pytest.mark.parametrize(
+        "host,port",
+        [
+            ("192.168.1.1", 1000),
+            ("localhost", None),
+            (None, None),
+        ],
+    )
+    def test_repr(self, host, port) -> None:
+        sa = SockAddr(host, port)
+        assert repr(sa) == f"SockAddr({str(host)}, {str(port)})"
+
+    @pytest.mark.parametrize(
+        "host,port",
+        [
+            ("192.168.5.1", 1010),
+            ("172.16.11.1", None),
+            (None, None),
+        ],
+    )
+    def test_str(self, host, port) -> None:
+        sa = SockAddr(host, port)
+        assert str(sa) == f"{str(host)}:{str(port)}"
+
     def test_set_host(self) -> None:
         sa = SockAddr()
         sa.host = "192.168.1.1"
