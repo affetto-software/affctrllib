@@ -1,3 +1,4 @@
+import sys
 from collections.abc import Iterable
 from pathlib import Path
 from typing import Any
@@ -8,8 +9,15 @@ class Logger(object):
     _eol: str
     _labels: list[str]
     _rawdata: list[list[Any]]
+    _fpath: Path | None
 
-    def __init__(self, sep: str = ",", eol: str = "\n") -> None:
+    def __init__(
+        self, fname: str | Path | None = None, sep: str = ",", eol: str = "\n"
+    ) -> None:
+        if fname is None:
+            self._fpath = None
+        else:
+            self._fpath = Path(fname)
         self._sep = sep
         self._eol = eol
         self._labels = []
@@ -54,14 +62,30 @@ class Logger(object):
                 return cand
             cnt += 1
 
-    def dump(self, fname: str | Path, overwrite=True, mode="w") -> None:
-        if overwrite:
-            p = Path(fname)
-        else:
-            p = self._generate_alternative_fname(Path(fname))
-        with open(p, mode=mode) as f:
+    def _dump_print(self, output=None) -> None:
+        if len(self._labels):
+            print(self.get_header(), end=self.eol, file=output)
+        for line in self._rawdata:
+            print(self.sep.join(f"{x}" for x in line), end=self.eol, file=output)
+
+    def _dump_open(self, fpath: Path, mode: str) -> None:
+        with open(fpath, mode=mode) as fobj:
             if len(self._labels):
-                f.write(self.sep.join(self._labels) + self.eol)
-            f.writelines(
-                self.sep.join(f"{x}" for x in row) + self.eol for row in self._rawdata
+                fobj.write(self.get_header() + self.eol)
+            fobj.writelines(
+                self.sep.join(f"{x}" for x in line) + self.eol for line in self._rawdata
             )
+
+    def dump(self, fname: str | Path | None = None, overwrite=True, mode="w") -> None:
+        fpath: Path
+        if fname is not None:
+            fpath = Path(fname)
+        elif self._fpath is not None:
+            fpath = self._fpath
+        else:
+            self._dump_print()
+            return
+
+        if not overwrite:
+            fpath = self._generate_alternative_fname(fpath)
+        self._dump_open(fpath, mode)

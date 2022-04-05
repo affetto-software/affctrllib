@@ -11,6 +11,7 @@ OUTPUT_DIR_PATH = os.path.join(os.path.dirname(__file__), "output")
 class TestLogger:
     def test_init(self) -> None:
         logger = Logger()
+        assert logger._fpath is None
         assert logger.sep == ","
         assert logger.eol == "\n"
         assert logger._labels == []
@@ -267,3 +268,38 @@ class TestLogger:
         logger = Logger()
         logger.dump(output_filename, overwrite=False)
         assert os.path.exists(expected_filename)
+
+    def test_dump_specify_no_fname(self, capsys) -> None:
+        labels = ["t", "x", "y"]
+        data = [[0, 1, 2], [3, 4, 5], [6, 7, 8]]
+        expected = ",".join(labels) + "\n"
+        for d in data:
+            expected += ",".join([str(x) for x in d]) + "\n"
+
+        logger = Logger()
+        logger.set_labels(labels)
+        for d in data:
+            logger.store_data(d)
+        logger.dump()
+        captured = capsys.readouterr()
+        assert captured.out == expected
+
+    def test_dump_specify_fname_in_init(self) -> None:
+        output_filename = os.path.join(OUTPUT_DIR_PATH, "output.csv")
+        if os.path.exists(output_filename):
+            os.remove(output_filename)
+
+        labels = ["t", "x", "y"]
+        data = [[0, 1, 2], [3, 4, 5], [6, 7, 8]]
+        expected = ",".join(labels) + "\n"
+        for d in data:
+            expected += ",".join([str(x) for x in d]) + "\n"
+
+        logger = Logger(output_filename)
+        logger.set_labels(labels)
+        for d in data:
+            logger.store_data(d)
+        logger.dump()
+
+        with open(output_filename, "r") as f:
+            assert f.read() == expected
