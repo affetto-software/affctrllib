@@ -29,11 +29,8 @@ class Logger(object):
     def extend_labels(self, labels: Iterable[str]) -> None:
         self._labels.extend(list(labels))
 
-    def get_header(self) -> str | None:
-        if len(self._labels):
-            return self.sep.join(self._labels)
-        else:
-            return None
+    def get_header(self) -> str:
+        return self.sep.join(self._labels)
 
     def store_data(self, data: Iterable[Any]) -> None:
         self._rawdata.append(list(data))

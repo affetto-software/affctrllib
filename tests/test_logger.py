@@ -97,7 +97,7 @@ class TestLogger:
 
     def test_get_labels_return_None_when_nothing(self) -> None:
         logger = Logger()
-        assert logger.get_header() is None
+        assert logger.get_header() == ""
 
     @pytest.mark.parametrize("data", [[0, 1, 2], [4, 5, 6], ["a", "b", "c"]])
     def test_store_data(self, data) -> None:
