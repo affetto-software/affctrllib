@@ -31,6 +31,13 @@ class Logger(object):
     def eol(self) -> str:
         return self._eol
 
+    @property
+    def fpath(self) -> str:
+        return str(self._fpath)
+
+    def get_filename(self) -> str:
+        return self.fpath
+
     def set_labels(self, labels: Iterable[str]) -> None:
         self._labels = list(labels)
 
