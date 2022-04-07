@@ -152,3 +152,16 @@ class TestTimer:
         t = timer.elapsed_time()
         # assert t == pytest.approx(0.01)  # uncomment this to see differences
         assert t == pytest.approx(0.01, rel=TOL)
+
+    def test_warn_block_has_no_effect(self) -> None:
+        timer = Timer(period=0.01)
+        timer.start()
+        with pytest.warns(RuntimeWarning) as record:
+            for _ in range(3):
+                time.sleep(0.01)
+                timer.block()
+        assert len(record) == 3
+        for i in range(3):
+            assert str(record[i].message).startswith(
+                "It took longer than specified period at t="
+            )

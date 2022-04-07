@@ -1,4 +1,5 @@
 import time
+import warnings
 from typing import Callable
 
 
@@ -79,4 +80,7 @@ class Timer(object):
         time_to_sleep = self._period_ns - elapsed_since_last_blocked
         if time_to_sleep > 0:
             time.sleep(time_to_sleep * 1e-9)
+        else:
+            msg = f"It took longer than specified period at t={self.elapsed_time()}"
+            warnings.warn(msg, RuntimeWarning)
         self._time_last_blocked_ns = self._time_ns_func()
