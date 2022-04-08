@@ -39,6 +39,10 @@ from .logger import Logger
 
 __all__.extend(["Logger"])
 
+from .ptp import PTP
+
+__all__.extend(["PTP"])
+
 from .timer import Timer
 
 __all__.extend(["Timer"])
