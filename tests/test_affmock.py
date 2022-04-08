@@ -30,6 +30,9 @@ class TestAffettoMock:
         mock = AffettoMock()
         mock.load_config(os.path.join(CONFIG_DIR_PATH, "mock.toml"))
 
+        # DOF
+        assert mock.dof == 13
+
         # remote_addr
         assert mock.remote_addr.host == "localhost"
         assert mock.remote_addr.port == 50000
@@ -44,6 +47,9 @@ class TestAffettoMock:
     def test_load_config_alternative(self) -> None:
         mock = AffettoMock()
         mock.load_config(os.path.join(CONFIG_DIR_PATH, "altmock.toml"))
+
+        # DOF
+        assert mock.dof == 15
 
         # remote_addr
         assert mock.remote_addr.host == "192.168.11.1"

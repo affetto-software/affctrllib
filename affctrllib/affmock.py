@@ -1,15 +1,17 @@
 import socket
-import time
 from pathlib import Path
-from typing import Any
 
+import numpy as np
 import tomli
 
 from ._sockutil import SockAddr
+from .affcomm import convert_array_to_string
+from .timer import Timer
 
 
 class AffettoMock(object):
     config_path: Path | None
+    dof: int
     remote_addr: SockAddr
     local_addr: SockAddr
     sensor_rate: float
@@ -32,15 +34,19 @@ class AffettoMock(object):
         with open(self.config_path, "rb") as f:
             config_dict = tomli.load(f)
         mock_config_dict = config_dict["affetto"]["mock"]
+        self.dof = mock_config_dict["dof"]
         self.remote_addr.set(mock_config_dict["remote"])
         self.local_addr.set(mock_config_dict["local"])
         self.sensor_rate = mock_config_dict["sensor"]["rate"]
 
     def start(self) -> None:
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        dt = 1.0 / self.sensor_rate
+        timer = Timer(rate=self.sensor_rate)
+        timer.start()
         while True:
-            msg = str(time.time())
+            t = timer.elapsed_time()
+            sarr = list(np.random.randint(0, 256, size=self.dof * 3))
+            msg = convert_array_to_string(sarr)
             sz = sock.sendto(msg.encode(), self.remote_addr.addr)
-            print(f"Sent '{msg}' to {self.remote_addr.addr} ({sz} bytes)")
-            time.sleep(dt)
+            print(f"t={t:.2f}: sent <{msg}> to {self.remote_addr.addr} ({sz} bytes)")
+            timer.block()

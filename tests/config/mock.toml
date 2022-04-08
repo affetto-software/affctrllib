@@ -1,5 +1,7 @@
 [affetto]
 [affetto.mock]
+dof = 13
+
 [affetto.mock.remote]
 host = "localhost"
 port = 50000

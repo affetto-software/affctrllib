@@ -1,5 +1,7 @@
 [affetto]
 [affetto.mock]
+dof = 15
+
 [affetto.mock.remote]
 host = "192.168.11.1"
 port = 70000
