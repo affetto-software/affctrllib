@@ -1,0 +1,25 @@
+[affetto]
+[affetto.comm]
+[affetto.comm.remote]
+host = "192.168.5.10"
+port = 50010
+
+[affetto.comm.local]
+host = "192.168.5.109"
+port = 50000
+
+[affetto]
+[affetto.mock]
+[affetto.mock.remote]
+host = "localhost"
+port = 50000
+
+[affetto.mock.local]
+host = "localhost"
+port = 50010
+
+[affetto.mock.sensor]
+rate = 100
+
+[affetto.mock.valve]
+rate = 30
