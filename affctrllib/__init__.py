@@ -31,6 +31,10 @@ from .affmock import AffettoMock
 
 __all__.extend(["AffettoMock"])
 
+from .affstate import AffState
+
+__all__.extend(["AffState"])
+
 from .logger import Logger
 
 __all__.extend(["Logger"])
