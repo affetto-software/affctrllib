@@ -1,5 +1,4 @@
 import os
-import socket
 
 import numpy as np
 import pytest
@@ -316,16 +315,3 @@ AffComm configuration:
         # local_addr
         assert acom.local_addr.host == "192.168.5.123"
         assert acom.local_addr.port == 60000
-
-    @pytest.mark.skip
-    def test_create_sensory_socket(self) -> None:
-        acom = AffComm()
-        address = ("localhost", 11111)
-        bufsize = 1024
-        ssock = acom.create_sensory_socket(address)
-        data, _ = ssock.recvfrom(bufsize)
-        assert data.decode() == "hello world"
-
-        # sender = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        # msg = b"hello world"
-        # sender.sendto(msg, address)

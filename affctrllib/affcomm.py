@@ -133,11 +133,3 @@ AffComm configuration:
     def create_command_socket(self) -> socket.socket:
         self.command_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         return self.command_socket
-
-    def listen(self) -> None:
-        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        sock.bind(self.local_addr.addr)
-        bufsz = 1024
-        while True:
-            data, addr = sock.recvfrom(bufsz)
-            print(f"Recv {data} from {addr}")
