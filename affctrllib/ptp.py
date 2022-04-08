@@ -51,7 +51,7 @@ class TriangularVelocityProfile(Profile):
             return 0
 
 
-class FifthOrderPolynomialProfile(Profile, Generic[JointT]):
+class FifthDegreePolynomialProfile(Profile, Generic[JointT]):
     def __init__(self, q0, qF, T, t0):
         Profile.__init__(self, q0, qF, T, t0)
         self._q_coeff = qF - q0
@@ -79,11 +79,11 @@ PTP_ACCEPTABLE_PROFILE_NAMES = {
     "triangular velocity": TriangularVelocityProfile,
     "triangular": TriangularVelocityProfile,
     "tri": TriangularVelocityProfile,
-    "5th-order polynomial": FifthOrderPolynomialProfile,
-    "5th order polynomial": FifthOrderPolynomialProfile,
-    "5th-order": FifthOrderPolynomialProfile,
-    "5th order": FifthOrderPolynomialProfile,
-    "5th": FifthOrderPolynomialProfile,
+    "5th-degree polynomial": FifthDegreePolynomialProfile,
+    "5th degree polynomial": FifthDegreePolynomialProfile,
+    "5th-degree": FifthDegreePolynomialProfile,
+    "5th degree": FifthDegreePolynomialProfile,
+    "5th": FifthDegreePolynomialProfile,
 }
 
 

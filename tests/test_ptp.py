@@ -1,5 +1,5 @@
 import pytest
-from affctrllib.ptp import PTP, FifthOrderPolynomialProfile, TriangularVelocityProfile
+from affctrllib.ptp import PTP, FifthDegreePolynomialProfile, TriangularVelocityProfile
 
 
 class TestPTP:
@@ -17,11 +17,11 @@ class TestPTP:
             ("triangular velocity", TriangularVelocityProfile),
             ("triangular", TriangularVelocityProfile),
             ("tri", TriangularVelocityProfile),
-            ("5th-order polynomial", FifthOrderPolynomialProfile),
-            ("5th order polynomial", FifthOrderPolynomialProfile),
-            ("5th-order", FifthOrderPolynomialProfile),
-            ("5th order", FifthOrderPolynomialProfile),
-            ("5th", FifthOrderPolynomialProfile),
+            ("5th-degree polynomial", FifthDegreePolynomialProfile),
+            ("5th degree polynomial", FifthDegreePolynomialProfile),
+            ("5th-degree", FifthDegreePolynomialProfile),
+            ("5th degree", FifthDegreePolynomialProfile),
+            ("5th", FifthDegreePolynomialProfile),
         ],
     )
     def test_select_profile(self, name, expected) -> None:
@@ -66,7 +66,7 @@ class TestPTP:
             assert ptp.q(t) == q
             assert ptp.dq(t) == dq
 
-    def test_update_5th_order_polynomial(self) -> None:
+    def test_update_5th_degree_polynomial(self) -> None:
         ptp = PTP(0, 1, 10, profile_name="5th")
         expectation_table = [
             # t, q, dq
@@ -82,8 +82,7 @@ class TestPTP:
             assert ptp.q(t) == pytest.approx(q)
             assert ptp.dq(t) == pytest.approx(dq)
 
-    @pytest.mark.skip
-    def test_update_5th_order_polynomial_t0(self) -> None:
+    def test_update_5th_degree_polynomial_t0(self) -> None:
         ptp = PTP(0, 1, 10, 1, profile_name="5th")
         expectation_table = [
             # t, q, dq
@@ -96,5 +95,5 @@ class TestPTP:
             (12, 1, 0),
         ]
         for t, q, dq in expectation_table:
-            assert ptp.q(t) == q
-            assert ptp.dq(t) == dq
+            assert ptp.q(t) == pytest.approx(q)
+            assert ptp.dq(t) == pytest.approx(dq)
