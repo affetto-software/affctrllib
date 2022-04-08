@@ -35,6 +35,10 @@ from .affstate import AffState
 
 __all__.extend(["AffState"])
 
+from .filter import Filter
+
+__all__.extend(["Filter"])
+
 from .logger import Logger
 
 __all__.extend(["Logger"])
