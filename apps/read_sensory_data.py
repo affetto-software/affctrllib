@@ -32,34 +32,42 @@ def report_statistics(received_time_series):
     print(f"   Std deviation of time diff: {std:.6f}[s] ({std*1000:.3f}[ms])")
 
 
-def mainloop(config, output):
+def mainloop(config, output, freq, period):
     acom = AffComm(config)
     print(acom)
+    if period == 0:
+        print(f"To finish process, type Ctrl-C.")
 
     ssock = acom.create_sensory_socket()
     logger = Logger(output)
     logger.set_labels(LABELS)
 
     received_time_series = []
-    timer = Timer()
-    timer.start()
-    try:
-        while True:
-            t = timer.elapsed_time()
-            recv_bytes, _ = ssock.recvfrom(BUFSIZE)
-            sarr = acl.split_received_msg(recv_bytes, function=int)
-            logger.store_data([t] + sarr)  # type: ignore
-            received_time_series.append(t)
 
-            print(f"\rt = {t:.2f}", end="")
-            # timer.block()
-
-    except KeyboardInterrupt:
+    def cleanup():
         ssock.close()
         print()
         print(f"Saving data in <{str(output)}>...")
         logger.dump()
         report_statistics(received_time_series)
+
+    timer = Timer(rate=freq if freq > 0 else None)
+    timer.start()
+    t = 0
+    try:
+        while period == 0 or t < period:
+            t = timer.elapsed_time()
+            recv_bytes, _ = ssock.recvfrom(BUFSIZE)
+            sarr = acl.split_received_msg(recv_bytes, function=int)
+            logger.store_data([t] + sarr)  # type: ignore
+            received_time_series.append(t)
+            print(f"\rt = {t:.2f}", end="")
+            if freq > 0:
+                timer.block()
+
+    except KeyboardInterrupt:
+        print(f"\nFinishing process by KeyboardInterrupt.")
+    cleanup()
 
 
 def parse():
@@ -68,14 +76,18 @@ def parse():
         "-c", "--config", default=DEFAULT_CONFIG_PATH, help="config file"
     )
     parser.add_argument("-o", "--output", default=None, help="output filename")
-    parser.add_argument("-H", "--hz", help="frequency to read data")
-    parser.add_argument("-T", "--period", help="time [s] until program ends")
+    parser.add_argument(
+        "-H", "--hz", dest="freq", default=0, type=float, help="frequency to read data"
+    )
+    parser.add_argument(
+        "-T", "--period", default=0, type=float, help="time [s] until program ends"
+    )
     return parser.parse_args()
 
 
 def main():
     args = parse()
-    mainloop(args.config, args.output)
+    mainloop(args.config, args.output, args.freq, args.period)
 
 
 if __name__ == "__main__":
