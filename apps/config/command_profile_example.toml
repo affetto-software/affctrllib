@@ -1,0 +1,57 @@
+[command]
+# Frequency rate to send commands
+rate = 30
+
+# Time duration in total
+time = 55  # [sec]
+
+[command.profile.constant]
+# Default values for constant profile
+value = 22
+
+[command.profile.sinusoidal]
+# Default values for sinusoidal profile
+amplitude = 127
+period = 10
+base = 127
+idletime = 5
+phase = 0
+
+[command.affetto]
+# Default profile for joints in Affetto.
+profile = "constant"
+params = { value = 33 }
+
+[command.affetto.0]
+profile = "constant"
+params = { value = 10 }
+
+[command.affetto.9]
+profile = "constant"
+ca.params = { value = 175 }
+cb.params = { value = 96 }
+
+[command.affetto.11]
+profile = "sinusoidal"
+params = { amplitude = 100, period = 8, base = 0, idletime = 0 }
+# Different values can be specified for each side
+ca.params = { phase = "0.5 * np.pi" }
+cb.params = { phase = "np.pi" }
+
+
+[command.affetto.13]
+profile = "sinusoidal"
+params = { amplitude = 150, period = 5, base = 120, idletime = 1 }
+# Different profile can be specified
+cb.profile = "constant"
+cb.params = { value = 127 }
+
+[command.affetto.14.ca]
+# Only one side can be specified
+profile = "sinusoidal"
+
+[command.affetto.14.ca.params]
+amplitude = 111
+period = 11
+base = 100
+idletime = 3
