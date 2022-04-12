@@ -138,6 +138,18 @@ def test_convert_array_to_string_specify_precision(
 
 
 @pytest.mark.parametrize(
+    "arr,sep,f_spec,expected",
+    [
+        (np.array([0, 1, 2]), " ", ".0f", "0 1 2"),
+        (np.array([0, 1, 2]), ",", ".2f", "0.00,1.00,2.00"),
+    ],
+)
+def test_convert_array_to_string_ndarray(arr, sep, f_spec, expected) -> None:
+    s = convert_array_to_string(arr, sep=sep, f_spec=f_spec)
+    assert s == expected
+
+
+@pytest.mark.parametrize(
     "arr,expected_bytes",
     [
         ([0, 1, 2], b"0 1 2"),
@@ -191,6 +203,18 @@ def test_reshape_array_for_unzip_specify_ncol(arr, ncol, expected) -> None:
 
 
 @pytest.mark.parametrize(
+    "arr,ncol,expected",
+    [
+        (np.array(range(6)), 3, np.array([[0, 3], [1, 4], [2, 5]])),
+        (np.array(range(10)), 2, np.array([[0, 2, 4, 6, 8], [1, 3, 5, 7, 9]])),
+    ],
+)
+def test_reshape_array_for_unzip_ndarray(arr, ncol, expected) -> None:
+    ret = reshape_array_for_unzip(arr, ncol=ncol)
+    assert_array_equal(ret, expected)
+
+
+@pytest.mark.parametrize(
     "arr,expected",
     [
         (range(6), [[0, 3], [1, 4], [2, 5]]),
@@ -212,6 +236,18 @@ def test_unzip_array(arr, expected) -> None:
     ],
 )
 def test_reshape_unzip_specify_ncol(arr, ncol, expected) -> None:
+    ret = unzip_array(list(arr), n=ncol)
+    assert ret == expected
+
+
+@pytest.mark.parametrize(
+    "arr,ncol,expected",
+    [
+        (np.array(range(6)), 3, [[0, 3], [1, 4], [2, 5]]),
+        (np.array(range(8)), 2, [[0, 2, 4, 6], [1, 3, 5, 7]]),
+    ],
+)
+def test_reshape_unzip_ndarray(arr, ncol, expected) -> None:
     ret = unzip_array(list(arr), n=ncol)
     assert ret == expected
 
@@ -242,6 +278,18 @@ def test_zip_arrays(arr1, arr2, expected) -> None:
 )
 def test_zip_arrays_3args(arr1, arr2, arr3, expected) -> None:
     ret = zip_arrays(arr1, arr2, arr3)
+    assert ret == expected
+
+
+@pytest.mark.parametrize(
+    "arr1,arr2,expected",
+    [
+        (np.array([0, 1, 2]), np.array([3, 4, 5]), [0, 3, 1, 4, 2, 5]),
+        (np.array(range(5)), np.array(range(5, 10)), [0, 5, 1, 6, 2, 7, 3, 8, 4, 9]),
+    ],
+)
+def test_zip_arrays_ndarray(arr1, arr2, expected) -> None:
+    ret = zip_arrays(arr1, arr2)
     assert ret == expected
 
 
