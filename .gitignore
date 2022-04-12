@@ -1,5 +1,7 @@
 # configuration file in apps/ directoy
 apps/config.toml
+# temporary data file
+/*.csv
 
 ### Python ###
 # Byte-compiled / optimized / DLL files
