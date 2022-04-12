@@ -1,0 +1,14 @@
+[keyframe]
+dof = 13
+profile = "triangular"
+
+[keyframe.initial]
+q = [127, 127, 127, 127, 127, 127, 127, 127, 127, 127, 127, 127, 127]
+
+[[keyframe.frames]]
+t = 0
+q = [50, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+
+[[keyframe.frames]]
+t = 5
+q = [200, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
