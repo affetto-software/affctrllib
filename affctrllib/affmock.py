@@ -39,14 +39,19 @@ class AffettoMock(object):
         self.local_addr.set(mock_config_dict["local"])
         self.sensor_rate = mock_config_dict["sensor"]["rate"]
 
-    def start(self) -> None:
+    def start(self, rate=None, quiet=False) -> None:
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        timer = Timer(rate=self.sensor_rate)
+        if rate is None:
+            rate = self.sensor_rate
+        timer = Timer(rate=rate)
         timer.start()
         while True:
             t = timer.elapsed_time()
             sarr = list(np.random.randint(0, 256, size=self.dof * 3))
             msg = convert_array_to_string(sarr)
             sz = sock.sendto(msg.encode(), self.remote_addr.addr)
-            print(f"t={t:.2f}: sent <{msg}> to {self.remote_addr.addr} ({sz} bytes)")
+            if not quiet:
+                print(
+                    f"t={t:.2f}: sent <{msg}> to {self.remote_addr.addr} ({sz} bytes)"
+                )
             timer.block()
