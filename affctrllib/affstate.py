@@ -58,6 +58,18 @@ class AffState(object):
         return self._raw_data
 
     @property
+    def raw_q(self) -> npt.ArrayLike:
+        return self._reshaped_data[0]  # type: ignore
+
+    @property
+    def raw_pa(self) -> npt.ArrayLike:
+        return self._reshaped_data[1]  # type: ignore
+
+    @property
+    def raw_pb(self) -> npt.ArrayLike:
+        return self._reshaped_data[2]  # type: ignore
+
+    @property
     def q(self) -> npt.ArrayLike:
         return self._filtered_data[0]
 
