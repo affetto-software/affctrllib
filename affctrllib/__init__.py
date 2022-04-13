@@ -27,6 +27,10 @@ __all__.extend(
     ]
 )
 
+from .affctrl import AffCtrl
+
+__all__.extend(["AffCtrl"])
+
 from .affmock import AffettoMock
 
 __all__.extend(["AffettoMock"])
