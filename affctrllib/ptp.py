@@ -51,7 +51,7 @@ class TriangularVelocityProfile(Profile):
             return 0
 
 
-class FifthDegreePolynomialProfile(Profile, Generic[JointT]):
+class FifthDegreePolynomialProfile(Profile):
     def __init__(self, q0, qF, T, t0):
         Profile.__init__(self, q0, qF, T, t0)
         self._q_coeff = qF - q0
