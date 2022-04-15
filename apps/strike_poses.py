@@ -56,7 +56,7 @@ def mainloop(config, output, freq, keyframes, initial=None, profile="tri"):
     logger = Logger(output)
     logger.set_labels(LABELS)
 
-    astate = AffState(freq=freq)
+    astate = AffState(freq=30)
     actrl = AffCtrl(config)
 
     def cleanup():
@@ -66,7 +66,7 @@ def mainloop(config, output, freq, keyframes, initial=None, profile="tri"):
         logger.dump()
 
     t = 0
-    timer = Timer()
+    timer = Timer(rate=30)
 
     recv_bytes, _ = ssock.recvfrom(BUFSIZE)
     sarr = acl.split_received_msg(recv_bytes, function=int)

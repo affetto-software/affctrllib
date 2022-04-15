@@ -57,7 +57,7 @@ def mainloop(config, output, freq, period):
         print(f"To finish process, type Ctrl-C.")
 
     ssock = acom.create_sensory_socket()
-    astate = AffState(freq=freq)
+    astate = AffState(freq=100)
     logger = Logger(output)
     logger.set_labels(LABELS)
 
