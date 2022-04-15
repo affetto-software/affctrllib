@@ -35,7 +35,7 @@ def report_statistics(received_time_series):
 def mainloop(config, output, freq, period):
     acom = AffComm(config)
     print(acom)
-    if period == 0:
+    if freq == 0:
         print(f"To finish process, type Ctrl-C.")
 
     ssock = acom.create_sensory_socket()
