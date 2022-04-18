@@ -86,18 +86,18 @@ class Socket(object):
         try:
             socket_type = self._socket.type
         except AttributeError:
-            socket_type = sock.SOCK_DGRAM
-        socket_type_name = ""
+            socket_type = None
+        socket_type_append = ""
         if socket_type == sock.SOCK_DGRAM:
-            socket_type_name = "UDP"
+            socket_type_append = " (UDP)"
         elif socket_type == sock.SOCK_STREAM:
-            socket_type_name = "TCP"
-        else:
-            socket_type_name = str(socket_type).split(".")[1]
+            socket_type_append = " (TCP)"
+        elif isinstance(socket_type, sock.SocketKind):
+            socket_type_append = f' ({str(socket_type).split(".")[1]})'
         try:
-            return f"{socket_type_name}: {self.host}:{str(self.port)}"
+            return f"{self.host}:{str(self.port)}" + socket_type_append
         except AttributeError:
-            return f"{socket_type_name}: No address is provided"
+            return f"No address is provided" + socket_type_append
 
     @property
     def family(self) -> str:

@@ -214,17 +214,35 @@ class TestSocket:
         "host,port",
         [
             ("localhost", 1010),
-            # ("192.168.2.22", 2020),
-            # ("192.168.3.33", 3030),
+            ("192.168.2.22", 2020),
+            ("192.168.3.33", 3030),
         ],
     )
     def test_str(self, host: str, port: int) -> None:
         s = Socket((host, port))
-        assert str(s) == f"UDP: {host}:{str(port)}"
+        assert str(s) == f"{host}:{str(port)}"
+
+    @pytest.mark.parametrize(
+        "host,port",
+        [
+            ("localhost", 1010),
+            ("192.168.2.22", 2020),
+            ("192.168.3.33", 3030),
+        ],
+    )
+    def test_str_after_create(self, host: str, port: int) -> None:
+        s = Socket((host, port))
+        s.create()
+        assert str(s) == f"{host}:{str(port)} (UDP)"
 
     def test_str_no_address(self) -> None:
         s = Socket()
-        assert str(s) == f"UDP: No address is provided"
+        assert str(s) == f"No address is provided"
+
+    def test_str_no_address_after_create(self) -> None:
+        s = Socket()
+        s.create()
+        assert str(s) == f"No address is provided (UDP)"
 
     @pytest.mark.parametrize("host", ["localhost", "192.168.11.4", "192.168.11.5"])
     def test_host_setter(self, host: str) -> None:
