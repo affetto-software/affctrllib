@@ -3,7 +3,7 @@ from typing import Any
 
 import numpy as np
 
-from .affcomm import reshape_array_for_unzip
+from .affcomm import unzip_array_as_ndarray
 from .affetto import Affetto
 from .filter import Filter
 
@@ -14,7 +14,7 @@ class AffState(Affetto):
     _freq: float
     _filter_list: list[Filter | None]
     _raw_data: list[float] | list[int] | np.ndarray
-    _reshaped_data: np.ndarray
+    _data_ndarray: np.ndarray
     _filtered_data: list[np.ndarray]
     _q_prev: np.ndarray
     _dq: np.ndarray
@@ -87,15 +87,15 @@ class AffState(Affetto):
 
     @property
     def raw_q(self) -> np.ndarray:
-        return self._reshaped_data[0]
+        return self._data_ndarray[0]
 
     @property
     def raw_pa(self) -> np.ndarray:
-        return self._reshaped_data[1]
+        return self._data_ndarray[1]
 
     @property
     def raw_pb(self) -> np.ndarray:
-        return self._reshaped_data[2]
+        return self._data_ndarray[2]
 
     @property
     def q(self) -> np.ndarray:
@@ -115,11 +115,11 @@ class AffState(Affetto):
 
     def update(self, raw_data: list[float] | list[int] | np.ndarray) -> None:
         self._raw_data = raw_data
-        self._reshaped_data = reshape_array_for_unzip(self._raw_data, ncol=3)
+        self._data_ndarray = unzip_array_as_ndarray(self._raw_data, ncol=3)
         # Process input signal filtering.
         self._filtered_data = [
             f.update(d) if f is not None else d
-            for f, d in zip(self._filter_list, self._reshaped_data)
+            for f, d in zip(self._filter_list, self._data_ndarray)
         ]
         # Calculate time derivative of q.
         try:

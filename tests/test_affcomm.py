@@ -7,9 +7,9 @@ from affctrllib.affcomm import (
     AffComm,
     convert_array_to_bytes,
     convert_array_to_string,
-    reshape_array_for_unzip,
     split_received_msg,
     unzip_array,
+    unzip_array_as_ndarray,
     zip_arrays,
 )
 from numpy.testing import assert_array_equal
@@ -172,8 +172,8 @@ def test_convert_array_to_bytes(arr, expected_bytes) -> None:
         (np.arange(9), np.arange(9).reshape(3, 3).T),
     ],
 )
-def test_reshape_array_for_unzip(arr, expected) -> None:
-    ret = reshape_array_for_unzip(arr)
+def test_unzip_array_as_ndarray(arr, expected) -> None:
+    ret = unzip_array_as_ndarray(arr)
     assert_array_equal(ret, expected)
 
 
@@ -184,9 +184,9 @@ def test_reshape_array_for_unzip(arr, expected) -> None:
         (range(10), np.array([[0, 3, 6, 9], [1, 4, 7, 0], [2, 5, 8, 0]])),
     ],
 )
-def test_reshape_array_for_unzip_not_divisible(arr, _) -> None:
+def test_unzip_array_as_ndarray_not_divisible(arr, _) -> None:
     with pytest.raises(ValueError) as excinfo:
-        _ = reshape_array_for_unzip(arr)
+        _ = unzip_array_as_ndarray(arr)
     assert "cannot reshape array of size" in str(excinfo.value)
 
 
@@ -197,8 +197,8 @@ def test_reshape_array_for_unzip_not_divisible(arr, _) -> None:
         (range(8), 2, np.array([[0, 2, 4, 6], [1, 3, 5, 7]])),
     ],
 )
-def test_reshape_array_for_unzip_specify_ncol(arr, ncol, expected) -> None:
-    ret = reshape_array_for_unzip(list(arr), ncol=ncol)
+def test_unzip_array_as_ndarray_specify_ncol(arr, ncol, expected) -> None:
+    ret = unzip_array_as_ndarray(list(arr), ncol=ncol)
     assert_array_equal(ret, expected)
 
 
@@ -209,8 +209,8 @@ def test_reshape_array_for_unzip_specify_ncol(arr, ncol, expected) -> None:
         (np.array(range(10)), 2, np.array([[0, 2, 4, 6, 8], [1, 3, 5, 7, 9]])),
     ],
 )
-def test_reshape_array_for_unzip_ndarray(arr, ncol, expected) -> None:
-    ret = reshape_array_for_unzip(arr, ncol=ncol)
+def test_unzip_array_as_ndarray_ndarray(arr, ncol, expected) -> None:
+    ret = unzip_array_as_ndarray(arr, ncol=ncol)
     assert_array_equal(ret, expected)
 
 

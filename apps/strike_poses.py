@@ -70,7 +70,7 @@ def mainloop(config, output, freq, keyframes, initial=None, profile="tri"):
 
     recv_bytes, _ = ssock.recvfrom(BUFSIZE)
     sarr = acl.split_received_msg(recv_bytes, function=int)
-    data = acl.reshape_array_for_unzip(sarr, ncol=3)
+    data = acl.unzip_array_as_ndarray(sarr, ncol=3)
     q0 = data[0]  # type: ignore
     time = 5
     timer.start()
@@ -94,7 +94,7 @@ def mainloop(config, output, freq, keyframes, initial=None, profile="tri"):
     for cnt, kf in enumerate(keyframes):
         recv_bytes, _ = ssock.recvfrom(BUFSIZE)
         sarr = acl.split_received_msg(recv_bytes, function=int)
-        data = acl.reshape_array_for_unzip(sarr, ncol=3)
+        data = acl.unzip_array_as_ndarray(sarr, ncol=3)
         q0 = data[0]  # type: ignore
         time = kf[0]
         t0 = t

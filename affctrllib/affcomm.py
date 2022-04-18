@@ -52,7 +52,7 @@ def convert_array_to_bytes(
     return convert_array_to_string(array, sep, f_spec, precision).encode()
 
 
-def reshape_array_for_unzip(
+def unzip_array_as_ndarray(
     array: list[float] | list[int] | np.ndarray, ncol: int = 3
 ) -> np.ndarray:
     ret = np.array(array).reshape((int(len(array) / ncol), ncol))
@@ -60,15 +60,15 @@ def reshape_array_for_unzip(
 
 
 def unzip_array(array: list[float] | list[int] | np.ndarray, n: int = 3) -> list[Any]:
-    reshaped = reshape_array_for_unzip(array, ncol=n)
-    return reshaped.tolist()
+    arr = unzip_array_as_ndarray(array, ncol=n)
+    return arr.tolist()
 
 
 def zip_arrays_as_ndarray(
     *arrays: list[float] | list[int] | np.ndarray,
 ) -> np.ndarray:
-    stacked = np.stack(arrays, axis=1)
-    return stacked.flatten()
+    arr = np.stack(arrays, axis=1)
+    return arr.flatten()
 
 
 @overload
