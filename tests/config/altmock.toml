@@ -1,7 +1,129 @@
 [affetto]
-[affetto.mock]
-dof = 15
+name = "affetto_with_neck"
 
+[[affetto.chain.link]]
+name = "torso"
+jointtype = "fixed"
+frame = [
+  [ 1, 0, 0, 0 ],
+  [ 0, 1, 0, 0 ],
+  [ 0, 0, 1, 0 ],
+]
+
+[[affetto.chain.link]]
+name = "waist"
+jointtype = "revolute"
+range = []
+frame = []
+parent =  "torso"
+
+[[affetto.chain.link]]
+name = "neck"
+jointtype = "revolute"
+range = []
+frame = []
+parent =  "waist"
+
+[[affetto.chain.link]]
+name = "left shoulder elevation"
+jointtype = "revolute"
+range = []
+frame = []
+parent = "waist"
+
+[[affetto.chain.link]]
+name = "left shoulder abduction"
+jointtype = "revolute"
+range = []
+frame = []
+parent = "left shoulder elevation"
+
+[[affetto.chain.link]]
+name = "left shoulder flextion"
+jointtype = "revolute"
+range = []
+frame = []
+parent = "left shoulder abduction"
+
+[[affetto.chain.link]]
+name = "left elbow rotation"
+jointtype = "revolute"
+range = []
+frame = []
+parent = "left shoulder flextion"
+
+[[affetto.chain.link]]
+name = "left elbow flextion"
+jointtype = "revolute"
+range = []
+frame = []
+parent = "left elbow rotation"
+
+[[affetto.chain.link]]
+name = "left wrist supination"
+jointtype = "revolute"
+range = []
+frame = []
+parent = "left elbow flextion"
+
+[[affetto.chain.link]]
+name = "left hand"
+jointtype = "fixed"
+range = []
+frame = []
+parent = "left wrist supination"
+
+[[affetto.chain.link]]
+name = "right shoulder elevation"
+jointtype = "revolute"
+range = []
+frame = []
+parent = "waist"
+
+[[affetto.chain.link]]
+name = "right shoulder abduction"
+jointtype = "revolute"
+range = []
+frame = []
+parent = "right shoulder elevation"
+
+[[affetto.chain.link]]
+name = "right shoulder flextion"
+jointtype = "revolute"
+range = []
+frame = []
+parent = "right shoulder abduction"
+
+[[affetto.chain.link]]
+name = "right elbow rotation"
+jointtype = "revolute"
+range = []
+frame = []
+parent = "right shoulder flextion"
+
+[[affetto.chain.link]]
+name = "right elbow flextion"
+jointtype = "revolute"
+range = []
+frame = []
+parent = "right elbow rotation"
+
+[[affetto.chain.link]]
+name = "right wrist supination"
+jointtype = "revolute"
+range = []
+frame = []
+parent = "right elbow flextion"
+
+[[affetto.chain.link]]
+name = "right hand"
+jointtype = "fixed"
+range = []
+frame = []
+parent = "right wrist supination"
+
+
+[affetto.mock]
 [affetto.mock.remote]
 host = "192.168.11.1"
 port = 70000

@@ -1,46 +1,45 @@
-import socket
 from pathlib import Path
+from typing import Any
 
 import numpy as np
-import tomli
 
-from ._sockutil import SockAddr
+from ._sockutil import Socket
 from .affcomm import convert_array_to_string
+from .affetto import Affetto
 from .timer import Timer
 
 
-class AffettoMock(object):
+class AffMock(Affetto):
     config_path: Path | None
     dof: int
-    remote_addr: SockAddr
-    local_addr: SockAddr
+    command_socket: Socket  # local
+    sensory_socket: Socket  # remote
     sensor_rate: float
 
     def __init__(self, config_path: Path | str | None = None) -> None:
-        self.config_path = None
-        if config_path is not None:
-            self.config_path = Path(config_path)
-        self.remote_addr = SockAddr()
-        self.local_addr = SockAddr()
-
-        if self.config_path:
-            self.load_config(self.config_path)
+        self.command_socket = Socket()
+        self.sensory_socket = Socket()
+        super().__init__(config_path)
 
     def __repr__(self) -> str:
         return "%s.%s()" % (self.__class__.__module__, self.__class__.__qualname__)
 
-    def load_config(self, config_path: str | Path) -> None:
-        self.config_path = Path(config_path)
-        with open(self.config_path, "rb") as f:
-            config_dict = tomli.load(f)
-        mock_config_dict = config_dict["affetto"]["mock"]
-        self.dof = mock_config_dict["dof"]
-        self.remote_addr.set(mock_config_dict["remote"])
-        self.local_addr.set(mock_config_dict["local"])
-        self.sensor_rate = mock_config_dict["sensor"]["rate"]
+    def load_config(self, config: dict[str, Any]):
+        super().load_config(config)
+        self.load_mock_config()
+
+    def load_mock_config(self, config: dict[str, Any] | None = None) -> None:
+        if config is not None:
+            c = config
+        else:
+            c = self.config
+        self.mock_config = c["mock"]
+        self.command_socket.addr = self.mock_config["local"]
+        self.sensory_socket.addr = self.mock_config["remote"]
+        self.sensor_rate = self.mock_config["sensor"]["rate"]
 
     def start(self, rate=None, quiet=False) -> None:
-        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.sensory_socket.create()
         if rate is None:
             rate = self.sensor_rate
         timer = Timer(rate=rate)
@@ -49,9 +48,9 @@ class AffettoMock(object):
             t = timer.elapsed_time()
             sarr = list(np.random.randint(0, 256, size=self.dof * 3))
             msg = convert_array_to_string(sarr)
-            sz = sock.sendto(msg.encode(), self.remote_addr.addr)
+            sz = self.sensory_socket.sendto(msg.encode())
             if not quiet:
                 print(
-                    f"t={t:.2f}: sent <{msg}> to {self.remote_addr.addr} ({sz} bytes)"
+                    f"t={t:.2f}: sent <{msg}> to {self.sensory_socket.addr} ({sz} bytes)"
                 )
             timer.block()

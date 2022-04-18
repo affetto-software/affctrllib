@@ -31,9 +31,9 @@ from .affctrl import AffCtrl
 
 __all__.extend(["AffCtrl"])
 
-from .affmock import AffettoMock
+from .affmock import AffMock
 
-__all__.extend(["AffettoMock"])
+__all__.extend(["AffMock"])
 
 from .affstate import AffState
 
