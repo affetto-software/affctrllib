@@ -26,10 +26,10 @@ class TestFilter:
         filt = Filter(n)
         assert filt.n_points == n
 
-    def test_update_int(self) -> None:
-        input_signal = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+    def test_update_float(self) -> None:
+        input_signal = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0]
         n_points = 3
-        expected = [1 / 3, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+        expected = [1 / 3, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0]
         filt = Filter(n_points)
         output_signal = []
         for x in input_signal:

@@ -1,14 +1,14 @@
 from collections import deque
 from typing import Generic, TypeVar
 
-import numpy.typing as npt
+import numpy as np
 
-T = TypeVar("T", int, float, npt.ArrayLike)
+T = TypeVar("T", float, np.ndarray)
 
 
 class Filter(Generic[T]):
     _n_points: int
-    _x_buffer: deque[T]
+    _x_buffer: deque[T | float]
     _y_prev: T
 
     def __init__(self, n_points: int | None = None) -> None:
@@ -16,7 +16,9 @@ class Filter(Generic[T]):
         if n_points is not None:
             self.n_points = n_points
 
-        self._x_buffer = deque([0.0] * self.n_points)  # type: ignore
+        self._x_buffer = deque()
+        for _ in range(self.n_points):
+            self._x_buffer.append(0.0)
         self._y_prev = 0.0
 
     @property
@@ -32,5 +34,5 @@ class Filter(Generic[T]):
 
     def update(self, x: T) -> T:
         self._x_buffer.append(x)
-        self._y_prev = self._y_prev + x - self._x_buffer.popleft()  # type: ignore
-        return self._y_prev / self.n_points  # type: ignore
+        self._y_prev = self._y_prev + x - self._x_buffer.popleft()
+        return self._y_prev / self.n_points
