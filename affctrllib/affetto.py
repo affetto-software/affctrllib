@@ -1,6 +1,7 @@
 import warnings
+from abc import abstractmethod
 from pathlib import Path
-from typing import Any
+from typing import Any, final
 
 import tomli
 
@@ -42,6 +43,7 @@ class Affetto(object):
     def config_path(self) -> Path:
         return self._config_path
 
+    @final
     def load_config_path(self, config_path: str | Path):
         self._config_path = Path(config_path)
         with open(self._config_path, "rb") as f:
@@ -52,15 +54,18 @@ class Affetto(object):
     def config(self) -> dict[str, Any]:
         return self._config
 
+    @abstractmethod
     def load_config(self, config_dict: dict[str, Any]) -> None:
-        self._config = config_dict["affetto"]
-        self.load_name(self.config)
-        self.load_chain(self.config)
+        affetto_config = config_dict["affetto"]
+        self._config = affetto_config
+        self.load_name(affetto_config)
+        self.load_chain(affetto_config)
 
     @property
     def name(self) -> str:
         return self._name
 
+    @abstractmethod
     def load_name(self, config: dict[str, Any]) -> None:
         try:
             self._name = config["name"]
@@ -71,6 +76,7 @@ class Affetto(object):
     def chain(self) -> Chain:
         return self._chain
 
+    @abstractmethod
     def load_chain(self, config: dict[str, Any]):
         try:
             self._chain = Chain(config["chain"])
