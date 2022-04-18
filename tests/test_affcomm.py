@@ -296,7 +296,6 @@ def test_zip_arrays_ndarray(arr1, arr2, expected) -> None:
 class TestAffComm:
     def test_init(self) -> None:
         acom = AffComm()
-        assert acom.config_path is None
         assert isinstance(acom.remote_addr, SockAddr)
         assert isinstance(acom.local_addr, SockAddr)
 
@@ -342,7 +341,7 @@ AffComm configuration:
 
     def test_load_config_default(self) -> None:
         acom = AffComm()
-        acom.load_config(os.path.join(CONFIG_DIR_PATH, "default.toml"))
+        acom.load_config_path(os.path.join(CONFIG_DIR_PATH, "default.toml"))
 
         # remote_addr
         assert acom.remote_addr.host == "192.168.1.1"
@@ -354,7 +353,7 @@ AffComm configuration:
 
     def test_load_config_alternative(self) -> None:
         acom = AffComm()
-        acom.load_config(os.path.join(CONFIG_DIR_PATH, "alternative.toml"))
+        acom.load_config_path(os.path.join(CONFIG_DIR_PATH, "alternative.toml"))
 
         # remote_addr
         assert acom.remote_addr.host == "192.168.5.10"

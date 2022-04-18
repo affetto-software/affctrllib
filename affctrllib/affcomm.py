@@ -7,6 +7,7 @@ import numpy.typing as npt
 import tomli
 
 from ._sockutil import SockAddr
+from .affetto import Affetto
 
 R = TypeVar("R")
 
@@ -97,41 +98,45 @@ def zip_arrays(
     return list(zip_arrays_as_ndarray(*arrays))  # type: ignore
 
 
-class AffComm(object):
-    config_path: Path | None
+class AffComm(Affetto):
+    comm_config: dict[str, Any]
     remote_addr: SockAddr
     local_addr: SockAddr
     sensory_socket: socket.socket
     command_socket: socket.socket
 
     def __init__(self, config_path: Path | str | None = None) -> None:
-        self.config_path = None
-        if config_path is not None:
-            self.config_path = Path(config_path)
         self.remote_addr = SockAddr()
         self.local_addr = SockAddr()
-
-        if self.config_path:
-            self.load_config(self.config_path)
+        super().__init__(config_path)
 
     def __repr__(self) -> str:
         return "%s.%s()" % (self.__class__.__module__, self.__class__.__qualname__)
 
     def __str__(self) -> str:
+        try:
+            cpath = self._config_path
+        except AttributeError:
+            cpath = None
         return f"""\
 AffComm configuration:
-  Config file: {str(self.config_path)}
+  Config file: {str(cpath)}
    Receive at: {str(self.local_addr)}
       Send to: {str(self.remote_addr)}
 """
 
-    def load_config(self, config_path: str | Path) -> None:
-        self.config_path = Path(config_path)
-        with open(self.config_path, "rb") as f:
-            config_dict = tomli.load(f)
-        comm_config_dict = config_dict["affetto"]["comm"]
-        self.remote_addr.set(comm_config_dict["remote"])
-        self.local_addr.set(comm_config_dict["local"])
+    def load_config(self, config: dict[str, Any]) -> None:
+        super().load_config(config)
+        self.load_comm_config()
+
+    def load_comm_config(self, config: dict[str, Any] | None = None) -> None:
+        if config is not None:
+            c = config
+        else:
+            c = self.config
+        self.comm_config = c["comm"]
+        self.remote_addr.set(self.comm_config["remote"])
+        self.local_addr.set(self.comm_config["local"])
 
     def create_sensory_socket(
         self, addr: tuple[str, int] | None = None
