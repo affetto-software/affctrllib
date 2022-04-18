@@ -123,7 +123,7 @@ class TestAffState:
         state._filter_list = [None, None, None]
         # update 1
         data = [0, 1] * 3
-        expected = [0, 100]
+        expected = [0, 0]
         state.update(data)
         assert_array_equal(state.dq, expected)
         # update 1

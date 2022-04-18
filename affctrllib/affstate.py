@@ -2,7 +2,6 @@ from pathlib import Path
 from typing import Any
 
 import numpy as np
-import numpy.typing as npt
 
 from .affcomm import reshape_array_for_unzip
 from .affetto import Affetto
@@ -14,11 +13,11 @@ class AffState(Affetto):
     _dt: float
     _freq: float
     _filter_list: list[Filter | None]
-    _raw_data: list[int]
-    _reshaped_data: npt.ArrayLike
-    _filtered_data: list[npt.ArrayLike]
-    _q_prev: npt.ArrayLike
-    _dq: npt.ArrayLike
+    _raw_data: list[float] | list[int] | np.ndarray
+    _reshaped_data: np.ndarray
+    _filtered_data: list[np.ndarray]
+    _q_prev: np.ndarray
+    _dq: np.ndarray
 
     def __init__(
         self,
@@ -40,7 +39,6 @@ class AffState(Affetto):
             raise ValueError("Require DT or FREQ")
 
         self._filter_list = [Filter(), Filter(), Filter()]
-        self._q_prev = 0
 
     def load_config(self, config: dict[str, Any]) -> None:
         super().load_config(config)
@@ -84,47 +82,48 @@ class AffState(Affetto):
         self.set_freq(freq)
 
     @property
-    def raw_data(self) -> list[int]:
+    def raw_data(self) -> list[float] | list[int] | np.ndarray:
         return self._raw_data
 
     @property
-    def raw_q(self) -> npt.ArrayLike:
-        return self._reshaped_data[0]  # type: ignore
+    def raw_q(self) -> np.ndarray:
+        return self._reshaped_data[0]
 
     @property
-    def raw_pa(self) -> npt.ArrayLike:
-        return self._reshaped_data[1]  # type: ignore
+    def raw_pa(self) -> np.ndarray:
+        return self._reshaped_data[1]
 
     @property
-    def raw_pb(self) -> npt.ArrayLike:
-        return self._reshaped_data[2]  # type: ignore
+    def raw_pb(self) -> np.ndarray:
+        return self._reshaped_data[2]
 
     @property
-    def q(self) -> npt.ArrayLike:
+    def q(self) -> np.ndarray:
         return self._filtered_data[0]
 
     @property
-    def pa(self) -> npt.ArrayLike:
+    def pa(self) -> np.ndarray:
         return self._filtered_data[1]
 
     @property
-    def pb(self) -> npt.ArrayLike:
+    def pb(self) -> np.ndarray:
         return self._filtered_data[2]
 
     @property
-    def dq(self) -> npt.ArrayLike:
+    def dq(self) -> np.ndarray:
         return self._dq
 
-    def update(self, raw_data: list[int]) -> None:
+    def update(self, raw_data: list[float] | list[int] | np.ndarray) -> None:
         self._raw_data = raw_data
         self._reshaped_data = reshape_array_for_unzip(self._raw_data, ncol=3)
         # Process input signal filtering.
-        self._filtered_data = [  # type: ignore
-            self._filter_list[i].update(self._reshaped_data[i])  # type: ignore
-            if isinstance(self._filter_list[i], Filter)
-            else self._reshaped_data[i]  # type: ignore
-            for i in range(3)
+        self._filtered_data = [
+            f.update(d) if f is not None else d
+            for f, d in zip(self._filter_list, self._reshaped_data)
         ]
         # Calculate time derivative of q.
-        self._dq = (self.q - self._q_prev) / self.dt  # type: ignore
+        try:
+            self._dq = (self.q - self._q_prev) / self.dt  # type: ignore
+        except AttributeError:
+            self._dq = np.zeros(shape=self.q.shape)
         self._q_prev = self.q
