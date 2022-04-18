@@ -4,7 +4,7 @@ from typing import Any, Callable, TypeVar, overload
 
 import numpy as np
 
-from ._sockutil import SockAddr
+from ._sockutil import Socket
 from .affetto import Affetto
 
 R = TypeVar("R")
@@ -94,14 +94,12 @@ def zip_arrays(
 
 class AffComm(Affetto):
     comm_config: dict[str, Any]
-    remote_addr: SockAddr
-    local_addr: SockAddr
-    sensory_socket: socket.socket
-    command_socket: socket.socket
+    sensory_socket: Socket
+    command_socket: Socket
 
     def __init__(self, config_path: Path | str | None = None) -> None:
-        self.remote_addr = SockAddr()
-        self.local_addr = SockAddr()
+        self.sensory_socket = Socket()
+        self.command_socket = Socket()
         super().__init__(config_path)
 
     def __repr__(self) -> str:
@@ -115,8 +113,8 @@ class AffComm(Affetto):
         return f"""\
 AffComm configuration:
   Config file: {str(cpath)}
-   Receive at: {str(self.local_addr)}
-      Send to: {str(self.remote_addr)}
+   Receive at: {str(self.sensory_socket)}
+      Send to: {str(self.command_socket)}
 """
 
     def load_config(self, config: dict[str, Any]) -> None:
@@ -129,19 +127,20 @@ AffComm configuration:
         else:
             c = self.config
         self.comm_config = c["comm"]
-        self.remote_addr.set(self.comm_config["remote"])
-        self.local_addr.set(self.comm_config["local"])
+        self.sensory_socket.addr = self.comm_config["local"]
+        self.command_socket.addr = self.comm_config["remote"]
 
     def create_sensory_socket(
         self, addr: tuple[str, int] | None = None
     ) -> socket.socket:
-        self.sensory_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        if addr is not None:
-            self.sensory_socket.bind(addr)
-        else:
-            self.sensory_socket.bind(self.local_addr.addr)
-        return self.sensory_socket
+        s = self.sensory_socket.create()
+        self.sensory_socket.bind(addr)
+        return s
 
     def create_command_socket(self) -> socket.socket:
-        self.command_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        return self.command_socket
+        return self.command_socket.create()
+
+    def create_sockets(
+        self, sensory_addr: tuple[str, int] | None = None
+    ) -> tuple[socket.socket, socket.socket]:
+        return (self.create_sensory_socket(sensory_addr), self.create_command_socket())

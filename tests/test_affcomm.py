@@ -2,7 +2,7 @@ import os
 
 import numpy as np
 import pytest
-from affctrllib._sockutil import SockAddr
+from affctrllib._sockutil import Socket
 from affctrllib.affcomm import (
     AffComm,
     convert_array_to_bytes,
@@ -296,8 +296,8 @@ def test_zip_arrays_ndarray(arr1, arr2, expected) -> None:
 class TestAffComm:
     def test_init(self) -> None:
         acom = AffComm()
-        assert isinstance(acom.remote_addr, SockAddr)
-        assert isinstance(acom.local_addr, SockAddr)
+        assert isinstance(acom.sensory_socket, Socket)
+        assert isinstance(acom.command_socket, Socket)
 
     @pytest.mark.parametrize(
         "config_file,remote_host",
@@ -308,7 +308,7 @@ class TestAffComm:
     )
     def test_init_load_config(self, config_file, remote_host) -> None:
         acom = AffComm(os.path.join(CONFIG_DIR_PATH, config_file))
-        assert acom.remote_addr.host == remote_host
+        assert acom.command_socket.host == remote_host
 
     def test_repr(self) -> None:
         acom = AffComm()
@@ -321,8 +321,8 @@ class TestAffComm:
             == """\
 AffComm configuration:
   Config file: None
-   Receive at: None:None
-      Send to: None:None
+   Receive at: No address is provided
+      Send to: No address is provided
 """
         )
 
@@ -343,22 +343,22 @@ AffComm configuration:
         acom = AffComm()
         acom.load_config_path(os.path.join(CONFIG_DIR_PATH, "default.toml"))
 
-        # remote_addr
-        assert acom.remote_addr.host == "192.168.1.1"
-        assert acom.remote_addr.port == 50010
+        # sensory_socket
+        assert acom.sensory_socket.host == "localhost"
+        assert acom.sensory_socket.port == 50000
 
-        # local_addr
-        assert acom.local_addr.host == "localhost"
-        assert acom.local_addr.port == 50000
+        # command_socket
+        assert acom.command_socket.host == "192.168.1.1"
+        assert acom.command_socket.port == 50010
 
     def test_load_config_alternative(self) -> None:
         acom = AffComm()
         acom.load_config_path(os.path.join(CONFIG_DIR_PATH, "alternative.toml"))
 
-        # remote_addr
-        assert acom.remote_addr.host == "192.168.5.10"
-        assert acom.remote_addr.port == 60010
+        # sensory_socket
+        assert acom.sensory_socket.host == "192.168.5.123"
+        assert acom.sensory_socket.port == 60000
 
-        # local_addr
-        assert acom.local_addr.host == "192.168.5.123"
-        assert acom.local_addr.port == 60000
+        # command_socket
+        assert acom.command_socket.host == "192.168.5.10"
+        assert acom.command_socket.port == 60010
