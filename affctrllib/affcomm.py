@@ -3,8 +3,6 @@ from pathlib import Path
 from typing import Any, Callable, TypeVar, overload
 
 import numpy as np
-import numpy.typing as npt
-import tomli
 
 from ._sockutil import SockAddr
 from .affetto import Affetto
@@ -14,7 +12,7 @@ R = TypeVar("R")
 
 def split_received_msg(
     data: bytes | str,
-    function: Callable[[str], R] = int,
+    function: Callable[[str], R] = float,
     sep: str | None = None,
     strip: bool = True,
 ) -> list[R]:
@@ -31,13 +29,12 @@ def split_received_msg(
 
 
 def convert_array_to_string(
-    array: list[float] | list[int] | npt.ArrayLike,
+    array: list[float] | list[int] | np.ndarray,
     sep: str = " ",
     f_spec: str = ".0f",
     precision: int | None = None,
 ) -> str:
     """Returns a string of array joined with specific format."""
-    array = array if isinstance(array, list) else np.array(array)
     if precision is None:
         formatted_array = [f"{x:{f_spec}}" for x in array]
     else:
@@ -46,7 +43,7 @@ def convert_array_to_string(
 
 
 def convert_array_to_bytes(
-    array: list[float] | list[int] | npt.ArrayLike,
+    array: list[float] | list[int] | np.ndarray,
     sep: str = " ",
     f_spec: str = ".0f",
     precision: int | None = None,
@@ -56,23 +53,20 @@ def convert_array_to_bytes(
 
 
 def reshape_array_for_unzip(
-    array: list[float] | list[int] | npt.ArrayLike, ncol: int = 3
-) -> npt.ArrayLike:
-    array = array if isinstance(array, list) else np.array(array)
+    array: list[float] | list[int] | np.ndarray, ncol: int = 3
+) -> np.ndarray:
     ret = np.array(array).reshape((int(len(array) / ncol), ncol))
     return ret.T
 
 
-def unzip_array(
-    array: list[float] | list[int] | npt.ArrayLike, n: int = 3
-) -> list[Any]:
+def unzip_array(array: list[float] | list[int] | np.ndarray, n: int = 3) -> list[Any]:
     reshaped = reshape_array_for_unzip(array, ncol=n)
-    return reshaped.tolist()  # type: ignore
+    return reshaped.tolist()
 
 
 def zip_arrays_as_ndarray(
-    *arrays: list[float] | list[int] | npt.ArrayLike,
-) -> npt.ArrayLike:
+    *arrays: list[float] | list[int] | np.ndarray,
+) -> np.ndarray:
     stacked = np.stack(arrays, axis=1)
     return stacked.flatten()
 
@@ -88,14 +82,14 @@ def zip_arrays(*arrays: list[int]) -> list[int]:
 
 
 @overload
-def zip_arrays(*arrays: npt.ArrayLike) -> list[float]:
+def zip_arrays(*arrays: np.ndarray) -> list[float]:
     ...
 
 
 def zip_arrays(
-    *arrays: list[float] | list[int] | npt.ArrayLike,
+    *arrays: list[float] | list[int] | np.ndarray,
 ) -> list[float] | list[int]:
-    return list(zip_arrays_as_ndarray(*arrays))  # type: ignore
+    return list(zip_arrays_as_ndarray(*arrays))
 
 
 class AffComm(Affetto):
