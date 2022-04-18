@@ -1,11 +1,16 @@
+from pathlib import Path
+from typing import Any
+
 import numpy as np
 import numpy.typing as npt
 
-from affctrllib.affcomm import reshape_array_for_unzip
-from affctrllib.filter import Filter
+from .affcomm import reshape_array_for_unzip
+from .affetto import Affetto
+from .filter import Filter
 
 
-class AffState(object):
+class AffState(Affetto):
+    state_config: dict[str, Any]
     _dt: float
     _freq: float
     _filter_list: list[Filter | None]
@@ -15,19 +20,44 @@ class AffState(object):
     _q_prev: npt.ArrayLike
     _dq: npt.ArrayLike
 
-    def __init__(self, dt: float | None = None, freq: float | None = None) -> None:
-        if dt is not None and freq is not None:
+    def __init__(
+        self,
+        config: str | Path | None = None,
+        dt: float | None = None,
+        freq: float | None = None,
+    ) -> None:
+        super().__init__(config)
+
+        if all(v is not None for v in (dt, freq)):
             raise ValueError("Unable to specify DT and FREQ simultaneously")
 
         if dt is not None:
             self.dt = dt
         elif freq is not None:
             self.freq = freq
-        else:
+
+        if not hasattr(self, "_dt") and not hasattr(self, "_freq"):
             raise ValueError("Require DT or FREQ")
 
         self._filter_list = [Filter(), Filter(), Filter()]
         self._q_prev = 0
+
+    def load_config(self, config: dict[str, Any]) -> None:
+        super().load_config(config)
+        self.load_state_config()
+
+    def load_state_config(self, config: dict[str, Any] | None = None) -> None:
+        if config is not None:
+            c = config
+        else:
+            c = self.config
+        self.state_config = c["state"]
+        if all(k in self.state_config for k in ("dt", "freq")):
+            raise ValueError("Unable to specify DT and FREQ simultaneously")
+        elif "dt" in self.state_config:
+            self.dt = self.state_config["dt"]
+        elif "freq" in self.state_config:
+            self.freq = self.state_config["freq"]
 
     @property
     def dt(self) -> float:

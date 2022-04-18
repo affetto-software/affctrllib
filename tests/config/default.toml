@@ -126,6 +126,10 @@ host = "localhost"
 port = 50000
 
 
+[affetto.state]
+freq = 30
+
+
 [affetto.ctrl]
 scheme = "PID"
 

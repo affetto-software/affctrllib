@@ -133,6 +133,10 @@ host = "192.168.5.123"
 port = 60000
 
 
+[affetto.state]
+freq = 100
+
+
 [affetto.ctrl]
 scheme = "PIDF"
 

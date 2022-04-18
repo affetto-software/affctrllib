@@ -1,11 +1,15 @@
+import os
+
 import pytest
 from affctrllib.affstate import AffState
 from numpy.testing import assert_array_equal
 
+CONFIG_DIR_PATH = os.path.join(os.path.dirname(__file__), "config")
+
 
 class TestAffState:
     def test_init(self) -> None:
-        state = AffState(0.01)
+        state = AffState(dt=0.01)
         assert state.dt == 0.01
         assert state.freq == 100
 
@@ -25,7 +29,7 @@ class TestAffState:
         dt = 0.01
         freq = 100
         with pytest.raises(ValueError) as excinfo:
-            _ = AffState(dt, freq)
+            _ = AffState(dt=dt, freq=freq)
         assert "Unable to specify DT and FREQ simultaneously" in str(excinfo.value)
 
     def test_init_error_none_of_dt_freq_specified(self) -> None:
@@ -35,17 +39,31 @@ class TestAffState:
 
     @pytest.mark.parametrize("dt,freq", [(0.01, 100), (0.001, 1000), (0.02, 50)])
     def test_dt_setter(self, dt, freq):
-        state = AffState(0.01)
+        state = AffState(dt=0.01)
         state.dt = dt
         assert state.dt == dt
         assert state.freq == freq
 
     @pytest.mark.parametrize("freq,dt", [(100, 0.01), (1000, 0.001), (30, 1.0 / 30)])
     def test_freq_setter(self, dt, freq):
-        state = AffState(0.01)
+        state = AffState(dt=0.01)
         state.freq = freq
         assert state.dt == dt
         assert state.freq == freq
+
+    def test_init_config(self) -> None:
+        config = os.path.join(CONFIG_DIR_PATH, "default.toml")
+        state = AffState(config)
+        assert str(state.config_path) == config
+        assert state.dof == 13
+        assert state.freq == 30
+
+    def test_init_config_alternative(self) -> None:
+        config = os.path.join(CONFIG_DIR_PATH, "alternative.toml")
+        state = AffState(config)
+        assert str(state.config_path) == config
+        assert state.dof == 14
+        assert state.freq == 100
 
     def test_update_raw_data(self) -> None:
         state = AffState(dt=0.01)
