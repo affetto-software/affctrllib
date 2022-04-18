@@ -138,6 +138,15 @@ class TestSocket:
         assert s.socket.family == socket.AF_INET
         assert s.socket.type == socket.SOCK_DGRAM
 
+    def test_is_created_true(self) -> None:
+        s = Socket()
+        s.create()
+        assert s.is_created()
+
+    def test_is_created_false(self) -> None:
+        s = Socket()
+        assert not s.is_created()
+
     def test_socket_error(self) -> None:
         s = Socket()
         with pytest.raises(RuntimeError) as excinfo:

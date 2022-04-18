@@ -91,6 +91,12 @@ class Socket(object):
         self._socket = sock.socket(getattr(sock, self.family), socket_type)
         return self._socket
 
+    def is_created(self) -> bool:
+        if hasattr(self, "_socket"):
+            return True
+        else:
+            return False
+
     def bind(self, addr: tuple[str, int] | None = None) -> None:
         if addr is None:
             try:
