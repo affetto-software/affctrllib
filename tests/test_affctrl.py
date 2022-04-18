@@ -2,7 +2,7 @@ import os
 
 import numpy as np
 import pytest
-from affctrllib.affctrl import AffCtrl, FeedbackPID
+from affctrllib.affctrl import AffCtrl, FeedbackPID, FeedbackPIDF
 from numpy.testing import assert_array_equal
 
 CONFIG_DIR_PATH = os.path.join(os.path.dirname(__file__), "config")
@@ -137,14 +137,26 @@ class TestFeedbackPID:
 class TestAffCtrl:
     def test_init(self) -> None:
         ctrl = AffCtrl()
-        assert ctrl.config_path is None
+        assert isinstance(ctrl, AffCtrl)
 
     def test_init_config(self) -> None:
         config = os.path.join(CONFIG_DIR_PATH, "default.toml")
         ctrl = AffCtrl(config)
-        assert ctrl.config_path == config
+        assert str(ctrl.config_path) == config
+        assert ctrl.dof == 13
         assert isinstance(ctrl.feedback_scheme, FeedbackPID)
         assert_array_equal(ctrl.feedback_scheme.kP, np.array([20] * 13))
         assert_array_equal(ctrl.feedback_scheme.kD, np.array([200] * 13))
         assert_array_equal(ctrl.feedback_scheme.kI, np.array([2] * 13))
         assert_array_equal(ctrl.feedback_scheme.stiff, np.array([150] * 13))
+
+    def test_init_config_alternative(self) -> None:
+        config = os.path.join(CONFIG_DIR_PATH, "alternative.toml")
+        ctrl = AffCtrl(config)
+        assert str(ctrl.config_path) == config
+        assert ctrl.dof == 14
+        assert isinstance(ctrl.feedback_scheme, FeedbackPIDF)
+        assert_array_equal(ctrl.feedback_scheme.kP, np.array([3] * 13))
+        assert_array_equal(ctrl.feedback_scheme.kD, np.array([30] * 13))
+        assert_array_equal(ctrl.feedback_scheme.kI, np.array([0.3] * 13))
+        assert_array_equal(ctrl.feedback_scheme.stiff, np.array([180] * 13))

@@ -1,9 +1,10 @@
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Generic, TypeVar
+from typing import Any, Generic, TypeVar
 
 import numpy as np
-import tomli
+
+from .affetto import Affetto
 
 JointT = TypeVar("JointT", int, float, np.ndarray)
 
@@ -146,17 +147,12 @@ AFFCTRL_FEEDBACK_SCHEME_TO_CONFIG_KEY = {
 }
 
 
-class AffCtrl(Generic[JointT]):
-    _dof: int
-    _config_path: Path | None
+class AffCtrl(Affetto, Generic[JointT]):
+    ctrl_config: dict[str, Any]
     _feedback_scheme: Feedback
 
     def __init__(self, config_path: str | Path | None = None) -> None:
-        if config_path is not None:
-            self.load_config(config_path)
-        else:
-            self._config_path = None
-        self._dof = 13
+        super().__init__(config_path)
 
     def __repr__(self) -> str:
         return ""
@@ -165,29 +161,26 @@ class AffCtrl(Generic[JointT]):
         return ""
 
     @property
-    def config_path(self) -> str | None:
-        if self._config_path is not None:
-            return str(self._config_path)
-        else:
-            return None
-
-    @property
     def feedback_scheme(self) -> Feedback:
         return self._feedback_scheme
 
-    def load_config(self, config_path: str | Path) -> None:
-        self._config_path = Path(config_path)
-        with open(self._config_path, "rb") as f:
-            config_dict = tomli.load(f)
+    def load_config(self, config: dict[str, Any]) -> None:
+        super().load_config(config)
+        self.load_ctrl_config()
 
-        ctrl_dict = config_dict["affetto"]["ctrl"]
-        scheme = ctrl_dict["scheme"]
+    def load_ctrl_config(self, config: dict[str, Any] | None = None) -> None:
+        if config is not None:
+            c = config
+        else:
+            c = self.config
+        self.ctrl_config = c["ctrl"]
+        scheme = self.ctrl_config["scheme"]
         scheme_class = AFFCTRL_ACCEPTABLE_FEEDBACK_SCHEME_NAMES[scheme]
         scheme_key = AFFCTRL_FEEDBACK_SCHEME_TO_CONFIG_KEY[scheme_class.__name__]
-        kP = np.array(ctrl_dict[scheme_key]["kP"])
-        kD = np.array(ctrl_dict[scheme_key]["kD"])
-        kI = np.array(ctrl_dict[scheme_key]["kI"])
-        stiff = np.array(ctrl_dict[scheme_key]["stiff"])
+        kP = np.array(self.ctrl_config[scheme_key]["kP"])
+        kD = np.array(self.ctrl_config[scheme_key]["kD"])
+        kI = np.array(self.ctrl_config[scheme_key]["kI"])
+        stiff = np.array(self.ctrl_config[scheme_key]["stiff"])
         self._feedback_scheme = scheme_class(kP=kP, kD=kD, kI=kI, stiff=stiff)
 
     def update(
