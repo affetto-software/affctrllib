@@ -1,0 +1,31 @@
+[chain]
+[[chain.link]]
+name = "link#00"
+jointtype = "fixed"
+frame = [
+  [ 0, 0, -1, 0 ],
+  [ 0, 1,  0, 0 ],
+  [ 1, 0,  0, 0 ],
+]
+
+[[chain.link]]
+name = "link#01"
+jointtype = "revolute"
+range = [ -180, 180 ]
+frame = [
+  [ 1, 0, 1, 0.15 ],
+  [ 0, 1, 0, 0 ],
+  [ 0, 0, 1, 0 ],
+]
+parent = "link#00"
+
+[[chain.link]]
+name = "link#02"
+jointtype = "revolute"
+range = [ -180, 180 ]
+frame = [
+  [ 1, 0, 1, 0.4 ],
+  [ 0, 1, 0, 0 ],
+  [ 0, 0, 1, 0 ],
+]
+parent = "link#01"

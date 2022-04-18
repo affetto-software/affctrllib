@@ -1,8 +1,9 @@
 [affetto]
+name = "affetto"
+
 [[affetto.chain.link]]
 name = "torso"
 jointtype = "fixed"
-range = []
 frame = [
   [ 1, 0, 0, 0 ],
   [ 0, 1, 0, 0 ],
