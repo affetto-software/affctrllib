@@ -144,3 +144,40 @@ AffComm configuration:
         self, sensory_addr: tuple[str, int] | None = None
     ) -> tuple[socket.socket, socket.socket]:
         return (self.create_sensory_socket(sensory_addr), self.create_command_socket())
+
+    def close(self) -> None:
+        if self.sensory_socket.is_created():
+            self.sensory_socket.close()
+        if self.command_socket.is_created():
+            self.command_socket.close()
+
+    def receive(self, bufsize=1024) -> bytes:
+        return self.sensory_socket.recvfrom(bufsize)
+
+    def receive_as_list(
+        self,
+        bufsize=1024,
+        function: Callable[[str], R] = float,
+    ) -> list[R]:
+        return split_received_msg(
+            self.sensory_socket.recvfrom(bufsize), function=function
+        )
+
+    def receive_as_2darray(
+        self,
+        bufsize=1024,
+    ) -> np.ndarray:
+        sarr = split_received_msg(self.sensory_socket.recvfrom(bufsize), function=float)
+        return unzip_array_as_ndarray(sarr, ncol=3)
+
+    def send(self, send_bytes: bytes, addr: tuple[str, int] | None = None) -> int:
+        return self.command_socket.sendto(send_bytes, addr)
+
+    def send_commands(
+        self,
+        *arrays: np.ndarray,
+        addr: tuple[str, int] | None = None,
+    ) -> int:
+        return self.command_socket.sendto(
+            convert_array_to_bytes(zip_arrays_as_ndarray(*arrays)), addr
+        )
