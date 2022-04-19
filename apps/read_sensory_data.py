@@ -31,10 +31,10 @@ def report_statistics(received_time_series):
     print(f"   Std deviation of time diff: {std:.6f}[s] ({std*1000:.3f}[ms])")
 
 
-def mainloop(config, output, freq, period):
+def mainloop(config, output, period):
     acom = AffComm(config)
     print(acom)
-    if freq == 0:
+    if period == 0:
         print(f"To finish process, type Ctrl-C.")
 
     acom.create_sensory_socket()
@@ -50,7 +50,7 @@ def mainloop(config, output, freq, period):
         logger.dump()
         report_statistics(received_time_series)
 
-    timer = Timer(rate=freq if freq > 0 else None)
+    timer = Timer()
     timer.start()
     t = 0
     try:
@@ -60,8 +60,6 @@ def mainloop(config, output, freq, period):
             logger.store_data([t] + data)
             received_time_series.append(t)
             print(f"\rt = {t:.2f}", end="")
-            if freq > 0:
-                timer.block()
 
     except KeyboardInterrupt:
         print(f"\nFinishing process by KeyboardInterrupt.")
@@ -75,9 +73,6 @@ def parse():
     )
     parser.add_argument("-o", "--output", default=None, help="output filename")
     parser.add_argument(
-        "-H", "--hz", dest="freq", default=0, type=float, help="frequency to read data"
-    )
-    parser.add_argument(
         "-T", "--period", default=0, type=float, help="time [s] until program ends"
     )
     return parser.parse_args()
@@ -85,7 +80,7 @@ def parse():
 
 def main():
     args = parse()
-    mainloop(args.config, args.output, args.freq, args.period)
+    mainloop(args.config, args.output, args.period)
 
 
 if __name__ == "__main__":
