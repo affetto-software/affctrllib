@@ -3,13 +3,13 @@
 import argparse
 import os
 
-from affctrllib.affmock import AffettoMock
+from affctrllib.affmock import AffMock
 
 DEFAULT_CONFIG_PATH = os.path.join(os.path.dirname(__file__), "config.toml")
 
 
 def mainloop(config, freq, quiet):
-    mock = AffettoMock(config)
+    mock = AffMock(config)
     if freq is not None:
         mock.sensor_rate = freq
     mock.start(freq, quiet)
