@@ -41,9 +41,9 @@ sin_pb = Sinusoidal(amplitude=300, period=2.5, base=300, phase=0.5 * np.pi)
 
 def generate_pseudo_sensory_data_string(t: float, dof: int = 13) -> str:
     phi = 0.5 * np.pi / (dof - 1) * np.arange(dof)
-    q = sin_q(t, phi)
-    pa = sin_pa(t, phi)
-    pb = sin_pb(t, phi)
+    q = sin_q(t, phi) + np.random.normal(0.0, 2, size=(dof,))
+    pa = sin_pa(t, phi) + np.random.normal(0.0, 12, size=(dof,))
+    pb = sin_pb(t, phi) + np.random.normal(0.0, 12, size=(dof,))
     A = np.vstack((q, pa, pb))
     return " ".join([f"{x[0]:.0f} {x[1]:.1f} {x[2]:.1f}" for x in A.T])
 
