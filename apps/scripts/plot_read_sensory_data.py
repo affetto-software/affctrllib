@@ -29,7 +29,7 @@ def savefig(fig, **sfparam):
         if not ext.startswith("."):
             ext = f".{ext}"
         fname = path.with_suffix(ext)
-        fig.savefig(str(fname))
+        fig.savefig(str(fname), bbox_inches="tight")
 
 
 def plot_pressure(data, joints, **sfparam):
@@ -39,10 +39,9 @@ def plot_pressure(data, joints, **sfparam):
         ax.plot(data.t, getattr(data, f"pb{i}"), label=f"pb[{i}]")
     ax.grid(axis="y")
     ax.legend(title="Measured pressure")
-    ax.autoscale(tight=True)
     pparam = {
         "xlabel": "time [s]",
-        "ylabel": "pressure [0-255]",
+        "ylabel": "pressure [kPa]",
     }
     ax.set(**pparam)
     if sfparam.get("filename", None) is None:
@@ -56,10 +55,9 @@ def plot_q(data, joints, **sfparam):
         ax.plot(data.t, getattr(data, f"q{i}"), label=f"q[{i}]")
     ax.grid(axis="y")
     ax.legend(title="Joint angle")
-    ax.autoscale(tight=True)
     pparam = {
         "xlabel": "time [s]",
-        "ylabel": "position [0-255]",
+        "ylabel": "position [0-100]",
     }
     ax.set(**pparam)
     if sfparam.get("filename", None) is None:

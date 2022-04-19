@@ -29,7 +29,7 @@ def savefig(fig, **sfparam):
         if not ext.startswith("."):
             ext = f".{ext}"
         fname = path.with_suffix(ext)
-        fig.savefig(str(fname))
+        fig.savefig(str(fname), bbox_inches="tight")
 
 
 def plot(data, i, **sfparam):
@@ -38,7 +38,6 @@ def plot(data, i, **sfparam):
     ax.plot(data.i, getattr(data, f"out{i}"), label=f"out{i}")
     ax.grid(axis="y")
     ax.legend()
-    ax.autoscale(tight=True)
     pparam = {
         "xlabel": "samples",
     }

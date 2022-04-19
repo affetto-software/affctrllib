@@ -29,7 +29,7 @@ def savefig(fig, **sfparam):
         if not ext.startswith("."):
             ext = f".{ext}"
         fname = path.with_suffix(ext)
-        fig.savefig(str(fname))
+        fig.savefig(str(fname), bbox_inches="tight")
 
 
 def plot_q(data, **sfparam):
@@ -38,7 +38,6 @@ def plot_q(data, **sfparam):
         ax.plot(data.t, getattr(data, f"q{i}"), label=f"q[{i}]")
     ax.grid(axis="y")
     ax.legend()
-    ax.autoscale(tight=True)
     pparam = {
         "xlabel": "samples",
         "ylabel": "q",
@@ -55,7 +54,6 @@ def plot_dq(data, **sfparam):
         ax.plot(data.t, getattr(data, f"dq{i}"), label=f"dq[{i}]")
     ax.grid(axis="y")
     ax.legend()
-    ax.autoscale(tight=True)
     pparam = {
         "xlabel": "samples",
         "ylabel": "dq",
@@ -72,7 +70,6 @@ def plot_ddq(data, **sfparam):
         ax.plot(data.t, getattr(data, f"ddq{i}"), label=f"ddq[{i}]")
     ax.grid(axis="y")
     ax.legend()
-    ax.autoscale(tight=True)
     pparam = {
         "xlabel": "samples",
         "ylabel": "ddq",
