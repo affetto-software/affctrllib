@@ -3,6 +3,7 @@ from pathlib import Path
 from typing import Any, Generic, TypeVar
 
 import numpy as np
+from attr import Attribute
 
 from .affetto import Affetto
 
@@ -149,6 +150,8 @@ AFFCTRL_FEEDBACK_SCHEME_TO_CONFIG_KEY = {
 
 class AffCtrl(Affetto, Generic[JointT]):
     ctrl_config: dict[str, Any]
+    _input_range: tuple[float, float]
+    _scale_gain: float
     _feedback_scheme: Feedback
 
     def __init__(self, config_path: str | Path | None = None) -> None:
@@ -174,6 +177,10 @@ class AffCtrl(Affetto, Generic[JointT]):
         else:
             c = self.config
         self.ctrl_config = c["ctrl"]
+        try:
+            self.input_range = tuple(self.ctrl_config["input_range"])
+        except KeyError:
+            pass
         scheme = self.ctrl_config["scheme"]
         scheme_class = AFFCTRL_ACCEPTABLE_FEEDBACK_SCHEME_NAMES[scheme]
         scheme_key = AFFCTRL_FEEDBACK_SCHEME_TO_CONFIG_KEY[scheme_class.__name__]
@@ -182,6 +189,33 @@ class AffCtrl(Affetto, Generic[JointT]):
         kI = np.array(self.ctrl_config[scheme_key]["kI"])
         stiff = np.array(self.ctrl_config[scheme_key]["stiff"])
         self._feedback_scheme = scheme_class(kP=kP, kD=kD, kI=kI, stiff=stiff)
+
+    @property
+    def input_range(self) -> tuple[float, float]:
+        return self._input_range
+
+    def set_input_range(self, input_range: tuple[float, float]) -> None:
+        self._input_range = input_range
+        self._scale_gain = 255.0 / (self._input_range[1] - self._input_range[0])
+
+    @input_range.setter
+    def input_range(self, input_range: tuple[float, float]) -> None:
+        self.set_input_range(input_range)
+
+    @property
+    def scale_gain(self) -> float:
+        return self._scale_gain
+
+    def scale(self, u1: JointT, u2: JointT) -> tuple[JointT, JointT]:
+        try:
+            c1 = np.clip(u1, self._input_range[0], self._input_range[1])
+            c2 = np.clip(u2, self._input_range[0], self._input_range[1])
+            return (
+                self._scale_gain * (c1 - self._input_range[0]),
+                self._scale_gain * (c2 - self._input_range[0]),
+            )
+        except AttributeError:
+            return (u1, u2)
 
     def update(
         self,
@@ -193,4 +227,5 @@ class AffCtrl(Affetto, Generic[JointT]):
         qdes: JointT,
         dqdes: JointT,
     ) -> tuple[JointT, JointT]:
-        return self.feedback_scheme.update(t, q, dq, pa, pb, qdes, dqdes)
+        u1, u2 = self.feedback_scheme.update(t, q, dq, pa, pb, qdes, dqdes)
+        return self.scale(u1, u2)

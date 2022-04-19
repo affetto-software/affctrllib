@@ -144,6 +144,7 @@ class TestAffCtrl:
         ctrl = AffCtrl(config)
         assert str(ctrl.config_path) == config
         assert ctrl.dof == 13
+        assert ctrl.scale_gain == 255 / 600
         assert isinstance(ctrl.feedback_scheme, FeedbackPID)
         assert_array_equal(ctrl.feedback_scheme.kP, np.array([20] * 13))
         assert_array_equal(ctrl.feedback_scheme.kD, np.array([200] * 13))
@@ -155,8 +156,22 @@ class TestAffCtrl:
         ctrl = AffCtrl(config)
         assert str(ctrl.config_path) == config
         assert ctrl.dof == 14
+        assert ctrl.scale_gain == 255 / 400
         assert isinstance(ctrl.feedback_scheme, FeedbackPIDF)
         assert_array_equal(ctrl.feedback_scheme.kP, np.array([3] * 13))
         assert_array_equal(ctrl.feedback_scheme.kD, np.array([30] * 13))
         assert_array_equal(ctrl.feedback_scheme.kI, np.array([0.3] * 13))
         assert_array_equal(ctrl.feedback_scheme.stiff, np.array([180] * 13))
+
+    @pytest.mark.parametrize(
+        "input_range,expected",
+        [
+            ((0, 600), 255 / 600),
+            ((100, 500), 255 / 400),
+        ],
+    )
+    def test_set_input_range(self, input_range, expected) -> None:
+        ctrl = AffCtrl()
+        ctrl.set_input_range(input_range)
+        assert ctrl.input_range == input_range
+        assert ctrl.scale_gain == expected
