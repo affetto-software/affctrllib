@@ -132,6 +132,7 @@ freq = 30
 
 [affetto.ctrl]
 scheme = "PID"
+input_range = [0, 600]
 
 [affetto.ctrl.pid]
 kP = [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20]

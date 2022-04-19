@@ -139,6 +139,7 @@ freq = 100
 
 [affetto.ctrl]
 scheme = "PIDF"
+input_range = [100, 500]
 
 [affetto.ctrl.pid]
 kP = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
