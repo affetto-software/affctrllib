@@ -70,6 +70,23 @@ def plot_q(data, joints, **sfparam):
     savefig(fig, **sfparam)
 
 
+def plot_dq(data, joints, **sfparam):
+    fig, ax = plt.subplots()
+    for i in joints:
+        ax.plot(data.t, getattr(data, f"dq{i}"), label=f"dq[{i}]")
+    ax.grid(axis="y")
+    ax.legend(title="Joint angle velocity")
+    ax.autoscale(tight=True)
+    pparam = {
+        "xlabel": "time [s]",
+        "ylabel": "velocity [/s]",
+    }
+    ax.set(**pparam)
+    if sfparam.get("filename", None) is None:
+        sfparam["filename"] = "dq"
+    savefig(fig, **sfparam)
+
+
 def parse():
     parser = argparse.ArgumentParser(
         description="Plot script for send_sinusoidal_command.py"
@@ -124,6 +141,7 @@ def main():
     if not (args.angle or args.pressure):
         plot_pressure(data, args.joint, **sfparam)
         plot_q(data, args.joint, **sfparam)
+        plot_dq(data, args.joint, **sfparam)
     if not args.noshow:
         plt.show()
 

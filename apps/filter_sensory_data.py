@@ -22,7 +22,7 @@ LABELS.extend([f"pb{i}" for i in range(DOF)])
 BUFSIZE = 1024
 
 
-def report_statistics(received_time_series):
+def report_statistics(received_time_series, freq):
     if len(received_time_series) == 0:
         return
 
@@ -32,6 +32,7 @@ def report_statistics(received_time_series):
     var = np.var(time_delta)
     std = np.std(time_delta)
     print(f"Statistics:")
+    print(f"            Assumed frequency: {freq}")
     print(f"  Number of collected samples: {len(received_time_series)}")
     print(f"     Mean of time differences: {mean:.5f}[s] ({mean*1000:.2f}[ms])")
     print(f"            Mean of frequency: {1.0 / mean:.2f}[Hz]")
@@ -41,13 +42,13 @@ def report_statistics(received_time_series):
 
 def logging(logger, t, astate):
     logger.store_data([t])
-    logger.extend_data(astate.raw_q)  # type: ignore
-    logger.extend_data(astate.raw_pa)  # type: ignore
-    logger.extend_data(astate.raw_pb)  # type: ignore
-    logger.extend_data(astate.q)  # type: ignore
-    logger.extend_data(astate.dq)  # type: ignore
-    logger.extend_data(astate.pa)  # type: ignore
-    logger.extend_data(astate.pb)  # type: ignore
+    logger.extend_data(astate.raw_q)
+    logger.extend_data(astate.raw_pa)
+    logger.extend_data(astate.raw_pb)
+    logger.extend_data(astate.q)
+    logger.extend_data(astate.dq)
+    logger.extend_data(astate.pa)
+    logger.extend_data(astate.pb)
 
 
 def mainloop(config, output, freq, period):
@@ -56,34 +57,33 @@ def mainloop(config, output, freq, period):
     if period == 0:
         print(f"To finish process, type Ctrl-C.")
 
-    ssock = acom.create_sensory_socket()
-    astate = AffState(freq=100)
+    acom.create_sensory_socket()
+    astate = AffState(config)
+    if freq > 0:
+        astate.freq = freq
     logger = Logger(output)
     logger.set_labels(LABELS)
 
     received_time_series = []
 
     def cleanup():
-        ssock.close()
+        acom.close()
         print()
         print(f"Saving data in <{str(output)}>...")
         logger.dump()
-        report_statistics(received_time_series)
+        report_statistics(received_time_series, astate.freq)
 
-    timer = Timer(rate=freq if freq > 0 else None)
+    timer = Timer(rate=astate.freq)
     timer.start()
     t = 0
     try:
         while period == 0 or t < period:
             t = timer.elapsed_time()
-            recv_bytes, _ = ssock.recvfrom(BUFSIZE)
-            sarr = acl.split_received_msg(recv_bytes, function=int)
-            astate.update(sarr)
+            data = acom.receive_as_list()
+            astate.update(data)
             logging(logger, t, astate)
             received_time_series.append(t)
             print(f"\rt = {t:.2f}", end="")
-            if freq > 0:
-                timer.block()
 
     except KeyboardInterrupt:
         print(f"\nFinishing process by KeyboardInterrupt.")
