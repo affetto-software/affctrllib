@@ -4,14 +4,52 @@ from typing import Any
 import numpy as np
 
 from ._sockutil import Socket
-from .affcomm import convert_array_to_string
 from .affetto import Affetto
 from .timer import Timer
 
 
+class Sinusoidal:
+    _amplitude: float
+    _period: float
+    _base: float
+    _phase: float
+    _omega: float
+
+    def __init__(
+        self, amplitude: float, period: float, base: float, phase: float = 0.0
+    ):
+        self._amplitude = amplitude
+        self._period = period
+        self._base = base
+        self._phase = phase
+        self._omega = 2.0 * np.pi / self._period
+
+    def __call__(self, t: float, phi: np.ndarray) -> np.ndarray:
+        return (
+            self._amplitude * np.sin(t * self._omega - self._phase - phi) + self._base
+        )
+
+    @property
+    def omega(self) -> float:
+        return self._omega
+
+
+sin_q = Sinusoidal(amplitude=50, period=5, base=50)
+sin_pa = Sinusoidal(amplitude=300, period=2.5, base=300, phase=0.25 * np.pi)
+sin_pb = Sinusoidal(amplitude=300, period=2.5, base=300, phase=0.5 * np.pi)
+
+
+def generate_pseudo_sensory_data_string(t: float, dof: int = 13) -> str:
+    phi = 0.5 * np.pi / (dof - 1) * np.arange(dof)
+    q = sin_q(t, phi)
+    pa = sin_pa(t, phi)
+    pb = sin_pb(t, phi)
+    A = np.vstack((q, pa, pb))
+    return " ".join([f"{x[0]:.0f} {x[1]:.1f} {x[2]:.1f}" for x in A.T])
+
+
 class AffMock(Affetto):
     config_path: Path | None
-    dof: int
     command_socket: Socket  # local
     sensory_socket: Socket  # remote
     sensor_rate: float
@@ -46,8 +84,7 @@ class AffMock(Affetto):
         timer.start()
         while True:
             t = timer.elapsed_time()
-            sarr = list(np.random.randint(0, 256, size=self.dof * 3))
-            msg = convert_array_to_string(sarr)
+            msg = generate_pseudo_sensory_data_string(t, self.dof)
             sz = self.sensory_socket.sendto(msg.encode())
             if not quiet:
                 print(
