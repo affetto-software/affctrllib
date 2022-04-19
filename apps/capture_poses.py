@@ -33,14 +33,15 @@ def make_toml_string(frames):
     string += f'profile = "{profile}"\n'
     string += f"\n"
     if len(frames) > 0:
+        q = frames[0][1]
         string += f"[keyframe.initial]\n"
-        string += f"q = {frames[0][1]}\n"
+        string += f"q = {q}\n"
         string += f"\n"
     for frame in frames:
-        t = round(frame[0], 1)
+        T = frame[0]
         q = frame[1]
         string += f"[[keyframe.frames]]\n"
-        string += f"t = {t}\n"
+        string += f"T = {T}\n"
         string += f"q = {q}\n"
         string += f"\n"
     return string
@@ -106,7 +107,8 @@ def mainloop(config, output):
             c = input("> ")
             t = timer.elapsed_time()
             sarr = acl.split_received_msg(recv_bytes.get())
-            q = acl.unzip_array(sarr)[0]
+            q = list(map(int, acl.unzip_array(sarr)[0]))
+            T = round(t - t0, 1)
             if c == "q":
                 print("Quitting...")
                 save(frames, output)
@@ -115,15 +117,15 @@ def mainloop(config, output):
                 print("Quitting without saving...")
                 break
             elif c == "c":
-                frames.append((t - t0, q))
-                print(f"T = {t - t0}, q={q}")
+                frames.append((T, q))
+                print(f"T = {T}, q={q}")
                 print("Successfully captured!")
                 t0 = t
             elif c == "s":
                 save(frames, output)
                 print("Successfully saved!")
             else:
-                print(f"T = {t - t0}, q={q}")
+                print(f"T = {T}, q={q}")
     except KeyboardInterrupt:
         print("Caught KeyboardInterrupt")
         cleanup()
