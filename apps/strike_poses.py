@@ -2,9 +2,7 @@
 
 import argparse
 import os
-from pathlib import Path
 
-import affctrllib as acl
 import numpy as np
 import tomli
 from affctrllib import PTP, AffComm, AffCtrl, AffState, Logger, Timer
@@ -27,9 +25,6 @@ LABELS.extend([f"dqdes{i}" for i in range(DOF)])
 LABELS.extend([f"ca{i}" for i in range(DOF)])
 LABELS.extend([f"cb{i}" for i in range(DOF)])
 BUFSIZE = 1024
-
-# Default values
-DEFAULT_FREQ = 30
 
 
 def logging(logger, t, astate, qdes, dqdes, ca, cb):
@@ -56,6 +51,8 @@ def mainloop(config, output, freq, keyframes, initial=None, profile="tri"):
     logger.set_labels(LABELS)
 
     astate = AffState(config)
+    if freq > 0:
+        astate.freq = freq
     astate._filter_list[0] = None
     actrl = AffCtrl(config)
     timer = Timer(rate=astate.freq)
@@ -67,7 +64,7 @@ def mainloop(config, output, freq, keyframes, initial=None, profile="tri"):
 
     def moveto(t0, T, qF, profile, msg=None):
         if msg:
-            print(msg)
+            print(msg, flush=True)
         t = t0
         q0 = acom.receive_as_2darray()[0]
         ptp = PTP(q0, qF, T, t0, profile)
@@ -85,21 +82,23 @@ def mainloop(config, output, freq, keyframes, initial=None, profile="tri"):
             acom.send_commands(ca, cb)
             logging(logger, t, astate, qdes, dqdes, ca, cb)
             print(f"\rt = {t:.2f}", end="")
-            timer.block()
+            # timer.block()
 
-    # Moving to initial pose...
-    t0 = -5
-    time = 5
-    msg = f"Moving to initial pose (in {time} sec) ..."
-    moveto(t0, time, initial, profile, msg)
+    if initial:
+        t0 = -5
+        time = 5
+        msg = f"\nMoving to initial pose (in {time} sec.) ..."
+        moveto(t0, time, np.array(initial), profile, msg)
     # cleanup()
     # return
 
+    t0 = 0
     for cnt, kf in enumerate(keyframes):
-        t0 = timer.elapsed_time()
         time = kf[0]
-        msg = f"Moving to keyframe {cnt} (in {time} sec) ..."
+        msg = f"\nMoving to keyframe {cnt} (in {time} sec.) ..."
         moveto(t0, time, np.array(kf[1]), profile, msg)
+        # t0 = t0 + time
+        t0 = t0 + timer.elapsed_time()
     cleanup()
 
 
@@ -107,13 +106,12 @@ def load_keyframe(keyframe):
     with open(keyframe, "rb") as f:
         d = tomli.load(f)
     k = d["keyframe"]
-    freq = k["freq"]
     profile = k["profile"]
     q0 = k["initial"]["q"]
     frames = []
     for kf in k["frames"]:
-        frames.append((kf["t"], kf["q"]))
-    return freq, profile, q0, frames
+        frames.append((kf["T"], kf["q"]))
+    return profile, q0, frames
 
 
 def parse():
@@ -121,20 +119,36 @@ def parse():
     parser.add_argument(
         "-c", "--config", default=DEFAULT_CONFIG_PATH, help="config file"
     )
-    parser.add_argument("-k", "--keyframe", default=None, help="keyframe file")
+    parser.add_argument("-k", "--keyframe", required=True, help="keyframe file")
     parser.add_argument("-o", "--output", default=None, help="output filename")
+    parser.add_argument(
+        "-H",
+        "--hz",
+        dest="freq",
+        default=0,
+        type=float,
+        help="frequency to send and receive data",
+    )
+    parser.add_argument(
+        "-p",
+        "--profile",
+        default=None,
+        help="Point to Point interpolation profile",
+    )
     return parser.parse_args()
 
 
 def main():
     args = parse()
-    freq, profile, q0, keyframes = load_keyframe(args.keyframe)
+    profile, q0, keyframes = load_keyframe(args.keyframe)
+    if args.profile:
+        profile = args.profile
     mainloop(
         args.config,
         args.output,
-        freq,
+        args.freq,
         keyframes,
-        np.array(q0),
+        q0,
         profile,
     )
 
