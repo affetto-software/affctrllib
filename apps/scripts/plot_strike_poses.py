@@ -41,7 +41,7 @@ def plot_command(data, joints, **sfparam):
     ax.legend(title="Command")
     pparam = {
         "xlabel": "time [s]",
-        "ylabel": "command [0-100]",
+        "ylabel": "command [0-255]",
     }
     ax.set(**pparam)
     if sfparam.get("filename", None) is None:
