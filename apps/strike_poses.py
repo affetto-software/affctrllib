@@ -34,13 +34,13 @@ DEFAULT_FREQ = 30
 
 def logging(logger, t, astate, qdes, dqdes, ca, cb):
     logger.store_data([t])
-    logger.extend_data(astate.raw_q)  # type: ignore
-    logger.extend_data(astate.raw_pa)  # type: ignore
-    logger.extend_data(astate.raw_pb)  # type: ignore
-    logger.extend_data(astate.q)  # type: ignore
-    logger.extend_data(astate.dq)  # type: ignore
-    logger.extend_data(astate.pa)  # type: ignore
-    logger.extend_data(astate.pb)  # type: ignore
+    logger.extend_data(astate.raw_q)
+    logger.extend_data(astate.raw_pa)
+    logger.extend_data(astate.raw_pb)
+    logger.extend_data(astate.q)
+    logger.extend_data(astate.dq)
+    logger.extend_data(astate.pa)
+    logger.extend_data(astate.pb)
     logger.extend_data(qdes)
     logger.extend_data(dqdes)
     logger.extend_data(ca)
@@ -51,72 +51,55 @@ def mainloop(config, output, freq, keyframes, initial=None, profile="tri"):
     acom = AffComm(config)
     print(acom)
 
-    ssock = acom.create_sensory_socket()
-    csock = acom.create_command_socket()
+    acom.create_sockets()
     logger = Logger(output)
     logger.set_labels(LABELS)
 
-    astate = AffState(freq=30)
+    astate = AffState(config)
+    astate._filter_list[0] = None
     actrl = AffCtrl(config)
+    timer = Timer(rate=astate.freq)
 
     def cleanup():
-        csock.close()
-        ssock.close()
+        acom.close()
         print(f"\nSaving data in <{str(output)}>...")
         logger.dump()
 
-    t = 0
-    timer = Timer(rate=30)
-
-    recv_bytes, _ = ssock.recvfrom(BUFSIZE)
-    sarr = acl.split_received_msg(recv_bytes, function=int)
-    data = acl.unzip_array_as_ndarray(sarr, ncol=3)
-    q0 = data[0]  # type: ignore
-    time = 5
-    timer.start()
-    ptp = PTP(q0, initial, time, 0, profile)
-    print(f"Moving to initial pose...")
-    while t < time:
-        t = timer.elapsed_time()
-        recv_bytes, _ = ssock.recvfrom(BUFSIZE)
-        sarr = acl.split_received_msg(recv_bytes, function=int)
-        astate.update(sarr)
-        qdes = ptp.q(t)
-        dqdes = ptp.dq(t)
-        ca, cb = actrl.update(t, astate.q, astate.dq, astate.pa, astate.pb, qdes, dqdes)
-        carr = acl.zip_arrays(ca, cb)
-        send_bytes = acl.convert_array_to_bytes(carr)
-        csock.sendto(send_bytes, acom.remote_addr.addr)
-        timer.block()
-
-    t = 0
-    timer.start()
-    for cnt, kf in enumerate(keyframes):
-        recv_bytes, _ = ssock.recvfrom(BUFSIZE)
-        sarr = acl.split_received_msg(recv_bytes, function=int)
-        data = acl.unzip_array_as_ndarray(sarr, ncol=3)
-        q0 = data[0]  # type: ignore
-        time = kf[0]
-        t0 = t
-        qF = np.array(kf[1])
-        ptp = PTP(q0, qF, time - t0, t0, profile)
-        print(f"Moving to keyframe {cnt}...")
-        while t < time:
-            t = timer.elapsed_time()
-            recv_bytes, _ = ssock.recvfrom(BUFSIZE)
-            sarr = acl.split_received_msg(recv_bytes, function=int)
+    def moveto(t0, T, qF, profile, msg=None):
+        if msg:
+            print(msg)
+        t = t0
+        q0 = acom.receive_as_2darray()[0]
+        ptp = PTP(q0, qF, T, t0, profile)
+        timer.start()
+        while t < t0 + T:
+            t = t0 + timer.elapsed_time()
+            sarr = acom.receive_as_list()
             astate.update(sarr)
             qdes = ptp.q(t)
-            dqdes = ptp.dq(t)
+            # dqdes = ptp.dq(t)
+            dqdes = np.zeros(shape=(actrl.dof,))
             ca, cb = actrl.update(
                 t, astate.q, astate.dq, astate.pa, astate.pb, qdes, dqdes
             )
-            carr = acl.zip_arrays(ca, cb)
-            send_bytes = acl.convert_array_to_bytes(carr)
-            csock.sendto(send_bytes, acom.remote_addr.addr)
+            acom.send_commands(ca, cb)
             logging(logger, t, astate, qdes, dqdes, ca, cb)
             print(f"\rt = {t:.2f}", end="")
             timer.block()
+
+    # Moving to initial pose...
+    t0 = -5
+    time = 5
+    msg = f"Moving to initial pose (in {time} sec) ..."
+    moveto(t0, time, initial, profile, msg)
+    # cleanup()
+    # return
+
+    for cnt, kf in enumerate(keyframes):
+        t0 = timer.elapsed_time()
+        time = kf[0]
+        msg = f"Moving to keyframe {cnt} (in {time} sec) ..."
+        moveto(t0, time, np.array(kf[1]), profile, msg)
     cleanup()
 
 
@@ -145,13 +128,13 @@ def parse():
 
 def main():
     args = parse()
-    freq, profile, initial, keyframes = load_keyframe(args.keyframe)
+    freq, profile, q0, keyframes = load_keyframe(args.keyframe)
     mainloop(
         args.config,
         args.output,
         freq,
         keyframes,
-        initial,
+        np.array(q0),
         profile,
     )
 

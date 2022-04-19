@@ -5,9 +5,7 @@ import copy
 import os
 from typing import Any
 
-import affctrllib as acl
 import numpy as np
-import numpy.typing as npt
 import tomli
 from affctrllib import AffComm, Logger, Timer
 
@@ -16,9 +14,8 @@ DOF = 13
 LABELS = ["t"]
 for i in range(DOF):
     LABELS.extend([f"q{i}", f"pa{i}", f"pb{i}"])
-for i in range(DOF):
-    LABELS.extend([f"ca{i}", f"cb{i}"])
-BUFSIZE = 1024
+LABELS.extend([f"ca{i}" for i in range(DOF)])
+LABELS.extend([f"cb{i}" for i in range(DOF)])
 
 
 # Default values
@@ -150,7 +147,7 @@ PROFILE_TO_FUNC_MAP = {
 
 def generate_commands(
     t, default_params, specific_params_list
-) -> tuple[npt.ArrayLike, npt.ArrayLike]:
+) -> tuple[np.ndarray, np.ndarray]:
     # Set default values.
     val = PROFILE_TO_FUNC_MAP[default_params["profile"]](t, **default_params["params"])
     ca = np.full((DOF,), val)
@@ -175,14 +172,12 @@ def mainloop(config, output, freq, time, default_params, specific_params_list):
     acom = AffComm(config)
     print(acom)
 
-    ssock = acom.create_sensory_socket()
-    csock = acom.create_command_socket()
+    acom.create_sockets()
     logger = Logger(output)
     logger.set_labels(LABELS)
 
     def cleanup():
-        csock.close()
-        ssock.close()
+        acom.close()
         print(f"\nSaving data in <{str(output)}>...")
         logger.dump()
 
@@ -194,19 +189,16 @@ def mainloop(config, output, freq, time, default_params, specific_params_list):
         t = timer.elapsed_time()
 
         # Receive sensory data.
-        recv_bytes, _ = ssock.recvfrom(BUFSIZE)
-        sarr = acl.split_received_msg(recv_bytes, function=int)
+        sdata = acom.receive_as_list()
 
         # Generate pressure values to send.
         ca, cb = generate_commands(t, default_params, specific_params_list)
 
         # Send commands.
-        carr = acl.zip_arrays(ca, cb)
-        send_bytes = acl.convert_array_to_bytes(carr)
-        csock.sendto(send_bytes, acom.remote_addr.addr)
+        acom.send_commands(ca, cb)
 
         # Logging.
-        logger.store_data([t] + sarr + carr)  # type: ignore
+        logger.store_data([t] + sdata + list(ca) + list(cb))
         print(f"\rt = {t:.2f}", end="")
 
         # Block process for a certain period.

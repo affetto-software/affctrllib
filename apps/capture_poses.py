@@ -95,11 +95,11 @@ def mainloop(config, output):
     def cleanup():
         event.clear()
         th.join()
-        ssock.close()
+        acom.close()
 
     frames = []
     timer = Timer()
-    t = 0
+    t0 = 0
     timer.start()
     try:
         while True:
@@ -115,14 +115,15 @@ def mainloop(config, output):
                 print("Quitting without saving...")
                 break
             elif c == "c":
-                frames.append((t, q))
-                print(f"q={q}")
+                frames.append((t - t0, q))
+                print(f"T = {t - t0}, q={q}")
                 print("Successfully captured!")
+                t0 = t
             elif c == "s":
                 save(frames, output)
                 print("Successfully saved!")
             else:
-                print(f"q={q}")
+                print(f"T = {t - t0}, q={q}")
     except KeyboardInterrupt:
         print("Caught KeyboardInterrupt")
         cleanup()

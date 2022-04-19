@@ -3,7 +3,6 @@
 import argparse
 import os
 
-import affctrllib as acl
 import numpy as np
 from affctrllib import AffComm, Logger, Timer
 
@@ -38,14 +37,14 @@ def mainloop(config, output, freq, period):
     if freq == 0:
         print(f"To finish process, type Ctrl-C.")
 
-    ssock = acom.create_sensory_socket()
+    acom.create_sensory_socket()
     logger = Logger(output)
     logger.set_labels(LABELS)
 
     received_time_series = []
 
     def cleanup():
-        ssock.close()
+        acom.close()
         print()
         print(f"Saving data in <{str(output)}>...")
         logger.dump()
@@ -57,9 +56,8 @@ def mainloop(config, output, freq, period):
     try:
         while period == 0 or t < period:
             t = timer.elapsed_time()
-            recv_bytes, _ = ssock.recvfrom(BUFSIZE)
-            sarr = acl.split_received_msg(recv_bytes, function=int)
-            logger.store_data([t] + sarr)  # type: ignore
+            data = acom.receive_as_list()
+            logger.store_data([t] + data)
             received_time_series.append(t)
             print(f"\rt = {t:.2f}", end="")
             if freq > 0:
