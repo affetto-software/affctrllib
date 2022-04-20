@@ -76,8 +76,8 @@ def mainloop(config, output, freq, keyframes, initial=None, profile="tri"):
             sarr = acom.receive_as_list()
             astate.update(sarr)
             qdes = ptp.q(t)
-            # dqdes = ptp.dq(t)
-            dqdes = np.zeros(shape=(actrl.dof,))
+            dqdes = ptp.dq(t)
+            # dqdes = np.zeros(shape=(actrl.dof,))
             ca, cb = actrl.update(
                 t, astate.q, astate.dq, astate.pa, astate.pb, qdes, dqdes
             )
