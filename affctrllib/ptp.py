@@ -1,6 +1,8 @@
 from abc import ABC, abstractmethod
 from typing import Generic, TypeVar
 
+import numpy as np
+
 JointT = TypeVar("JointT")
 
 
@@ -11,6 +13,10 @@ class Profile(ABC):
         self._T = T
         self._t0 = t0
         self._tF = t0 + T
+        try:
+            self._zeros = np.zeros(shape=q0.shape)
+        except AttributeError:
+            self._zeros = 0
 
     @abstractmethod
     def q(self, t):
@@ -42,13 +48,13 @@ class TriangularVelocityProfile(Profile):
 
     def dq(self, t):
         if t < self._t0:
-            return 0
+            return self._zeros
         elif t <= self._midpoint:
             return self._ascend_dq_coeff * (t - self._t0)
         elif t <= self._tF:
             return self._descend_dq_coeff * (t - self._tF)
         else:
-            return 0
+            return self._zeros
 
 
 class FifthDegreePolynomialProfile(Profile):
@@ -69,7 +75,7 @@ class FifthDegreePolynomialProfile(Profile):
 
     def dq(self, t):
         if t < self._t0 or t > self._tF:
-            return 0
+            return self._zeros
         t1 = (t - self._t0) / self._T
         t2 = t1 * t1
         return t2 * (t1 - 1) * (t1 - 1) * self._dq_coeff
