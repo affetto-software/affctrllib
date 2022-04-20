@@ -53,7 +53,10 @@ def mainloop(config, output, freq, keyframes, initial=None, profile="tri"):
     astate = AffState(config)
     if freq > 0:
         astate.freq = freq
-    astate._filter_list[0] = None
+    for _ in range(10):
+        sarr = acom.receive_as_list()
+        astate.update(sarr)
+
     actrl = AffCtrl(config)
     timer = Timer(rate=astate.freq)
 
