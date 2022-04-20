@@ -62,11 +62,10 @@ def mainloop(config, output, freq, keyframes, initial=None, profile="tri"):
         print(f"\nSaving data in <{str(output)}>...")
         logger.dump()
 
-    def moveto(t0, T, qF, profile, msg=None):
+    def moveto(t0, q0, T, qF, profile, msg=None):
         if msg:
             print(msg, flush=True)
         t = t0
-        q0 = acom.receive_as_2darray()[0]
         ptp = PTP(q0, qF, T, t0, profile)
         timer.start()
         while t < t0 + T:
@@ -84,21 +83,22 @@ def mainloop(config, output, freq, keyframes, initial=None, profile="tri"):
             print(f"\rt = {t:.2f}", end="")
             # timer.block()
 
+    q0 = acom.receive_as_2darray()[0]
     if initial:
         t0 = -5
         time = 5
         msg = f"\nMoving to initial pose (in {time} sec.) ..."
-        moveto(t0, time, np.array(initial), profile, msg)
-    # cleanup()
-    # return
+        moveto(t0, q0, time, np.array(initial), profile, msg)
+        q0 = np.array(initial)
 
     t0 = 0
     for cnt, kf in enumerate(keyframes):
         time = kf[0]
         msg = f"\nMoving to keyframe {cnt} (in {time} sec.) ..."
-        moveto(t0, time, np.array(kf[1]), profile, msg)
+        moveto(t0, q0, time, np.array(kf[1]), profile, msg)
         # t0 = t0 + time
         t0 = t0 + timer.elapsed_time()
+        q0 = np.array(kf[1])
     cleanup()
 
 
