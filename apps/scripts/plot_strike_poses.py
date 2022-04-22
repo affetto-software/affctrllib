@@ -52,8 +52,8 @@ def plot_command(data, joints, **sfparam):
 def plot_pressure(data, joints, **sfparam):
     fig, ax = plt.subplots()
     for i in joints:
-        ax.plot(data.t, getattr(data, f"pa{i}") / 2.55, label=f"pa[{i}]")
-        ax.plot(data.t, getattr(data, f"pb{i}") / 2.55, label=f"pb[{i}]")
+        ax.plot(data.t, getattr(data, f"pa{i}"), label=f"pa[{i}]")
+        ax.plot(data.t, getattr(data, f"pb{i}"), label=f"pb[{i}]")
     ax.grid(axis="y")
     ax.legend(title="Measured pressure")
     pparam = {
@@ -63,6 +63,47 @@ def plot_pressure(data, joints, **sfparam):
     ax.set(**pparam)
     if sfparam.get("filename", None) is None:
         sfparam["filename"] = "pressure"
+    savefig(fig, **sfparam)
+
+
+def plot_pressure_command(data, joints, **sfparam):
+    fig, ax = plt.subplots()
+    for i in joints:
+        (line,) = ax.plot(
+            data.t,
+            getattr(data, f"ca{i}") * 600 / 255,
+            ls="--",
+            label=f"ca[{i}]",
+        )
+        (line,) = ax.plot(
+            data.t,
+            getattr(data, f"pa{i}"),
+            c=line.get_color(),
+            ls="-",
+            label=f"pa[{i}]",
+        )
+        (line,) = ax.plot(
+            data.t,
+            getattr(data, f"cb{i}") * 600 / 255,
+            ls="--",
+            label=f"cb[{i}]",
+        )
+        (line,) = ax.plot(
+            data.t,
+            getattr(data, f"pb{i}"),
+            c=line.get_color(),
+            ls="-",
+            label=f"pb[{i}]",
+        )
+    ax.grid(axis="y")
+    ax.legend(title="Pressure values")
+    pparam = {
+        "xlabel": "time [s]",
+        "ylabel": "pressure [kPa]",
+    }
+    ax.set(**pparam)
+    if sfparam.get("filename", None) is None:
+        sfparam["filename"] = "pressure_command"
     savefig(fig, **sfparam)
 
 
@@ -143,6 +184,7 @@ def main():
     data = Data(args.data)
     plot_command(data, args.joint, **sfparam)
     plot_pressure(data, args.joint, **sfparam)
+    plot_pressure_command(data, args.joint, **sfparam)
     plot_q(data, args.joint, **sfparam)
     plot_dq(data, args.joint, **sfparam)
     if not args.noshow:
