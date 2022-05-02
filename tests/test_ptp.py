@@ -1,5 +1,11 @@
+import numpy as np
 import pytest
-from affctrllib.ptp import PTP, FifthDegreePolynomialProfile, TriangularVelocityProfile
+from affctrllib.ptp import (
+    PTP,
+    FifthDegreePolynomialProfile,
+    TrapezoidalVelocityProfile,
+    TriangularVelocityProfile,
+)
 from numpy.testing import assert_array_almost_equal, assert_array_equal
 
 
@@ -27,6 +33,19 @@ class TestPTP:
     )
     def test_select_profile(self, name, expected) -> None:
         ptp = PTP(0, 1, 5, profile_name=name)
+        assert isinstance(ptp.profile, expected)
+
+    @pytest.mark.parametrize(
+        "name,expected",
+        [
+            ("tra", TrapezoidalVelocityProfile),
+            ("trapez", TrapezoidalVelocityProfile),
+            ("trapezoidal", TrapezoidalVelocityProfile),
+            ("trapezoidal velocity", TrapezoidalVelocityProfile),
+        ],
+    )
+    def test_select_profile_trapezoidal(self, name, expected) -> None:
+        ptp = PTP(0, 1, 5, profile_name=name, vmax=0.1)
         assert isinstance(ptp.profile, expected)
 
     @pytest.mark.parametrize("name", ["hoge", "poly", "tria", "5th ordre"])
@@ -130,3 +149,145 @@ class TestPTP:
         for t, q, dq in expectation_table:
             assert_array_almost_equal(ptp.q(t), [q, q, q])
             assert_array_almost_equal(ptp.dq(t), [dq, dq, dq])
+
+    def test_set_vmax(self) -> None:
+        ptp = PTP(0, 1, 5, vmax=0.25, profile_name="tra")
+        assert ptp.profile.vmax == 0.25  # type: ignore
+        assert ptp.profile.tb == 1  # type: ignore
+
+    def test_set_vmax_ndarray(self) -> None:
+        ptp = PTP(
+            np.array([0, 0]),
+            np.array([1, 1]),
+            5,
+            vmax=np.array([0.25, 0.3]),
+            profile_name="tra",
+        )
+        assert_array_equal(ptp.profile.vmax, np.array([0.25, 0.3]))  # type: ignore
+        assert_array_almost_equal(ptp.profile.tb, np.array([1, 5 / 3]))  # type: ignore
+
+    def test_set_vmax_adapt_dimension_to_q0(self) -> None:
+        ptp = PTP(
+            np.array([0, 0, 0]),
+            np.array([1, 1, 1]),
+            5,
+            vmax=0.25,
+            profile_name="tra",
+        )
+        assert ptp.profile.vmax.shape == (3,)  # type: ignore
+        assert_array_equal(ptp.profile.vmax, np.array([0.25, 0.25, 0.25]))  # type: ignore
+        assert ptp.profile.tb.shape == (3,)  # type: ignore
+        assert_array_equal(ptp.profile.tb, np.array([1, 1, 1]))  # type: ignore
+
+    def test_set_tb(self) -> None:
+        ptp = PTP(0, 1, 5, tb=1, profile_name="tra")
+        assert ptp.profile.vmax == 0.25  # type: ignore
+        assert ptp.profile.tb == 1  # type: ignore
+
+    def test_set_tb_ndarray(self) -> None:
+        ptp = PTP(
+            np.array([0, 0]),
+            np.array([1, 1]),
+            5,
+            tb=np.array([1, 5 / 3]),
+            profile_name="tra",
+        )
+        assert_array_almost_equal(ptp.profile.vmax, np.array([0.25, 0.3]))  # type: ignore
+        assert_array_equal(ptp.profile.tb, np.array([1, 5 / 3]))  # type: ignore
+
+    def test_set_tb_adapt_dimension_to_q0(self) -> None:
+        ptp = PTP(
+            np.array([0, 0, 0]),
+            np.array([1, 1, 1]),
+            5,
+            tb=1,
+            profile_name="tra",
+        )
+        assert ptp.profile.vmax.shape == (3,)  # type: ignore
+        assert_array_equal(ptp.profile.vmax, np.array([0.25, 0.25, 0.25]))  # type: ignore
+        assert ptp.profile.tb.shape == (3,)  # type: ignore
+        assert_array_equal(ptp.profile.tb, np.array([1, 1, 1]))  # type: ignore
+
+    def test_update_trapezoidal_velocity(self) -> None:
+        ptp = PTP(0, 1, 5, vmax=0.25, profile_name="tra")
+        expectation_table = [
+            # t, q, dq, ddq
+            (-1, 0, 0, 0),
+            (0, 0, 0, 0.25),
+            (0.5, 0.03125, 0.125, 0.25),
+            (1, 0.125, 0.25, 0),
+            (2.5, 0.5, 0.25, 0),
+            (4, 0.875, 0.25, -0.25),
+            (4.5, 0.96875, 0.125, -0.25),
+            (5, 1, 0, 0),
+            (6, 1, 0, 0),
+        ]
+        for t, q, dq, ddq in expectation_table:
+            assert ptp.q(t) == q
+            assert ptp.dq(t) == dq
+            assert ptp.ddq(t) == ddq
+
+    def test_update_trapezoidal_velocity_t0(self) -> None:
+        ptp = PTP(0, 1, 5, 1, vmax=0.25, profile_name="tra")
+        expectation_table = [
+            # t, q, dq
+            (0, 0, 0, 0),
+            (1, 0, 0, 0.25),
+            (1.5, 0.03125, 0.125, 0.25),
+            (2, 0.125, 0.25, 0),
+            (3.5, 0.5, 0.25, 0),
+            (5, 0.875, 0.25, -0.25),
+            (5.5, 0.96875, 0.125, -0.25),
+            (6, 1, 0, 0),
+            (7, 1, 0, 0),
+        ]
+        for t, q, dq, ddq in expectation_table:
+            assert ptp.q(t) == q
+            assert ptp.dq(t) == dq
+            assert ptp.ddq(t) == ddq
+
+    def test_update_trapezoidal_velocity_ndarray(self) -> None:
+        ptp = PTP(
+            np.array([0, 0, 0]), np.array([1, 1, 1]), 5, vmax=0.25, profile_name="tra"
+        )
+        expectation_table = [
+            # t, q, dq, ddq
+            (-1, 0, 0, 0),
+            (0, 0, 0, 0.25),
+            (0.5, 0.03125, 0.125, 0.25),
+            (1, 0.125, 0.25, 0),
+            (2.5, 0.5, 0.25, 0),
+            (4, 0.875, 0.25, -0.25),
+            (4.5, 0.96875, 0.125, -0.25),
+            (5, 1, 0, 0),
+            (6, 1, 0, 0),
+        ]
+        for t, q, dq, ddq in expectation_table:
+            assert_array_almost_equal(ptp.q(t), [q, q, q])
+            assert_array_almost_equal(ptp.dq(t), [dq, dq, dq])
+            assert_array_almost_equal(ptp.ddq(t), [ddq, ddq, ddq])
+
+    def test_update_trapezoidal_velocity_ndarray_specify_vmax(self) -> None:
+        ptp = PTP(
+            np.array([0, 0]),
+            np.array([1, 1]),
+            5,
+            vmax=np.array([0.25, 0.4]),
+            profile_name="tra",
+        )
+        expectation_table = [
+            # t, q, dq, ddq
+            (-1, (0, 0), (0, 0), (0, 0)),
+            (0, (0, 0), (0, 0), (0.25, 0.16)),
+            (0.5, (0.03125, 0.02), (0.125, 0.08), (0.25, 0.16)),
+            (1, (0.125, 0.08), (0.25, 0.16), (0, 0.16)),
+            (2.5, (0.5, 0.5), (0.25, 0.4), (0, -0.16)),
+            (4, (0.875, 0.92), (0.25, 0.16), (-0.25, -0.16)),
+            (4.5, (0.96875, 0.98), (0.125, 0.08), (-0.25, -0.16)),
+            (5, (1, 1), (0, 0), (0, 0)),
+            (6, (1, 1), (0, 0), (0, 0)),
+        ]
+        for t, q, dq, ddq in expectation_table:
+            assert_array_almost_equal(ptp.q(t), q)
+            assert_array_almost_equal(ptp.dq(t), dq)
+            assert_array_almost_equal(ptp.ddq(t), ddq)

@@ -97,13 +97,125 @@ class TriangularVelocityProfile(Profile, Generic[JointT]):
             return 0
 
 
+class TrapezoidalVelocityProfile(Profile, Generic[JointT]):
+    _vmax: JointT
+    _tb: JointT
+    _vM: JointT
+    _a: JointT
+    _zeros: JointT
+    _ones: JointT
+
+    def __init__(
+        self,
+        q0: JointT,
+        qF: JointT,
+        T: float,
+        t0: float,
+        vmax: JointT | float | None = None,
+        tb: JointT | float | None = None,
+    ):
+        Profile.__init__(self, q0, qF, T, t0)
+        if vmax is not None:
+            self.set_vmax(vmax)
+        elif tb is not None:
+            self.set_tb(tb)
+        if isinstance(vmax, np.ndarray):
+            self._zeros = np.zeros(shape=vmax.shape)
+            self._ones = np.ones(shape=vmax.shape)
+        else:
+            self._zeros = 0
+            self._ones = 1
+
+    @property
+    def vmax(self) -> JointT:
+        return self._vmax
+
+    def set_vmax(self, vmax: JointT | float) -> None:
+        if isinstance(self.q0, np.ndarray) and isinstance(vmax, (int, float)):
+            self._vmax = np.full(self.q0.shape, vmax)
+        else:
+            self._vmax = vmax
+        self._tb = self.T - 1.0 / self.vmax
+        self._vM = self.vmax / (self.qF - self.q0)
+        self._a = self._vM / self.tb
+
+    @property
+    def tb(self) -> JointT:
+        return self._tb
+
+    def set_tb(self, tb: JointT | float) -> None:
+        if isinstance(self.q0, np.ndarray) and isinstance(tb, (int, float)):
+            self._tb = np.full(self.q0.shape, tb)
+        else:
+            self._tb = tb
+        self._vmax = 1.0 / (self.T - self.tb)
+        self._vM = self.vmax / (self.qF - self.q0)
+        self._a = self._vM / self.tb
+
+    def s(self, t: float) -> np.ndarray | float:
+        t_rel = t - self.t0
+        if t_rel < 0:
+            return self._zeros
+        elif t_rel >= self.T:
+            return self._ones
+        return np.where(
+            t_rel < self.tb,
+            0.5 * self._a * t_rel * t_rel,
+            np.where(
+                (self.tb <= t_rel) & (t_rel < (self.T - self.tb)),
+                self._vM * (t_rel - 0.5 * self.tb),
+                np.where(
+                    ((self.T - self.tb) <= t_rel) & (t_rel < self.T),
+                    1.0 - 0.5 * self._a * (self.T - t_rel) * (self.T - t_rel),
+                    self._zeros,
+                ),
+            ),
+        )
+
+    def ds(self, t: float) -> np.ndarray | float:
+        t_rel = t - self.t0
+        if t_rel < 0 or t_rel >= self.T:
+            return self._zeros
+        return np.where(
+            t_rel < self.tb,
+            self._a * t_rel,
+            np.where(
+                (self.tb <= t_rel) & (t_rel < (self.T - self.tb)),
+                self._vM,
+                np.where(
+                    ((self.T - self.tb) <= t_rel) & (t_rel < self.T),
+                    self._a * (self.T - t_rel),
+                    self._zeros,
+                ),
+            ),
+        )
+
+    def dds(self, t: float) -> np.ndarray | float:
+        t_rel = t - self.t0
+        if t_rel < 0 or t_rel >= self.T:
+            return self._zeros
+        return np.where(
+            t_rel < self.tb,
+            self._a,
+            np.where(
+                (self.tb <= t_rel) & (t_rel < self.T - self.tb),
+                self._zeros,
+                np.where(
+                    ((self.T - self.tb) <= t_rel) & (t_rel < self.T),
+                    -self._a,
+                    self._zeros,
+                ),
+            ),
+        )
+
+
 class FifthDegreePolynomialProfile(Profile, Generic[JointT]):
     def __init__(self, q0: JointT, qF: JointT, T: float, t0: float):
         Profile.__init__(self, q0, qF, T, t0)
         self._ds_coeff = 30.0 / T
         self._dds_coeff = 60.0 / (T * T)
 
-    def s(self, t):
+    def s(self, t: float) -> float:
         t_rel = t - self._t0
         if t_rel < 0:
             return 0
@@ -134,6 +246,10 @@ PTP_ACCEPTABLE_PROFILE_NAMES = {
     "triangular velocity": TriangularVelocityProfile,
     "triangular": TriangularVelocityProfile,
     "tri": TriangularVelocityProfile,
+    "trapezoidal velocity": TrapezoidalVelocityProfile,
+    "trapezoidal": TrapezoidalVelocityProfile,
+    "trapez": TrapezoidalVelocityProfile,
+    "tra": TrapezoidalVelocityProfile,
     "5th-degree polynomial": FifthDegreePolynomialProfile,
     "5th degree polynomial": FifthDegreePolynomialProfile,
     "5th-degree": FifthDegreePolynomialProfile,
