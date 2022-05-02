@@ -12,7 +12,6 @@ class Profile(ABC, Generic[JointT]):
         self._qF = qF
         self._T = T
         self._t0 = t0
-        self._tF = t0 + T
         try:
             self._zeros = np.zeros(shape=q0.shape)
         except AttributeError:
