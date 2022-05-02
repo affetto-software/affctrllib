@@ -1,5 +1,6 @@
 import pytest
 from affctrllib.ptp import PTP, FifthDegreePolynomialProfile, TriangularVelocityProfile
+from numpy.testing import assert_array_almost_equal, assert_array_equal
 
 
 class TestPTP:
@@ -66,6 +67,22 @@ class TestPTP:
             assert ptp.q(t) == q
             assert ptp.dq(t) == dq
 
+    def test_update_triangular_velocity_ndarray(self) -> None:
+        ptp = PTP(np.array([0, 0, 0]), np.array([1, 1, 1]), 5, profile_name="tri")
+        expectation_table = [
+            # t, q, dq
+            (-1, 0, 0),
+            (0, 0, 0),
+            (1, 0.08, 0.16),
+            (2.5, 0.5, 0.4),
+            (4, 0.92, 0.16),
+            (5, 1, 0),
+            (6, 1, 0),
+        ]
+        for t, q, dq in expectation_table:
+            assert_array_equal(ptp.q(t), np.array([q, q, q]))
+            assert_array_equal(ptp.dq(t), np.array([dq, dq, dq]))
+
     def test_update_5th_degree_polynomial(self) -> None:
         ptp = PTP(0, 1, 10, profile_name="5th")
         expectation_table = [
@@ -97,3 +114,19 @@ class TestPTP:
         for t, q, dq in expectation_table:
             assert ptp.q(t) == pytest.approx(q)
             assert ptp.dq(t) == pytest.approx(dq)
+
+    def test_update_5th_degree_polynomial_ndarray(self) -> None:
+        ptp = PTP(np.array([0, 0, 0]), np.array([1, 1, 1]), 10, profile_name="5th")
+        expectation_table = [
+            # t, q, dq
+            (-1, 0, 0),
+            (0, 0, 0),
+            (1, 0.00856, 0.0243),
+            (5, 0.5, 0.1875),
+            (8, 2944 / 3125, 48 / 625),
+            (10, 1, 0),
+            (11, 1, 0),
+        ]
+        for t, q, dq in expectation_table:
+            assert_array_almost_equal(ptp.q(t), [q, q, q])
+            assert_array_almost_equal(ptp.dq(t), [dq, dq, dq])

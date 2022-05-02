@@ -12,21 +12,17 @@ class Profile(ABC, Generic[JointT]):
         self._qF = qF
         self._T = T
         self._t0 = t0
-        try:
-            self._zeros = np.zeros(shape=q0.shape)
-        except AttributeError:
-            self._zeros = 0
 
     @abstractmethod
-    def s(self, t) -> JointT:
+    def s(self, t) -> float:
         ...
 
     @abstractmethod
-    def ds(self, t) -> JointT:
+    def ds(self, t) -> float:
         ...
 
     @abstractmethod
-    def dds(self, t) -> JointT:
+    def dds(self, t) -> float:
         ...
 
     def q(self, t) -> JointT:
