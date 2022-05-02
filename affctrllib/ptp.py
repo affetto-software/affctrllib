@@ -1,3 +1,4 @@
+import warnings
 from abc import ABC, abstractmethod
 from typing import Generic, TypeVar
 
@@ -119,6 +120,8 @@ class TrapezoidalVelocityProfile(Profile, Generic[JointT]):
             self.set_vmax(vmax)
         elif tb is not None:
             self.set_tb(tb)
+        else:
+            raise ValueError("Require Vmax or Tb for trapezoidal velocity profile")
         if isinstance(vmax, np.ndarray):
             self._zeros = np.zeros(shape=vmax.shape)
             self._ones = np.ones(shape=vmax.shape)
@@ -136,6 +139,34 @@ class TrapezoidalVelocityProfile(Profile, Generic[JointT]):
         else:
             self._vmax = vmax
         self._vM = np.absolute(self.vmax / (self.qF - self.q0))
+
+        # Raise error when vM is too small.
+        if np.any(self._vM <= 1.0 / self.T):
+            i = np.flatnonzero(self._vM <= 1.0 / self.T)[0]
+            try:
+                v = self._vmax[i]  # type: ignore
+            except TypeError:
+                v = self._vmax
+            msg = f"Specified Vmax for q[{i}] is too small "
+            msg += f"to reach desired position: {v}"
+            raise ValueError(msg)
+
+        # Emit warning when vM is too large.
+        if np.any(self._vM > 2.0 / self.T):
+            v = 2.0 / self.T
+            indices = np.flatnonzero(self._vM > v)
+            vM = np.where(self._vM > v, v, self._vM)
+            for i in indices:
+                msg = f"Specified Vmax for q[{i}] is truncated: "
+                if isinstance(self._vM, np.ndarray):
+                    v1, v2 = self._vM[i], vM[i]
+                else:
+                    v1, v2 = self._vM, vM
+                msg += f"{v1} -> {v2}"
+                warnings.warn(msg, ResourceWarning)
+            self._vM = vM
+            self._vmax = self._vM * (self.qF - self.q0)
+
         self._tb = self.T - 1.0 / self._vM
         self._a = self._vM / self.tb
 
@@ -148,6 +179,22 @@ class TrapezoidalVelocityProfile(Profile, Generic[JointT]):
             self._tb = np.full(self.q0.shape, tb)
         else:
             self._tb = tb
+
+        # Emit warning when tb is too large.
+        if np.any(self._tb > 0.5 * self.T):
+            half_T = 0.5 * self.T
+            indices = np.flatnonzero(self._tb > half_T)
+            Tb = np.where(self._tb > half_T, half_T, self._tb)
+            for i in indices:
+                msg = f"Specified Tb for q[{i}] is reduced: "
+                if isinstance(self._tb, np.ndarray):
+                    tb1, tb2 = self._tb[i], Tb[i]
+                else:
+                    tb1, tb2 = self._tb, Tb
+                msg += f"{tb1} -> {tb2}"
+                warnings.warn(msg, ResourceWarning)
+            self._tb = Tb
+
         self._vM = 1.0 / (self.T - self.tb)
         self._vmax = self._vM * (self.qF - self.q0)
         self._a = self._vM / self.tb

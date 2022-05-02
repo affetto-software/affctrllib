@@ -45,7 +45,7 @@ class TestPTP:
         ],
     )
     def test_select_profile_trapezoidal(self, name, expected) -> None:
-        ptp = PTP(0, 1, 5, profile_name=name, vmax=0.1)
+        ptp = PTP(0, 1, 5, profile_name=name, vmax=0.25)
         assert isinstance(ptp.profile, expected)
 
     @pytest.mark.parametrize("name", ["hoge", "poly", "tria", "5th ordre"])
@@ -207,6 +207,74 @@ class TestPTP:
         assert_array_equal(ptp.profile.vmax, np.array([0.25, 0.25, 0.25]))  # type: ignore
         assert ptp.profile.tb.shape == (3,)  # type: ignore
         assert_array_equal(ptp.profile.tb, np.array([1, 1, 1]))  # type: ignore
+
+    def test_error_no_vmax_tb_provided(self) -> None:
+        with pytest.raises(ValueError) as excinfo:
+            _ = PTP(0, 1, 5, profile_name="tra")
+        msg = "Require Vmax or Tb for trapezoidal velocity profile"
+        assert msg in str(excinfo.value)
+
+    def test_error_too_small_vmax(self) -> None:
+        with pytest.raises(ValueError) as excinfo:
+            _ = PTP(0, 1, 5, profile_name="tra", vmax=0.1)
+        msg = "Specified Vmax for q[0] is too small to reach desired position: 0.1"
+        assert msg in str(excinfo.value)
+
+    def test_error_too_small_vmax_ndarray(self) -> None:
+        with pytest.raises(ValueError) as excinfo:
+            _ = PTP(
+                np.array([0, 0, 0]),
+                np.array([1, 1, 1]),
+                5,
+                profile_name="tra",
+                vmax=np.array([0.25, 0.1, 0.25]),
+            )
+        msg = "Specified Vmax for q[1] is too small to reach desired position: 0.1"
+        assert msg in str(excinfo.value)
+
+    def test_warn_too_large_vmax(self) -> None:
+        with pytest.warns(ResourceWarning) as record:
+            _ = PTP(0, 1, 5, profile_name="tra", vmax=0.5)
+        msg = "Specified Vmax for q[0] is truncated: 0.5 -> 0.4"
+        assert msg in str(record[0].message)
+
+    def test_warn_too_large_vmax_ndarray(self) -> None:
+        with pytest.warns(ResourceWarning) as record:
+            ptp = PTP(
+                np.array([0, 0, 0, 0]),
+                np.array([1, 1, 1, 1]),
+                5,
+                profile_name="tra",
+                vmax=np.array([0.25, 0.5, 0.25, 0.6]),
+            )
+        assert len(record) == 2
+        msg = "Specified Vmax for q[1] is truncated: 0.5 -> 0.4"
+        assert msg in str(record[0].message)
+        msg = "Specified Vmax for q[3] is truncated: 0.6 -> 0.4"
+        assert msg in str(record[1].message)
+        assert_array_equal(ptp.profile.vmax, [0.25, 0.4, 0.25, 0.4])  # type: ignore
+
+    def test_warn_too_large_tb(self) -> None:
+        with pytest.warns(ResourceWarning) as record:
+            _ = PTP(0, 1, 5, profile_name="tra", tb=3)
+        msg = "Specified Tb for q[0] is reduced: 3 -> 2.5"
+        assert msg in str(record[0].message)
+
+    def test_warn_too_large_tb_ndarray(self) -> None:
+        with pytest.warns(ResourceWarning) as record:
+            ptp = PTP(
+                np.array([0, 0, 0, 0]),
+                np.array([1, 1, 1, 1]),
+                5,
+                profile_name="tra",
+                tb=np.array([4, 1, 2, 5]),
+            )
+        assert len(record) == 2
+        msg = "Specified Tb for q[0] is reduced: 4 -> 2.5"
+        assert msg in str(record[0].message)
+        msg = "Specified Tb for q[3] is reduced: 5 -> 2.5"
+        assert msg in str(record[1].message)
+        assert_array_equal(ptp.profile.tb, [2.5, 1, 2, 2.5])  # type: ignore
 
     def test_update_trapezoidal_velocity(self) -> None:
         ptp = PTP(0, 1, 5, vmax=0.25, profile_name="tra")
