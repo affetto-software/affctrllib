@@ -135,8 +135,8 @@ class TrapezoidalVelocityProfile(Profile, Generic[JointT]):
             self._vmax = np.full(self.q0.shape, vmax)
         else:
             self._vmax = vmax
-        self._tb = self.T - 1.0 / self.vmax
-        self._vM = self.vmax / (self.qF - self.q0)
+        self._vM = np.absolute(self.vmax / (self.qF - self.q0))
+        self._tb = self.T - 1.0 / self._vM
         self._a = self._vM / self.tb
 
     @property
@@ -148,8 +148,8 @@ class TrapezoidalVelocityProfile(Profile, Generic[JointT]):
             self._tb = np.full(self.q0.shape, tb)
         else:
             self._tb = tb
-        self._vmax = 1.0 / (self.T - self.tb)
-        self._vM = self.vmax / (self.qF - self.q0)
+        self._vM = 1.0 / (self.T - self.tb)
+        self._vmax = self._vM * (self.qF - self.q0)
         self._a = self._vM / self.tb
 
     def s(self, t: float) -> np.ndarray | float:
