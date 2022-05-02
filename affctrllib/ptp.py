@@ -3,10 +3,10 @@ from typing import Generic, TypeVar
 
 import numpy as np
 
-JointT = TypeVar("JointT")
+JointT = TypeVar("JointT", int, float, np.ndarray)
 
 
-class Profile(ABC):
+class Profile(ABC, Generic[JointT]):
     def __init__(self, q0, qF, T, t0):
         self._q0 = q0
         self._qF = qF
@@ -19,66 +19,99 @@ class Profile(ABC):
             self._zeros = 0
 
     @abstractmethod
-    def q(self, t):
+    def s(self, t) -> JointT:
         ...
 
     @abstractmethod
-    def dq(self, t):
+    def ds(self, t) -> JointT:
         ...
+
+    @abstractmethod
+    def dds(self, t) -> JointT:
+        ...
+
+    def q(self, t) -> JointT:
+        s = self.s(t)
+        return self._q0 * (1.0 - s) + self._qF * s
+
+    def dq(self, t) -> JointT:
+        return (self._qF - self._q0) * self.ds(t)
+
+    def ddq(self, t) -> JointT:
+        return (self._qF - self._q0) * self.dds(t)
 
 
 class TriangularVelocityProfile(Profile):
     def __init__(self, q0, qF, T, t0):
         Profile.__init__(self, q0, qF, T, t0)
-        self._midpoint = t0 + 0.5 * T
-        self._ascend_q_coeff = (2.0 / (T * T)) * (qF - q0)
-        self._descend_q_coeff = (2.0 / (T * T)) * (q0 - qF)
-        self._ascend_dq_coeff = 2.0 * self._ascend_q_coeff
-        self._descend_dq_coeff = 2.0 * self._descend_q_coeff
+        self._s_coeff = 2.0 / (T * T)
+        self._ds_coeff = 4.0 / (T * T)
 
-    def q(self, t):
-        if t < self._t0:
-            return self._q0
-        elif t <= self._midpoint:
-            return self._ascend_q_coeff * (t - self._t0) * (t - self._t0) + self._q0
-        elif t <= self._tF:
-            return self._descend_q_coeff * (t - self._tF) * (t - self._tF) + self._qF
+    def s(self, t):
+        t_rel = t - self._t0
+        if t_rel < 0:
+            return 0
+        elif t_rel <= 0.5 * self._T:
+            return self._s_coeff * t_rel * t_rel
+        elif t_rel <= self._T:
+            return 1.0 - self._s_coeff * (self._T - t_rel) * (self._T - t_rel)
         else:
-            return self._qF
+            return 1
 
-    def dq(self, t):
-        if t < self._t0:
-            return self._zeros
-        elif t <= self._midpoint:
-            return self._ascend_dq_coeff * (t - self._t0)
-        elif t <= self._tF:
-            return self._descend_dq_coeff * (t - self._tF)
+    def ds(self, t):
+        t_rel = t - self._t0
+        if t_rel < 0:
+            return 0
+        elif t_rel <= 0.5 * self._T:
+            return self._ds_coeff * t_rel
+        elif t_rel <= self._T:
+            return self._ds_coeff * (self._T - t_rel)
         else:
-            return self._zeros
+            return 0
+
+    def dds(self, t):
+        t_rel = t - self._t0
+        if t_rel < 0:
+            return 0
+        elif t_rel <= 0.5 * self._T:
+            return self._ds_coeff
+        elif t_rel <= self._T:
+            return -self._ds_coeff
+        else:
+            return 0
 
 
 class FifthDegreePolynomialProfile(Profile):
     def __init__(self, q0, qF, T, t0):
         Profile.__init__(self, q0, qF, T, t0)
-        self._q_coeff = qF - q0
-        self._dq_coeff = (30.0 / T) * (qF - q0)
+        self._ds_coeff = 30.0 / T
+        self._dds_coeff = 60.0 / (T * T)
 
-    def q(self, t):
-        if t < self._t0:
-            return self._q0
-        elif t > self._tF:
-            return self._qF
-        t1 = (t - self._t0) / self._T
+    def s(self, t):
+        t_rel = t - self._t0
+        if t_rel < 0:
+            return 0
+        elif t_rel > self._T:
+            return 1
+        t1 = t_rel / self._T
         t2 = t1 * t1
         t3 = t2 * t1
-        return t3 * (6.0 * t2 - 15.0 * t1 + 10.0) * self._q_coeff + self._q0
+        return t3 * (6.0 * t2 - 15.0 * t1 + 10.0)
 
-    def dq(self, t):
-        if t < self._t0 or t > self._tF:
-            return self._zeros
-        t1 = (t - self._t0) / self._T
+    def ds(self, t):
+        t_rel = t - self._t0
+        if t_rel < 0 or t_rel > self._T:
+            return 0
+        t1 = t_rel / self._T
         t2 = t1 * t1
-        return t2 * (t1 - 1) * (t1 - 1) * self._dq_coeff
+        return t2 * (t1 - 1.0) * (t1 - 1.0) * self._ds_coeff
+
+    def dds(self, t):
+        t_rel = t - self._t0
+        if t_rel < 0 or t_rel > self._T:
+            return 0
+        t1 = t_rel / self._T
+        return t1 * (2.0 * t1 - 1.0) * (t1 - 1.0) * self._dds_coeff
 
 
 PTP_ACCEPTABLE_PROFILE_NAMES = {
