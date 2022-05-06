@@ -2,8 +2,10 @@
 
 import argparse
 import os
+import re
 import sys
 import threading
+import time
 from pathlib import Path
 
 import affctrllib as acl
@@ -15,12 +17,14 @@ BUFSIZE = 1024
 
 
 def usage():
-    print(f" ======= Operations ======= : <Key>")
-    print(f"      preview current angles: <RET>")
-    print(f"      capture current angles: <c>")
-    print(f"save captured angles to file: <s>")
-    print(f"               quit and save: <q>")
-    print(f"         quit without saving: <q!>")
+    print(f" =========== Operations ========== : <Key>")
+    print(f"             preview current angles: <RET>")
+    print(f"             capture current angles: <c>")
+    print(f"capture current angles after 2 sec.: <2c>")
+    print(f"       save captured angles to file: <s>")
+    print(f"                      quit and save: <q>")
+    print(f"                quit without saving: <q!>")
+    print(f"                  show help message: <h>")
     print(f"")
 
 
@@ -102,13 +106,17 @@ def mainloop(config, output):
     timer = Timer()
     t0 = 0
     timer.start()
+
+    def capture():
+        t = timer.elapsed_time()
+        sarr = acl.split_received_msg(recv_bytes.get())
+        q = list(map(int, acl.unzip_array(sarr)[0]))
+        T = round(t - t0, 1)
+        return T, q
+
     try:
         while True:
             c = input("> ")
-            t = timer.elapsed_time()
-            sarr = acl.split_received_msg(recv_bytes.get())
-            q = list(map(int, acl.unzip_array(sarr)[0]))
-            T = round(t - t0, 1)
             if c == "q":
                 print("Quitting...")
                 save(frames, output)
@@ -117,14 +125,29 @@ def mainloop(config, output):
                 print("Quitting without saving...")
                 break
             elif c == "c":
+                T, q = capture()
                 frames.append((T, q))
                 print(f"T = {T}, q={q}")
                 print("Successfully captured!")
-                t0 = t
+                t0 = timer.elapsed_time()
+            elif (len(c) > 1) and (
+                (c[-1] == "c" and c[0].isdigit()) or (c[0] == "c" and c[-1].isdigit())
+            ):
+                wait_t = re.findall(r"\d+", c)[0]
+                print(f"Waiting for {wait_t} sec...")
+                time.sleep(int(wait_t))
+                T, q = capture()
+                frames.append((T, q))
+                print(f"T = {T}, q={q}")
+                print("Successfully captured!")
+                t0 = timer.elapsed_time()
+            elif c == "h":
+                usage()
             elif c == "s":
                 save(frames, output)
                 print("Successfully saved!")
             else:
+                T, q = capture()
                 print(f"T = {T}, q={q}")
     except KeyboardInterrupt:
         print("Caught KeyboardInterrupt")
