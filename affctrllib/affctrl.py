@@ -184,21 +184,54 @@ class AffCtrl(Affetto, Generic[JointT]):
             self.input_range = tuple(self.ctrl_config["input_range"])
         except KeyError:
             pass
-        if "inactive_joints" in self.ctrl_config:
-            for inactive_joint in self.ctrl_config["inactive_joints"]:
+        self.load_inactive_joints()
+        try:
+            scheme = self.ctrl_config["scheme"]
+        except KeyError:
+            scheme = "pid"
+        self.load_feedback_scheme(scheme)
+
+    def load_inactive_joints(self, ctrl_config: dict[str, Any] | None = None) -> None:
+        if ctrl_config is None:
+            ctrl_config = self.ctrl_config
+        if "inactive_joints" in ctrl_config:
+            for inactive_joint in ctrl_config["inactive_joints"]:
                 index = inactive_joint["index"]
                 try:
                     self.set_inactive_joint(index, inactive_joint["pressure"])
                 except KeyError:
                     self.set_inactive_joint(index)
-        scheme = self.ctrl_config["scheme"]
+
+    @classmethod
+    def _load_feedback_scheme_find_array(
+        cls,
+        ctrl_config: dict[str, Any],
+        scheme_key: str,
+        param_key: str,
+        kwargs: dict[str, Any],
+    ) -> dict[str, Any]:
+        try:
+            kwargs[param_key] = np.array(ctrl_config[scheme_key][param_key])
+        except KeyError:
+            pass
+        return kwargs
+
+    def load_feedback_scheme(
+        self, scheme: str, ctrl_config: dict[str, Any] | None = None
+    ) -> None:
+        if ctrl_config is None:
+            ctrl_config = self.ctrl_config
         scheme_class = AFFCTRL_ACCEPTABLE_FEEDBACK_SCHEME_NAMES[scheme]
         scheme_key = AFFCTRL_FEEDBACK_SCHEME_TO_CONFIG_KEY[scheme_class.__name__]
-        kP = np.array(self.ctrl_config[scheme_key]["kP"])
-        kD = np.array(self.ctrl_config[scheme_key]["kD"])
-        kI = np.array(self.ctrl_config[scheme_key]["kI"])
-        stiff = np.array(self.ctrl_config[scheme_key]["stiff"])
-        self._feedback_scheme = scheme_class(kP=kP, kD=kD, kI=kI, stiff=stiff)
+        kwargs = {}
+        self._load_feedback_scheme_find_array(ctrl_config, scheme_key, "kP", kwargs)
+        self._load_feedback_scheme_find_array(ctrl_config, scheme_key, "kD", kwargs)
+        self._load_feedback_scheme_find_array(ctrl_config, scheme_key, "kI", kwargs)
+        self._load_feedback_scheme_find_array(ctrl_config, scheme_key, "stiff", kwargs)
+        self._load_feedback_scheme_find_array(
+            ctrl_config, scheme_key, "press_gain", kwargs
+        )
+        self._feedback_scheme = scheme_class(**kwargs)
 
     @property
     def input_range(self) -> tuple[float, float]:

@@ -134,6 +134,29 @@ class TestFeedbackPID:
             assert ua, ub == expected[t]
 
 
+class TestFeedbackPIDF:
+    def test_init(self) -> None:
+        _ = FeedbackPIDF()
+        assert True
+
+    @pytest.mark.parametrize("press_gain", [0.1, [0.2, 0.2], np.array([0.3, 0.3, 0.3])])
+    def test_init_with_stiff(self, press_gain) -> None:
+        pidf = FeedbackPIDF(press_gain=press_gain)
+        if isinstance(press_gain, np.ndarray):
+            assert_array_equal(pidf.press_gain, press_gain)
+        else:
+            assert pidf.press_gain == press_gain
+
+    @pytest.mark.parametrize("press_gain", [127, [150, 150], np.array([200, 200, 200])])
+    def test_press_gain_setter(self, press_gain) -> None:
+        pidf = FeedbackPIDF()
+        pidf.press_gain = press_gain
+        if isinstance(press_gain, np.ndarray):
+            assert_array_equal(pidf.press_gain, press_gain)
+        else:
+            assert pidf.press_gain == press_gain
+
+
 class TestAffCtrl:
     def test_init(self) -> None:
         ctrl = AffCtrl()
@@ -188,6 +211,30 @@ class TestAffCtrl:
         assert_array_equal(ctrl.feedback_scheme.kD, np.array([30] * 13))
         assert_array_equal(ctrl.feedback_scheme.kI, np.array([0.3] * 13))
         assert_array_equal(ctrl.feedback_scheme.stiff, np.array([180] * 13))
+
+    def test_load_inactive_joints(self) -> None:
+        config = os.path.join(CONFIG_DIR_PATH, "default.toml")
+        ctrl = AffCtrl(config)
+        inactive_joints = {
+            "inactive_joints": [{"index": 3}, {"index": "9,10-11", "pressure": 400}]
+        }
+        ctrl.reset_inactive_joints()
+        ctrl.load_inactive_joints(inactive_joints)
+        assert_array_equal(
+            ctrl.inactive_joints,
+            [[3, 0, 0], [9, 400, 400], [10, 400, 400], [11, 400, 400]],
+        )
+
+    def test_load_feedback_scheme(self) -> None:
+        config = os.path.join(CONFIG_DIR_PATH, "default.toml")
+        ctrl = AffCtrl(config)
+        ctrl.load_feedback_scheme("pidf")
+        assert isinstance(ctrl.feedback_scheme, FeedbackPIDF)
+        assert_array_equal(ctrl.feedback_scheme.kP, np.array([10] * 13))
+        assert_array_equal(ctrl.feedback_scheme.kD, np.array([100] * 13))
+        assert_array_equal(ctrl.feedback_scheme.kI, np.array([1] * 13))
+        assert_array_equal(ctrl.feedback_scheme.stiff, np.array([120] * 13))
+        assert_array_equal(ctrl.feedback_scheme.press_gain, np.array([1] * 13))
 
     @pytest.mark.parametrize(
         "input_range,expected",
