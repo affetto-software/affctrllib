@@ -157,7 +157,7 @@ class AffCtrl(Affetto, Generic[JointT]):
     DEFAULT_INACTIVE_PRESSURE = 0
 
     def __init__(self, config_path: str | Path | None = None) -> None:
-        self._inactive_joints = np.empty((0, 3), dtype=float)
+        self.reset_inactive_joints()
         super().__init__(config_path)
 
     def __repr__(self) -> str:
@@ -269,6 +269,9 @@ class AffCtrl(Affetto, Generic[JointT]):
         arr = np.full((len(indices), 3), pressure)
         arr[:, 0] = indices
         self._inactive_joints = np.append(self._inactive_joints, arr, axis=0)
+
+    def reset_inactive_joints(self) -> None:
+        self._inactive_joints = np.empty((0, 3), dtype=float)
 
     def mask(self, u1: JointT, u2: JointT) -> tuple[JointT, JointT]:
         mask = self.inactive_joints[:, 0].astype(int)

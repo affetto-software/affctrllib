@@ -273,6 +273,13 @@ class TestAffCtrl:
             ],
         )
 
+    def test_reset_inactive_joints(self):
+        ctrl = AffCtrl()
+        ctrl.set_inactive_joint(1)
+        assert_array_equal(ctrl.inactive_joints, [[1, 0, 0]])
+        ctrl.reset_inactive_joints()
+        assert_array_equal(ctrl.inactive_joints, np.empty(shape=(0, 3)))
+
     def test_mask(self):
         config = os.path.join(CONFIG_DIR_PATH, "default.toml")
         ctrl = AffCtrl(config)
