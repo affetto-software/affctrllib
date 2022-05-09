@@ -113,11 +113,22 @@ class FeedbackPID(Feedback[JointT]):
 
 class FeedbackPIDF(Feedback[JointT]):
     _stiff: JointT
+    _press_gain: JointT
 
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
         if "stiff" in kwargs:
             self.stiff = kwargs["stiff"]
+        if "press_gain" in kwargs:
+            self.press_gain = kwargs["press_gain"]
+
+    @property
+    def press_gain(self) -> JointT:
+        return self._press_gain
+
+    @press_gain.setter
+    def press_gain(self, press_gain) -> None:
+        self._press_gain = press_gain
 
     def update(
         self,
@@ -129,7 +140,10 @@ class FeedbackPIDF(Feedback[JointT]):
         qdes: JointT,
         dqdes: JointT,
     ) -> tuple[JointT, JointT]:
-        d = pa - pb
+        try:
+            d = self.press_gain * (pa - pb)
+        except AttributeError:
+            d = pa - pb
         e = self.positional_feedback(t, q, dq, qdes, dqdes)
         return (self.stiff + e - d, self.stiff - e + d)
 
