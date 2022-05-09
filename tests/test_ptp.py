@@ -3,10 +3,13 @@ import pytest
 from affctrllib.ptp import (
     PTP,
     FifthDegreePolynomialProfile,
+    SinusoidalVelocityProfile,
     TrapezoidalVelocityProfile,
     TriangularVelocityProfile,
 )
 from numpy.testing import assert_array_almost_equal, assert_array_equal
+
+PIx2 = 2.0 * np.pi
 
 
 class TestPTP:
@@ -24,6 +27,9 @@ class TestPTP:
             ("triangular velocity", TriangularVelocityProfile),
             ("triangular", TriangularVelocityProfile),
             ("tri", TriangularVelocityProfile),
+            ("sinusoidal velocity", SinusoidalVelocityProfile),
+            ("sinusoidal", SinusoidalVelocityProfile),
+            ("sin", SinusoidalVelocityProfile),
             ("5th-degree polynomial", FifthDegreePolynomialProfile),
             ("5th degree polynomial", FifthDegreePolynomialProfile),
             ("5th-degree", FifthDegreePolynomialProfile),
@@ -359,3 +365,54 @@ class TestPTP:
             assert_array_almost_equal(ptp.q(t), q)
             assert_array_almost_equal(ptp.dq(t), dq)
             assert_array_almost_equal(ptp.ddq(t), ddq)
+
+    def test_update_sinusoidal_velocity(self) -> None:
+        ptp = PTP(0, 1, 4, profile_name="sin")
+        expectation_table = [
+            # t, q, dq, ddq
+            (-1, 0, 0, 0),
+            (0, 0, 0, 0),
+            (1, 0.25 - 1.0 / PIx2, 0.25, PIx2 / 16),
+            (2, 0.5, 0.5, 0),
+            (3, 0.75 + 1.0 / PIx2, 0.25, -PIx2 / 16),
+            (4, 1, 0, 0),
+            (5, 1, 0, 0),
+        ]
+        for t, q, dq, ddq in expectation_table:
+            assert ptp.q(t) == pytest.approx(q)
+            assert ptp.dq(t) == pytest.approx(dq)
+            assert ptp.ddq(t) == pytest.approx(ddq)
+
+    def test_update_sinusoidal_velocity_t0(self) -> None:
+        ptp = PTP(0, 1, 4, 1, profile_name="sin")
+        expectation_table = [
+            # t, q, dq, ddq
+            (0, 0, 0, 0),
+            (1, 0, 0, 0),
+            (2, 0.25 - 1.0 / PIx2, 0.25, PIx2 / 16),
+            (3, 0.5, 0.5, 0),
+            (4, 0.75 + 1.0 / PIx2, 0.25, -PIx2 / 16),
+            (5, 1, 0, 0),
+            (6, 1, 0, 0),
+        ]
+        for t, q, dq, ddq in expectation_table:
+            assert ptp.q(t) == pytest.approx(q)
+            assert ptp.dq(t) == pytest.approx(dq)
+            assert ptp.ddq(t) == pytest.approx(ddq)
+
+    def test_update_sinusoidal_velocity_ndarray(self) -> None:
+        ptp = PTP(np.array([0, 0, 0]), np.array([1, 1, 1]), 4, profile_name="sin")
+        expectation_table = [
+            # t, q, dq, ddq
+            (-1, 0, 0, 0),
+            (0, 0, 0, 0),
+            (1, 0.25 - 1.0 / PIx2, 0.25, PIx2 / 16),
+            (2, 0.5, 0.5, 0),
+            (3, 0.75 + 1.0 / PIx2, 0.25, -PIx2 / 16),
+            (4, 1, 0, 0),
+            (5, 1, 0, 0),
+        ]
+        for t, q, dq, ddq in expectation_table:
+            assert_array_almost_equal(ptp.q(t), [q, q, q])
+            assert_array_almost_equal(ptp.dq(t), [dq, dq, dq])
+            assert_array_almost_equal(ptp.ddq(t), [ddq, ddq, ddq])

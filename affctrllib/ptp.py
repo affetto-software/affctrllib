@@ -256,6 +256,35 @@ class TrapezoidalVelocityProfile(Profile, Generic[JointT]):
         )
 
 
+class SinusoidalVelocityProfile(Profile[JointT]):
+    def __init__(self, q0: JointT, qF: JointT, T: float, t0: float):
+        super().__init__(q0, qF, T, t0)
+        self._omega = 2.0 * np.pi / T
+        self._s_coeff = -1.0 / (2.0 * np.pi)
+        self._ds_coeff = 1.0 / T
+        self._dds_coeff = self._omega / T
+
+    def s(self, t: float) -> float:
+        t_rel = t - self._t0
+        if t_rel < 0:
+            return 0
+        elif t_rel > self._T:
+            return 1
+        return self._s_coeff * np.sin(self._omega * t_rel) + t_rel / self.T
+
+    def ds(self, t: float) -> float:
+        t_rel = t - self._t0
+        if t_rel < 0 or t_rel > self._T:
+            return 0
+        return self._ds_coeff * (1.0 - np.cos(self._omega * t_rel))
+
+    def dds(self, t: float) -> float:
+        t_rel = t - self._t0
+        if t_rel < 0 or t_rel > self._T:
+            return 0
+        return self._dds_coeff * np.sin(self._omega * t_rel)
+
+
 class FifthDegreePolynomialProfile(Profile, Generic[JointT]):
     def __init__(self, q0: JointT, qF: JointT, T: float, t0: float):
         Profile.__init__(self, q0, qF, T, t0)
@@ -297,6 +326,9 @@ PTP_ACCEPTABLE_PROFILE_NAMES = {
     "trapezoidal": TrapezoidalVelocityProfile,
     "trapez": TrapezoidalVelocityProfile,
     "tra": TrapezoidalVelocityProfile,
+    "sinusoidal velocity": SinusoidalVelocityProfile,
+    "sinusoidal": SinusoidalVelocityProfile,
+    "sin": SinusoidalVelocityProfile,
     "5th-degree polynomial": FifthDegreePolynomialProfile,
     "5th degree polynomial": FifthDegreePolynomialProfile,
     "5th-degree": FifthDegreePolynomialProfile,
