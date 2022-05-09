@@ -138,6 +138,7 @@ class TestAffCtrl:
     def test_init(self) -> None:
         ctrl = AffCtrl()
         assert isinstance(ctrl, AffCtrl)
+        assert ctrl.inactive_joints.shape == (0, 3)
 
     def test_init_config(self) -> None:
         config = os.path.join(CONFIG_DIR_PATH, "default.toml")
@@ -145,6 +146,18 @@ class TestAffCtrl:
         assert str(ctrl.config_path) == config
         assert ctrl.dof == 13
         assert ctrl.scale_gain == 255 / 600
+        assert_array_equal(
+            ctrl.inactive_joints,
+            [
+                [1, 0, 0],
+                [7, 100, 100],
+                [8, 100, 100],
+                [9, 100, 100],
+                [10, 100, 100],
+                [11, 100, 100],
+                [12, 100, 100],
+            ],
+        )
         assert isinstance(ctrl.feedback_scheme, FeedbackPID)
         assert_array_equal(ctrl.feedback_scheme.kP, np.array([20] * 13))
         assert_array_equal(ctrl.feedback_scheme.kD, np.array([200] * 13))
@@ -157,6 +170,19 @@ class TestAffCtrl:
         assert str(ctrl.config_path) == config
         assert ctrl.dof == 14
         assert ctrl.scale_gain == 255 / 400
+        assert_array_equal(
+            ctrl.inactive_joints,
+            [
+                [1, 400, 400],
+                [3, 400, 400],
+                [5, 400, 400],
+                [7, 400, 400],
+                [8, 200, 200],
+                [10, 200, 200],
+                [11, 200, 200],
+                [12, 200, 200],
+            ],
+        )
         assert isinstance(ctrl.feedback_scheme, FeedbackPIDF)
         assert_array_equal(ctrl.feedback_scheme.kP, np.array([3] * 13))
         assert_array_equal(ctrl.feedback_scheme.kD, np.array([30] * 13))
@@ -175,3 +201,97 @@ class TestAffCtrl:
         ctrl.set_input_range(input_range)
         assert ctrl.input_range == input_range
         assert ctrl.scale_gain == expected
+
+    @pytest.mark.parametrize(
+        "i,p",
+        [
+            (1, 10),
+            (3, 30),
+            ("5", 50),
+            ("8", 80),
+        ],
+    )
+    def test_set_inactive_joints(self, i, p):
+        ctrl = AffCtrl()
+        ctrl.set_inactive_joint(i, p)
+        assert_array_equal(ctrl.inactive_joints, [[int(i), p, p]])
+
+    def test_set_inactive_joints_default_press(self):
+        ctrl = AffCtrl()
+        ctrl.set_inactive_joint(3)
+        assert_array_equal(ctrl.inactive_joints, [[3, 0, 0]])
+
+    @pytest.mark.parametrize(
+        "pattern,pressure,expected",
+        [
+            (1, 10, [[1, 10, 10]]),
+            ("2", 20, [[2, 20, 20]]),
+            ("1-3", 30, [[1, 30, 30], [2, 30, 30], [3, 30, 30]]),
+            ("2-5", 40, [[2, 40, 40], [3, 40, 40], [4, 40, 40], [5, 40, 40]]),
+            ("3-3", 50, [[3, 50, 50]]),
+            ("3-2", 60, np.empty(shape=(0, 3))),
+            ("-3", 70, [[0, 70, 70], [1, 70, 70], [2, 70, 70], [3, 70, 70]]),
+            ("10-", 80, [[10, 80, 80], [11, 80, 80], [12, 80, 80]]),
+            ("1,3,5", 90, [[1, 90, 90], [3, 90, 90], [5, 90, 90]]),
+            (
+                "2,3-5,8",
+                100,
+                [
+                    [2, 100, 100],
+                    [3, 100, 100],
+                    [4, 100, 100],
+                    [5, 100, 100],
+                    [8, 100, 100],
+                ],
+            ),
+            (
+                "0,10-",
+                110,
+                [[0, 110, 110], [10, 110, 110], [11, 110, 110], [12, 110, 110]],
+            ),
+        ],
+    )
+    def test_set_inactive_joints_pattern(self, pattern, pressure, expected):
+        ctrl = AffCtrl()
+        ctrl.set_inactive_joint(pattern, pressure)
+        assert_array_equal(ctrl.inactive_joints, expected)
+
+    def test_set_inactive_joints_multi(self):
+        ctrl = AffCtrl()
+        ctrl.set_inactive_joint(1)
+        ctrl.set_inactive_joint("7-12", 100)
+        assert_array_equal(
+            ctrl.inactive_joints,
+            [
+                [1, 0, 0],
+                [7, 100, 100],
+                [8, 100, 100],
+                [9, 100, 100],
+                [10, 100, 100],
+                [11, 100, 100],
+                [12, 100, 100],
+            ],
+        )
+
+    def test_mask(self):
+        config = os.path.join(CONFIG_DIR_PATH, "default.toml")
+        ctrl = AffCtrl(config)
+        u1 = np.ones((13,))
+        u2 = np.ones((13,))
+        u1, u2 = ctrl.mask(u1, u2)
+        expected = np.ones((13,))
+        expected[1] = 0
+        expected[7:] = 100
+        assert_array_equal(u1, expected)
+        assert_array_equal(u2, expected)
+
+    def test_masked_ctrl_input(self):
+        z = np.zeros((13,))
+        config = os.path.join(CONFIG_DIR_PATH, "default.toml")
+        ctrl = AffCtrl(config)
+        u1, u2 = ctrl.update(0, z, z, z, z, z, z)
+        expected = np.full((13,), 150 * 255 / 600)
+        expected[1] = 0
+        expected[7:] = 100 * 255 / 600
+        assert_array_equal(u1, expected)
+        assert_array_equal(u2, expected)

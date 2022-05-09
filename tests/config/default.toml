@@ -134,6 +134,13 @@ freq = 30
 scheme = "PID"
 input_range = [0, 600]
 
+[[affetto.ctrl.inactive_joints]]
+index = 1
+
+[[affetto.ctrl.inactive_joints]]
+index = "7-12"
+pressure = 100
+
 [affetto.ctrl.pid]
 kP = [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20]
 kD = [200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200, 200]

@@ -141,6 +141,14 @@ freq = 100
 scheme = "PIDF"
 input_range = [100, 500]
 
+[[affetto.ctrl.inactive_joints]]
+index = "1,3,5,7"
+pressure = 400
+
+[[affetto.ctrl.inactive_joints]]
+index = "8,10-12"
+pressure = 200
+
 [affetto.ctrl.pid]
 kP = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
 kD = [10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10]
