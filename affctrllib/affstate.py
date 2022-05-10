@@ -1,11 +1,14 @@
+import itertools
+import sys
 from pathlib import Path
 from typing import Any
 
 import numpy as np
 
-from .affcomm import unzip_array_as_ndarray
+from .affcomm import AffComm, unzip_array_as_ndarray
 from .affetto import Affetto
 from .filter import Filter
+from .timer import Timer
 
 
 class AffState(Affetto):
@@ -131,3 +134,38 @@ class AffState(Affetto):
         except AttributeError:
             self._dq = np.zeros(shape=self.q.shape)
         self._q_prev = self.q
+
+    def idle(
+        self,
+        acom: AffComm,
+        n_sample: int = 100,
+        freq_tol: float = 1,
+        no_error: bool = False,
+        quiet: bool = False,
+    ) -> None:
+        spinner = itertools.cycle(["-", "/", "|", "\\"])
+        if not quiet:
+            sys.stdout.write("Idling sensory module... ")
+            sys.stdout.flush()
+        if not acom.sensory_socket.is_created():
+            acom.create_sensory_socket()
+        timer = Timer()
+        received_time_series = []
+        timer.start()
+        for i in range(n_sample):
+            sarr = acom.receive_as_list()
+            received_time_series.append(timer.elapsed_time())
+            self.update(sarr)
+            if not quiet and i % 10 == 0:
+                sys.stdout.write(next(spinner))
+                sys.stdout.flush()
+                sys.stdout.write("\b")
+        time_series = np.array(received_time_series)
+        dt_series = np.subtract(time_series[1:], time_series[:-1])
+        estimated_freq = 1.0 / np.mean(dt_series)
+        if not no_error and abs(self.freq - estimated_freq) > freq_tol:
+            msg = f"Specified sampling frequency is probably incorrect:\n"
+            msg += f"  {estimated_freq:.3f} (estimated) vs {self.freq:.3f} (specified)"
+            raise RuntimeError(msg)
+        if not quiet:
+            sys.stdout.write("done.\n")

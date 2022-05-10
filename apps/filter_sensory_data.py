@@ -57,7 +57,6 @@ def mainloop(config, output, freq, period):
     if period == 0:
         print(f"To finish process, type Ctrl-C.")
 
-    acom.create_sensory_socket()
     astate = AffState(config)
     if freq > 0:
         astate.freq = freq
@@ -73,6 +72,7 @@ def mainloop(config, output, freq, period):
         logger.dump()
         report_statistics(received_time_series, astate.freq)
 
+    astate.idle(acom)
     timer = Timer(rate=astate.freq)
     timer.start()
     t = 0
