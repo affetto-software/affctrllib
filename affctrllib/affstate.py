@@ -90,6 +90,10 @@ class AffState(Affetto):
         return self._data_ndarray[0]
 
     @property
+    def raw_dq(self) -> np.ndarray:
+        return self._dq
+
+    @property
     def raw_pa(self) -> np.ndarray:
         return self._data_ndarray[1]
 
@@ -102,16 +106,16 @@ class AffState(Affetto):
         return self._filtered_data[0]
 
     @property
+    def dq(self) -> np.ndarray:
+        return self._dq
+
+    @property
     def pa(self) -> np.ndarray:
         return self._filtered_data[1]
 
     @property
     def pb(self) -> np.ndarray:
         return self._filtered_data[2]
-
-    @property
-    def dq(self) -> np.ndarray:
-        return self._dq
 
     def update(self, raw_data: list[float] | list[int] | np.ndarray) -> None:
         self._raw_data = raw_data
