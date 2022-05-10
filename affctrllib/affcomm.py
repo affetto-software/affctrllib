@@ -145,11 +145,17 @@ AffComm configuration:
     ) -> tuple[socket.socket, socket.socket]:
         return (self.create_sensory_socket(sensory_addr), self.create_command_socket())
 
-    def close(self) -> None:
+    def close_sensory_socket(self) -> None:
         if self.sensory_socket.is_created():
             self.sensory_socket.close()
+
+    def close_command_socket(self) -> None:
         if self.command_socket.is_created():
             self.command_socket.close()
+
+    def close(self) -> None:
+        self.close_sensory_socket()
+        self.close_command_socket()
 
     def receive(self, bufsize=1024) -> bytes:
         return self.sensory_socket.recvfrom(bufsize)
