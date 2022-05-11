@@ -234,52 +234,62 @@ class AffStateThread(threading.Thread):
         with self._lock:
             self._astate.freq = freq
 
+    def get_raw_states(self) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+        with self._lock:
+            s = self._astate
+            return (
+                np.copy(s.raw_q),
+                np.copy(s.raw_dq),
+                np.copy(s.raw_pa),
+                np.copy(s.raw_pb),
+            )
+
     def get_states(self) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
         with self._lock:
             s = self._astate
-            return s.q, s.dq, s.pa, s.pb
+            return np.copy(s.q), np.copy(s.dq), np.copy(s.pa), np.copy(s.pb)
 
     @property
-    def raw_data(self) -> list[float] | list[int] | np.ndarray:
+    def raw_data(self) -> np.ndarray:
         with self._lock:
-            return self._astate.raw_data
+            return np.copy(self._astate.raw_data)
 
     @property
     def raw_q(self) -> np.ndarray:
         with self._lock:
-            return self._astate.raw_q
+            return np.copy(self._astate.raw_q)
 
     @property
     def raw_dq(self) -> np.ndarray:
         with self._lock:
-            return self._astate.raw_dq
+            return np.copy(self._astate.raw_dq)
 
     @property
     def raw_pa(self) -> np.ndarray:
         with self._lock:
-            return self._astate.raw_pa
+            return np.copy(self._astate.raw_pa)
 
     @property
     def raw_pb(self) -> np.ndarray:
         with self._lock:
-            return self._astate.raw_pb
+            return np.copy(self._astate.raw_pb)
 
     @property
     def q(self) -> np.ndarray:
         with self._lock:
-            return self._astate.q
+            return np.copy(self._astate.q)
 
     @property
     def dq(self) -> np.ndarray:
         with self._lock:
-            return self._astate.dq
+            return np.copy(self._astate.dq)
 
     @property
     def pa(self) -> np.ndarray:
         with self._lock:
-            return self._astate.pa
+            return np.copy(self._astate.pa)
 
     @property
     def pb(self) -> np.ndarray:
         with self._lock:
-            return self._astate.pb
+            return np.copy(self._astate.pb)
