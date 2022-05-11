@@ -161,13 +161,49 @@ class TestAffCtrl:
     def test_init(self) -> None:
         ctrl = AffCtrl()
         assert isinstance(ctrl, AffCtrl)
+        assert ctrl.freq == 30
+        assert ctrl.dt == 1.0 / 30
         assert ctrl.inactive_joints.shape == (0, 3)
+
+    @pytest.mark.parametrize("dt,freq", [(0.01, 100), (0.001, 1000), (0.02, 50)])
+    def test_init_specify_dt(self, dt, freq) -> None:
+        ctrl = AffCtrl(dt=dt)
+        assert ctrl.dt == dt
+        assert ctrl.freq == freq
+
+    @pytest.mark.parametrize("freq,dt", [(100, 0.01), (1000, 0.001), (30, 1.0 / 30)])
+    def test_init_specify_freq(self, freq, dt) -> None:
+        ctrl = AffCtrl(freq=freq)
+        assert ctrl.dt == dt
+        assert ctrl.freq == freq
+
+    def test_init_error_both_of_dt_freq_specified(self) -> None:
+        dt = 0.01
+        freq = 100
+        with pytest.raises(ValueError) as excinfo:
+            _ = AffCtrl(dt=dt, freq=freq)
+        assert "Unable to specify DT and FREQ simultaneously" in str(excinfo.value)
+
+    @pytest.mark.parametrize("dt,freq", [(0.01, 100), (0.001, 1000), (0.02, 50)])
+    def test_dt_setter(self, dt, freq):
+        ctrl = AffCtrl(dt=0.01)
+        ctrl.dt = dt
+        assert ctrl.dt == dt
+        assert ctrl.freq == freq
+
+    @pytest.mark.parametrize("freq,dt", [(100, 0.01), (1000, 0.001), (30, 1.0 / 30)])
+    def test_freq_setter(self, dt, freq):
+        ctrl = AffCtrl(dt=0.01)
+        ctrl.freq = freq
+        assert ctrl.dt == dt
+        assert ctrl.freq == freq
 
     def test_init_config(self) -> None:
         config = os.path.join(CONFIG_DIR_PATH, "default.toml")
         ctrl = AffCtrl(config)
         assert str(ctrl.config_path) == config
         assert ctrl.dof == 13
+        assert ctrl.freq == 30
         assert ctrl.scale_gain == 255 / 600
         assert_array_equal(
             ctrl.inactive_joints,
@@ -192,6 +228,7 @@ class TestAffCtrl:
         ctrl = AffCtrl(config)
         assert str(ctrl.config_path) == config
         assert ctrl.dof == 14
+        assert ctrl.freq == 50
         assert ctrl.scale_gain == 255 / 400
         assert_array_equal(
             ctrl.inactive_joints,

@@ -133,6 +133,7 @@ freq = 30
 [affetto.ctrl]
 scheme = "PID"
 input_range = [0, 600]
+freq = 30
 
 [[affetto.ctrl.inactive_joints]]
 index = 1

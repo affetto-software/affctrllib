@@ -163,22 +163,67 @@ AFFCTRL_FEEDBACK_SCHEME_TO_CONFIG_KEY = {
 
 class AffCtrl(Affetto, Generic[JointT]):
     ctrl_config: dict[str, Any]
+    _dt: float
+    _freq: float
     _input_range: tuple[float, float]
     _scale_gain: float
     _inactive_joints: np.ndarray
     _feedback_scheme: Feedback
 
+    DEFAULT_FREQ = 30
     DEFAULT_INACTIVE_PRESSURE = 0
 
-    def __init__(self, config_path: str | Path | None = None) -> None:
+    def __init__(
+        self,
+        config_path: str | Path | None = None,
+        dt: float | None = None,
+        freq: float | None = None,
+    ) -> None:
+        self.set_freq(self.DEFAULT_FREQ)
         self.reset_inactive_joints()
         super().__init__(config_path)
+        self.set_frequency(dt=dt, freq=freq)
 
     def __repr__(self) -> str:
         return ""
 
     def __str__(self) -> str:
         return ""
+
+    def set_frequency(self, dt: float | None = None, freq: float | None = None) -> None:
+        if dt is not None and freq is not None:
+            raise ValueError("Unable to specify DT and FREQ simultaneously")
+        if dt is not None:
+            self._dt = dt
+            self._freq = 1.0 / dt
+        elif freq is not None:
+            self._freq = freq
+            self._dt = 1.0 / freq
+
+        if not hasattr(self, "_dt") and not hasattr(self, "_freq"):
+            raise ValueError("Require DT or FREQ")
+
+    @property
+    def dt(self) -> float:
+        return self._dt
+
+    def set_dt(self, dt: float) -> None:
+        self.set_frequency(dt=dt)
+
+    @dt.setter
+    def dt(self, dt: float) -> None:
+        self.set_dt(dt)
+
+    @property
+    def freq(self) -> float:
+        return self._freq
+
+    def set_freq(self, freq: float) -> None:
+        self.set_frequency(freq=freq)
+
+    @freq.setter
+    def freq(self, freq: float) -> None:
+        self.set_freq(freq)
 
     @property
     def feedback_scheme(self) -> Feedback:
@@ -194,6 +239,9 @@ class AffCtrl(Affetto, Generic[JointT]):
         else:
             c = self.config
         self.ctrl_config = c["ctrl"]
+        dt = self.ctrl_config.get("dt", None)
+        freq = self.ctrl_config.get("freq", None)
+        self.set_frequency(dt=dt, freq=freq)
         try:
             self.input_range = tuple(self.ctrl_config["input_range"])
         except KeyError:
