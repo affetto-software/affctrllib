@@ -185,6 +185,35 @@ class TestPTP:
         assert ptp.profile.tb.shape == (3,)  # type: ignore
         assert_array_equal(ptp.profile.tb, np.array([1, 1, 1]))  # type: ignore
 
+    def test_set_vmax_set_zero(self) -> None:
+        ptp = PTP(0, 1, 6, vmax=0, profile_name="tra")
+        assert ptp.profile.vmax == 0.25  # type: ignore
+        assert ptp.profile.tb == 2  # type: ignore
+
+    def test_set_vmax_set_zero_ndarray(self) -> None:
+        ptp = PTP(
+            np.array([0, 0]),
+            np.array([1, 1]),
+            6,
+            vmax=np.array([0, 0.3]),
+            profile_name="tra",
+        )
+        assert_array_equal(ptp.profile.vmax, np.array([0.25, 0.3]))  # type: ignore
+        assert_array_almost_equal(ptp.profile.tb, np.array([2, 8 / 3]))  # type: ignore
+
+    def test_set_vmax_set_zero_adapt_dimension_to_q0(self) -> None:
+        ptp = PTP(
+            np.array([0, 0, 0]),
+            np.array([1, 1, 1]),
+            6,
+            vmax=0,
+            profile_name="tra",
+        )
+        assert ptp.profile.vmax.shape == (3,)  # type: ignore
+        assert_array_equal(ptp.profile.vmax, np.array([0.25, 0.25, 0.25]))  # type: ignore
+        assert ptp.profile.tb.shape == (3,)  # type: ignore
+        assert_array_equal(ptp.profile.tb, np.array([2, 2, 2]))  # type: ignore
+
     def test_set_tb(self) -> None:
         ptp = PTP(0, 1, 5, tb=1, profile_name="tra")
         assert ptp.profile.vmax == 0.25  # type: ignore
@@ -213,6 +242,35 @@ class TestPTP:
         assert_array_equal(ptp.profile.vmax, np.array([0.25, 0.25, 0.25]))  # type: ignore
         assert ptp.profile.tb.shape == (3,)  # type: ignore
         assert_array_equal(ptp.profile.tb, np.array([1, 1, 1]))  # type: ignore
+
+    def test_set_tb_set_zero(self) -> None:
+        ptp = PTP(0, 1, 6, tb=0, profile_name="tra")
+        assert ptp.profile.vmax == 0.25  # type: ignore
+        assert ptp.profile.tb == 2  # type: ignore
+
+    def test_set_tb_set_zero_ndarray(self) -> None:
+        ptp = PTP(
+            np.array([0, 0]),
+            np.array([1, 1]),
+            6,
+            tb=np.array([0, 8 / 3]),
+            profile_name="tra",
+        )
+        assert_array_equal(ptp.profile.vmax, np.array([0.25, 0.3]))  # type: ignore
+        assert_array_almost_equal(ptp.profile.tb, np.array([2, 8 / 3]))  # type: ignore
+
+    def test_set_tb_set_zero_adapt_dimension_to_q0(self) -> None:
+        ptp = PTP(
+            np.array([0, 0, 0]),
+            np.array([1, 1, 1]),
+            6,
+            tb=0,
+            profile_name="tra",
+        )
+        assert ptp.profile.vmax.shape == (3,)  # type: ignore
+        assert_array_equal(ptp.profile.vmax, np.array([0.25, 0.25, 0.25]))  # type: ignore
+        assert ptp.profile.tb.shape == (3,)  # type: ignore
+        assert_array_equal(ptp.profile.tb, np.array([2, 2, 2]))  # type: ignore
 
     def test_error_no_vmax_tb_provided(self) -> None:
         with pytest.raises(ValueError) as excinfo:
@@ -263,7 +321,7 @@ class TestPTP:
     def test_warn_too_large_tb(self) -> None:
         with pytest.warns(ResourceWarning) as record:
             _ = PTP(0, 1, 5, profile_name="tra", tb=3)
-        msg = "Specified Tb for q[0] is reduced: 3 -> 2.5"
+        msg = "Specified Tb for q[0] is reduced: 3.0 -> 2.5"
         assert msg in str(record[0].message)
 
     def test_warn_too_large_tb_ndarray(self) -> None:
@@ -276,9 +334,9 @@ class TestPTP:
                 tb=np.array([4, 1, 2, 5]),
             )
         assert len(record) == 2
-        msg = "Specified Tb for q[0] is reduced: 4 -> 2.5"
+        msg = "Specified Tb for q[0] is reduced: 4.0 -> 2.5"
         assert msg in str(record[0].message)
-        msg = "Specified Tb for q[3] is reduced: 5 -> 2.5"
+        msg = "Specified Tb for q[3] is reduced: 5.0 -> 2.5"
         assert msg in str(record[1].message)
         assert_array_equal(ptp.profile.tb, [2.5, 1, 2, 2.5])  # type: ignore
 

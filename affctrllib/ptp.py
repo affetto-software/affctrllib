@@ -139,6 +139,7 @@ class TrapezoidalVelocityProfile(Profile, Generic[JointT]):
         else:
             _vmax = vmax
         self._vM = np.absolute(_vmax / (self.qF - self.q0))
+        self._vM = np.where(self._vM < 1e-12, 3.0 / (2.0 * self.T), self._vM)
 
         # Raise error when vM is too small.
         if np.any(self._vM <= 1.0 / self.T):
@@ -158,9 +159,9 @@ class TrapezoidalVelocityProfile(Profile, Generic[JointT]):
             vM = np.where(self._vM > v, v, self._vM)
             for i in indices:
                 msg = f"Specified Vmax for q[{i}] is truncated: "
-                if isinstance(self._vM, np.ndarray):
+                try:
                     v1, v2 = self._vM[i], vM[i]
-                else:
+                except IndexError:
                     v1, v2 = self._vM, vM
                 msg += f"{v1} -> {v2}"
                 warnings.warn(msg, ResourceWarning)
@@ -179,6 +180,7 @@ class TrapezoidalVelocityProfile(Profile, Generic[JointT]):
             self._tb = np.full(self.q0.shape, tb)
         else:
             self._tb = tb
+        self._tb = np.where(self._tb < 1e-12, self.T / 3, self._tb)
 
         # Emit warning when tb is too large.
         if np.any(self._tb > 0.5 * self.T):
@@ -187,9 +189,9 @@ class TrapezoidalVelocityProfile(Profile, Generic[JointT]):
             Tb = np.where(self._tb > half_T, half_T, self._tb)
             for i in indices:
                 msg = f"Specified Tb for q[{i}] is reduced: "
-                if isinstance(self._tb, np.ndarray):
+                try:
                     tb1, tb2 = self._tb[i], Tb[i]
-                else:
+                except IndexError:
                     tb1, tb2 = self._tb, Tb
                 msg += f"{tb1} -> {tb2}"
                 warnings.warn(msg, ResourceWarning)
