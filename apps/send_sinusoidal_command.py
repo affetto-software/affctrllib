@@ -178,7 +178,6 @@ def mainloop(config, output, freq, time, default_params, specific_params_list):
 
     def cleanup():
         acom.close()
-        print(f"\nSaving data in <{str(output)}>...")
         logger.dump()
 
     t = 0
@@ -203,6 +202,7 @@ def mainloop(config, output, freq, time, default_params, specific_params_list):
 
         # Block process for a certain period.
         timer.block()
+    print()
 
     cleanup()
 

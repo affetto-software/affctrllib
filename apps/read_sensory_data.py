@@ -45,8 +45,6 @@ def mainloop(config, output, period):
 
     def cleanup():
         acom.close()
-        print()
-        print(f"Saving data in <{str(output)}>...")
         logger.dump()
         report_statistics(received_time_series)
 
@@ -60,6 +58,7 @@ def mainloop(config, output, period):
             logger.store_data([t] + data)
             received_time_series.append(t)
             print(f"\rt = {t:.2f}", end="")
+        print()
 
     except KeyboardInterrupt:
         print(f"\nFinishing process by KeyboardInterrupt.")

@@ -60,7 +60,6 @@ def mainloop(config, output, freq, keyframes, initial=None, profile="tri"):
 
     def cleanup():
         acom.close()
-        print(f"\nSaving data in <{str(output)}>...")
         logger.dump()
 
     def moveto(t0, q0, T, qF, profile, msg=None):
@@ -83,6 +82,7 @@ def mainloop(config, output, freq, keyframes, initial=None, profile="tri"):
             logging(logger, t, astate, qdes, dqdes, ca, cb)
             print(f"\rt = {t:.2f}", end="")
             # timer.block()
+        print()
 
     q0 = acom.receive_as_2darray()[0]
     if initial:
