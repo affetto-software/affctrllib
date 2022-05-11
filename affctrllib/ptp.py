@@ -121,7 +121,7 @@ class TrapezoidalVelocityProfile(Profile, Generic[JointT]):
         elif tb is not None:
             self.set_tb(tb)
         else:
-            raise ValueError("Require Vmax or Tb for trapezoidal velocity profile")
+            self.set_vmax(0)
         if isinstance(vmax, np.ndarray):
             self._zeros = np.zeros(shape=vmax.shape)
             self._ones = np.ones(shape=vmax.shape)

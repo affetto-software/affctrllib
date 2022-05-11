@@ -51,7 +51,7 @@ class TestPTP:
         ],
     )
     def test_select_profile_trapezoidal(self, name, expected) -> None:
-        ptp = PTP(0, 1, 5, profile_name=name, vmax=0.25)
+        ptp = PTP(0, 1, 5, profile_name=name)
         assert isinstance(ptp.profile, expected)
 
     @pytest.mark.parametrize("name", ["hoge", "poly", "tria", "5th ordre"])
@@ -272,11 +272,17 @@ class TestPTP:
         assert ptp.profile.tb.shape == (3,)  # type: ignore
         assert_array_equal(ptp.profile.tb, np.array([2, 2, 2]))  # type: ignore
 
-    def test_error_no_vmax_tb_provided(self) -> None:
-        with pytest.raises(ValueError) as excinfo:
-            _ = PTP(0, 1, 5, profile_name="tra")
-        msg = "Require Vmax or Tb for trapezoidal velocity profile"
-        assert msg in str(excinfo.value)
+    def test_init_none_of_vmax_tb_provided(self) -> None:
+        ptp = PTP(0, 1, 6, profile_name="tra")
+        assert ptp.profile.vmax == 0.25  # type: ignore
+        assert ptp.profile.tb == 2  # type: ignore
+
+    def test_init_none_of_vmax_tb_provided_ndarray(self) -> None:
+        ptp = PTP(np.array([0, 0, 0]), np.array([1, 1, 1]), 6, profile_name="tra")
+        assert ptp.profile.vmax.shape == (3,)  # type: ignore
+        assert_array_equal(ptp.profile.vmax, np.array([0.25, 0.25, 0.25]))  # type: ignore
+        assert ptp.profile.tb.shape == (3,)  # type: ignore
+        assert_array_equal(ptp.profile.tb, np.array([2, 2, 2]))  # type: ignore
 
     def test_error_too_small_vmax(self) -> None:
         with pytest.raises(ValueError) as excinfo:
