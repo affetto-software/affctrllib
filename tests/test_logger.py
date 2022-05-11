@@ -158,7 +158,7 @@ class TestLogger:
         logger.set_labels(labels)
         for d in data:
             logger.store_data(d)
-        logger.dump(output_filename)
+        logger.dump(output_filename, quiet=True)
 
         with open(output_filename, "r") as f:
             assert f.read() == expected
@@ -182,7 +182,7 @@ class TestLogger:
         logger = Logger()
         for d in data:
             logger.store_data(d)
-        logger.dump(output_filename)
+        logger.dump(output_filename, quiet=True)
 
         with open(output_filename, "r") as f:
             assert f.read() == expected
@@ -193,7 +193,7 @@ class TestLogger:
             os.remove(output_filename)
 
         logger = Logger()
-        logger.dump(output_filename)
+        logger.dump(output_filename, quiet=True)
 
         with open(output_filename, "r") as f:
             assert f.read() == ""
@@ -214,7 +214,7 @@ class TestLogger:
         logger.set_labels(labels)
         for d in data:
             logger.store_data(d)
-        logger.dump(output_filename)
+        logger.dump(output_filename, quiet=True)
 
         with open(output_filename, "r") as f:
             assert f.read() == expected
@@ -236,7 +236,7 @@ class TestLogger:
         logger.set_labels(labels)
         for d in data:
             logger.store_data(d)
-        logger.dump(output_filename)
+        logger.dump(output_filename, quiet=True)
 
         with open(output_filename, mode="r", newline="\r\n") as f:
             assert f.read() == expected
@@ -251,7 +251,7 @@ class TestLogger:
         assert not os.path.exists(expected_filename)
 
         logger = Logger()
-        logger.dump(output_filename, overwrite=False)
+        logger.dump(output_filename, overwrite=False, quiet=True)
         assert os.path.exists(expected_filename)
 
     def test_dump_overwrite_false_2(self) -> None:
@@ -266,7 +266,7 @@ class TestLogger:
         assert not os.path.exists(expected_filename)
 
         logger = Logger()
-        logger.dump(output_filename, overwrite=False)
+        logger.dump(output_filename, overwrite=False, quiet=True)
         assert os.path.exists(expected_filename)
 
     def test_dump_specify_no_fname(self, capsys) -> None:
@@ -280,7 +280,7 @@ class TestLogger:
         logger.set_labels(labels)
         for d in data:
             logger.store_data(d)
-        logger.dump()
+        logger.dump(quiet=True)
         captured = capsys.readouterr()
         assert captured.out == expected
 
@@ -299,7 +299,39 @@ class TestLogger:
         logger.set_labels(labels)
         for d in data:
             logger.store_data(d)
-        logger.dump()
+        logger.dump(quiet=True)
 
         with open(output_filename, "r") as f:
             assert f.read() == expected
+
+    def test_dump_print_result(self, capsys) -> None:
+        output_filename = os.path.join(OUTPUT_DIR_PATH, "output.csv")
+        if os.path.exists(output_filename):
+            os.remove(output_filename)
+        expected = f"Saving data in <{str(output_filename)}>... done.\n"
+
+        labels = ["t", "x", "y"]
+        data = [[0, 1, 2], [3, 4, 5], [6, 7, 8]]
+        logger = Logger()
+        logger.set_labels(labels)
+        for d in data:
+            logger.store_data(d)
+        logger.dump(output_filename)
+        captured = capsys.readouterr()
+        assert captured.out == expected
+
+    def test_dump_quiet(self, capsys) -> None:
+        output_filename = os.path.join(OUTPUT_DIR_PATH, "output.csv")
+        if os.path.exists(output_filename):
+            os.remove(output_filename)
+        expected = ""
+
+        labels = ["t", "x", "y"]
+        data = [[0, 1, 2], [3, 4, 5], [6, 7, 8]]
+        logger = Logger()
+        logger.set_labels(labels)
+        for d in data:
+            logger.store_data(d)
+        logger.dump(output_filename, quiet=True)
+        captured = capsys.readouterr()
+        assert captured.out == expected

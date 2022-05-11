@@ -1,3 +1,4 @@
+import sys
 from collections.abc import Iterable
 from pathlib import Path
 from typing import Any
@@ -82,7 +83,13 @@ class Logger(object):
                 self.sep.join(f"{x}" for x in line) + self.eol for line in self._rawdata
             )
 
-    def dump(self, fname: str | Path | None = None, overwrite=True, mode="w") -> None:
+    def dump(
+        self,
+        fname: str | Path | None = None,
+        overwrite: bool = True,
+        mode: str = "w",
+        quiet: bool = False,
+    ) -> None:
         fpath: Path
         if fname is not None:
             fpath = Path(fname)
@@ -94,4 +101,9 @@ class Logger(object):
 
         if not overwrite:
             fpath = self._generate_alternative_fname(fpath)
+        if not quiet:
+            sys.stdout.write(f"Saving data in <{fpath}>... ")
+            sys.stdout.flush()
         self._dump_open(fpath, mode)
+        if not quiet:
+            sys.stdout.write(f"done.\n")
