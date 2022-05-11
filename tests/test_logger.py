@@ -61,11 +61,19 @@ class TestLogger:
         logger.set_labels(labels)
         assert logger.get_header() == "t,x,y"
 
-    def test_set_labels_string(self) -> None:
+    def test_set_labels_multiple_args(self) -> None:
         logger = Logger()
-        labels = "txy"
-        logger.set_labels(labels)
-        assert logger.get_header() == "t,x,y"
+        label1 = "t"
+        label2 = [f"q{i}" for i in range(3)]
+        label3 = [f"dq{i}" for i in range(3)]
+        label4 = "rq0"
+        logger.set_labels(label1, label2, label3, label4)
+        assert logger.get_header() == "t,q0,q1,q2,dq0,dq1,dq2,rq0"
+
+    def test_set_labels_string_labels(self) -> None:
+        logger = Logger()
+        logger.set_labels("rq0", "rq1")
+        assert logger.get_header() == "rq0,rq1"
 
     @pytest.mark.parametrize(
         "labels,additional",
@@ -96,6 +104,22 @@ class TestLogger:
         logger = Logger()
         logger.extend_labels(["t", "x", "y"])
         assert logger.get_header() == ",".join(["t", "x", "y"])
+
+    def test_extend_labels_multiple_args(self) -> None:
+        logger = Logger()
+        logger.set_labels("t")
+        label1 = [f"q{i}" for i in range(3)]
+        label2 = [f"dq{i}" for i in range(3)]
+        logger.extend_labels(label1, label2, "rq0")
+        assert logger.get_header() == ",".join(
+            ["t", "q0", "q1", "q2", "dq0", "dq1", "dq2", "rq0"]
+        )
+
+    def test_extend_labels_string(self) -> None:
+        logger = Logger()
+        logger.set_labels(["t"])
+        logger.extend_labels("rq0", "rq1")
+        assert logger.get_header() == ",".join(["t", "rq0", "rq1"])
 
     def test_get_labels_return_None_when_nothing(self) -> None:
         logger = Logger()

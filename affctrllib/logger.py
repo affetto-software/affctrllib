@@ -38,11 +38,13 @@ class Logger(object):
     def get_filename(self) -> str:
         return self.fpath
 
-    def set_labels(self, labels: Iterable[str]) -> None:
-        self._labels = list(labels)
+    def set_labels(self, *args: str | Iterable[str]) -> None:
+        listed = [[arg] if isinstance(arg, str) else arg for arg in args]
+        self._labels = [x for l in listed for x in l]
 
-    def extend_labels(self, labels: Iterable[str]) -> None:
-        self._labels.extend(list(labels))
+    def extend_labels(self, *args: str | Iterable[str]) -> None:
+        listed = [[arg] if isinstance(arg, str) else arg for arg in args]
+        self._labels.extend([x for l in listed for x in l])
 
     def get_header(self) -> str:
         return self.sep.join(self._labels)
