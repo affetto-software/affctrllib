@@ -135,18 +135,18 @@ class TrapezoidalVelocityProfile(Profile, Generic[JointT]):
 
     def set_vmax(self, vmax: JointT | float) -> None:
         if isinstance(self.q0, np.ndarray) and isinstance(vmax, (int, float)):
-            self._vmax = np.full(self.q0.shape, vmax)
+            _vmax = np.full(self.q0.shape, vmax)
         else:
-            self._vmax = vmax
-        self._vM = np.absolute(self.vmax / (self.qF - self.q0))
+            _vmax = vmax
+        self._vM = np.absolute(_vmax / (self.qF - self.q0))
 
         # Raise error when vM is too small.
         if np.any(self._vM <= 1.0 / self.T):
             i = np.flatnonzero(self._vM <= 1.0 / self.T)[0]
             try:
-                v = self._vmax[i]  # type: ignore
-            except TypeError:
-                v = self._vmax
+                v = _vmax[i]  # type: ignore
+            except (TypeError, IndexError):
+                v = _vmax
             msg = f"Specified Vmax for q[{i}] is too small "
             msg += f"to reach desired position: {v}"
             raise ValueError(msg)
@@ -165,8 +165,8 @@ class TrapezoidalVelocityProfile(Profile, Generic[JointT]):
                 msg += f"{v1} -> {v2}"
                 warnings.warn(msg, ResourceWarning)
             self._vM = vM
-            self._vmax = self._vM * (self.qF - self.q0)
 
+        self._vmax = self._vM * (self.qF - self.q0)
         self._tb = self.T - 1.0 / self._vM
         self._a = self._vM / self.tb
 
