@@ -9,7 +9,7 @@ CONFIG_DIR_PATH = os.path.join(os.path.dirname(__file__), "config")
 
 class TestAffState:
     def test_init(self) -> None:
-        state = AffState(dt=0.01)
+        state = AffState()
         assert state.dt == 0.01
         assert state.freq == 100
 
@@ -31,11 +31,6 @@ class TestAffState:
         with pytest.raises(ValueError) as excinfo:
             _ = AffState(dt=dt, freq=freq)
         assert "Unable to specify DT and FREQ simultaneously" in str(excinfo.value)
-
-    def test_init_error_none_of_dt_freq_specified(self) -> None:
-        with pytest.raises(ValueError) as excinfo:
-            _ = AffState()
-        assert "Require DT or FREQ" in str(excinfo.value)
 
     @pytest.mark.parametrize("dt,freq", [(0.01, 100), (0.001, 1000), (0.02, 50)])
     def test_dt_setter(self, dt, freq):

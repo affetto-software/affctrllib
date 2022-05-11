@@ -23,25 +23,18 @@ class AffState(Affetto):
     _q_prev: np.ndarray
     _dq: np.ndarray
 
+    DEFAULT_FREQ = 100
+
     def __init__(
         self,
         config: str | Path | None = None,
         dt: float | None = None,
         freq: float | None = None,
     ) -> None:
+        self.set_freq(self.DEFAULT_FREQ)
         super().__init__(config)
 
-        if all(v is not None for v in (dt, freq)):
-            raise ValueError("Unable to specify DT and FREQ simultaneously")
-
-        if dt is not None:
-            self.dt = dt
-        elif freq is not None:
-            self.freq = freq
-
-        if not hasattr(self, "_dt") and not hasattr(self, "_freq"):
-            raise ValueError("Require DT or FREQ")
-
+        self.set_frequency(dt=dt, freq=freq)
         self._filter_list = [Filter(), Filter(), Filter()]
 
     def load_config(self, config: dict[str, Any]) -> None:
@@ -54,20 +47,29 @@ class AffState(Affetto):
         else:
             c = self.config
         self.state_config = c["state"]
-        if all(k in self.state_config for k in ("dt", "freq")):
+        dt = self.state_config.get("dt", None)
+        freq = self.state_config.get("freq", None)
+        self.set_frequency(dt=dt, freq=freq)
+
+    def set_frequency(self, dt: float | None = None, freq: float | None = None) -> None:
+        if dt is not None and freq is not None:
             raise ValueError("Unable to specify DT and FREQ simultaneously")
-        elif "dt" in self.state_config:
-            self.dt = self.state_config["dt"]
-        elif "freq" in self.state_config:
-            self.freq = self.state_config["freq"]
+        if dt is not None:
+            self._dt = dt
+            self._freq = 1.0 / dt
+        elif freq is not None:
+            self._freq = freq
+            self._dt = 1.0 / freq
+
+        if not hasattr(self, "_dt") and not hasattr(self, "_freq"):
+            raise ValueError("Require DT or FREQ")
 
     @property
     def dt(self) -> float:
         return self._dt
 
     def set_dt(self, dt: float) -> None:
-        self._dt = dt
-        self._freq = 1.0 / dt
+        self.set_frequency(dt=dt)
 
     @dt.setter
     def dt(self, dt: float) -> None:
@@ -78,8 +80,7 @@ class AffState(Affetto):
         return self._freq
 
     def set_freq(self, freq: float) -> None:
-        self._freq = freq
-        self._dt = 1.0 / freq
+        self.set_frequency(freq=freq)
 
     @freq.setter
     def freq(self, freq: float) -> None:
