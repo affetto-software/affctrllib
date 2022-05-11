@@ -191,6 +191,9 @@ class AffStateThread(threading.Thread):
         self._stopped = threading.Event()
         threading.Thread.__init__(self)
 
+        self.acquire = self._lock.acquire
+        self.release = self._lock.release
+
     def prepare(
         self,
         n_sample: int = 100,
