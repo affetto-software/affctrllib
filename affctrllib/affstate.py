@@ -214,6 +214,26 @@ class AffStateThread(threading.Thread):
         self._acom.close_sensory_socket()
         self._stopped.set()
 
+    @property
+    def dt(self) -> float:
+        with self._lock:
+            return self._astate.dt
+
+    @dt.setter
+    def dt(self, dt: float) -> None:
+        with self._lock:
+            self._astate.dt = dt
+
+    @property
+    def freq(self) -> float:
+        with self._lock:
+            return self._astate.freq
+
+    @freq.setter
+    def freq(self, freq: float) -> None:
+        with self._lock:
+            self._astate.freq = freq
+
     def get_states(self) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
         with self._lock:
             s = self._astate

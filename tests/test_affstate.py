@@ -1,7 +1,7 @@
 import os
 
 import pytest
-from affctrllib.affstate import AffState
+from affctrllib.affstate import AffState, AffStateThread
 from numpy.testing import assert_array_equal
 
 CONFIG_DIR_PATH = os.path.join(os.path.dirname(__file__), "config")
@@ -131,3 +131,22 @@ class TestAffState:
         expected = [100, 200]
         state.update(data)
         assert_array_equal(state.dq, expected)
+
+
+class TestAffStateThread:
+    def test_init_config(self) -> None:
+        config = os.path.join(CONFIG_DIR_PATH, "default.toml")
+        state = AffStateThread(config)
+        assert state.freq == 30
+
+    def test_init_alternative_freq(self) -> None:
+        config = os.path.join(CONFIG_DIR_PATH, "default.toml")
+        state = AffStateThread(config, freq=50)
+        assert state.freq == 50
+
+    def test_set_freq(self) -> None:
+        config = os.path.join(CONFIG_DIR_PATH, "default.toml")
+        state = AffStateThread(config)
+        assert state.freq == 30
+        state.freq = 50
+        assert state.freq == 50
