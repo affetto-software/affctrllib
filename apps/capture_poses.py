@@ -1,36 +1,46 @@
 #!/usr/bin/env python
 
 import argparse
-import os
 import re
-import sys
-import threading
 import time
 from pathlib import Path
 
-import affctrllib as acl
-from affctrllib import AffComm, Timer
+from affctrllib import AffStateThread, Timer
 
-DEFAULT_CONFIG_PATH = os.path.join(os.path.dirname(__file__), "config.toml")
-DOF = 13
-BUFSIZE = 1024
+DEFAULT_CONFIG_PATH = Path(__file__).parent.joinpath("config.toml")
+MENU = [
+    ("RET", "Preview current joint angles"),
+    ("c", "Capture current joint angles"),
+    ("2c", "Capture current angles after 2 sec"),
+    ("s", "Save captured angles to file"),
+    ("q", "Quit and save"),
+    ("q!", "Quit without saving"),
+    ("h", "Show help message"),
+]
 
 
 def usage():
-    print(f" =========== Operations ========== : <Key>")
-    print(f"             preview current angles: <RET>")
-    print(f"             capture current angles: <c>")
-    print(f"capture current angles after 2 sec.: <2c>")
-    print(f"       save captured angles to file: <s>")
-    print(f"                      quit and save: <q>")
-    print(f"                quit without saving: <q!>")
-    print(f"                  show help message: <h>")
-    print(f"")
+    maxlen_key = 0
+    maxlen_desc = 0
+    for key, desc in MENU:
+        maxlen_key = len(key) if len(key) > maxlen_key else maxlen_key
+        maxlen_desc = len(desc) if len(desc) > maxlen_desc else maxlen_desc
+    sep = ": "
+    maxlen = maxlen_key + maxlen_desc + len(sep)
+    title = f"Operations"
+    header = (
+        f"{' ' + title[:int(len(title)/2)]:=>{int(maxlen/2)}}"
+        + f"{title[int(len(title)/2):] + ' ':=<{int(maxlen/2+maxlen%2)}}"
+    )
+    menu = header + "\n"
+    for key, desc in MENU:
+        menu += f"{key: >{maxlen_key}}{sep}{desc}\n"
+    print(menu)
 
 
 def make_toml_string(frames):
     dof = 13
-    profile = "triangular"
+    profile = "trapezoidal"
 
     string = f"[keyframe]\n"
     string += f"dof = {dof}\n"
@@ -62,98 +72,56 @@ def save(frames, output):
         print(f"Saved captured keyframes in <{str(path)}>")
 
 
-class ReceivedBytes(object):
-    _bytes: bytes
-
-    def __init__(self):
-        self._bytes = bytes()
-        self._lock = threading.Lock()
-
-    def get(self) -> bytes:
-        with self._lock:
-            return self._bytes
-
-    def set(self, _bytes: bytes) -> None:
-        with self._lock:
-            self._bytes = _bytes
+def capture(t0, timer: Timer, astate: AffStateThread):
+    t = timer.elapsed_time()
+    q = list(astate.q.astype(int))
+    T = round(t - t0, 1)
+    return t, T, q
 
 
-def receive_continuously(ssock, recv_bytes: ReceivedBytes, event: threading.Event):
-    while event.is_set():
-        rb, _ = ssock.recvfrom(BUFSIZE)
-        recv_bytes.set(rb)
-
-
-def mainloop(config, output):
-    acom = AffComm(config)
-    print(acom)
-    usage()
-
-    # Create a thread to receive continuously.
-    ssock = acom.create_sensory_socket()
-    recv_bytes = ReceivedBytes()
-    event = threading.Event()
-    th = threading.Thread(target=receive_continuously, args=(ssock, recv_bytes, event))
-    event.set()
-    th.start()
-
-    def cleanup():
-        event.clear()
-        th.join()
-        acom.close()
+def mainloop(config, output, freq=None):
+    if freq is None:
+        astate = AffStateThread(config)
+    else:
+        astate = AffStateThread(config, freq=freq)
 
     frames = []
     timer = Timer()
     t0 = 0
+    astate.prepare()
+    astate.start()
     timer.start()
-
-    def capture():
-        t = timer.elapsed_time()
-        sarr = acl.split_received_msg(recv_bytes.get())
-        q = list(map(int, acl.unzip_array(sarr)[0]))
-        T = round(t - t0, 1)
-        return T, q
-
     try:
+        usage()
         while True:
             c = input("> ")
             if c == "q":
-                print("Quitting...")
                 save(frames, output)
                 break
             elif c == "q!":
-                print("Quitting without saving...")
                 break
-            elif c == "c":
-                T, q = capture()
-                frames.append((T, q))
-                print(f"T = {T}, q={q}")
-                print("Successfully captured!")
-                t0 = timer.elapsed_time()
-            elif (len(c) > 1) and (
-                (c[-1] == "c" and c[0].isdigit()) or (c[0] == "c" and c[-1].isdigit())
-            ):
-                wait_t = re.findall(r"\d+", c)[0]
-                print(f"Waiting for {wait_t} sec...")
-                time.sleep(int(wait_t))
-                T, q = capture()
-                frames.append((T, q))
-                print(f"T = {T}, q={q}")
-                print("Successfully captured!")
-                t0 = timer.elapsed_time()
             elif c == "h":
                 usage()
             elif c == "s":
                 save(frames, output)
-                print("Successfully saved!")
+            elif "c" in c:
+                if len(c) > 1:
+                    try:
+                        wait_t = re.findall(r"\d+", c)[0]
+                        print(f"Waiting for {wait_t} sec...")
+                        time.sleep(int(wait_t))
+                    except:
+                        pass
+                t0, T, q = capture(t0, timer, astate)
+                frames.append((T, q))
+                print(f"T = {T}, q = {q}")
+                print("Successfully captured!")
             else:
-                T, q = capture()
-                print(f"T = {T}, q={q}")
-    except KeyboardInterrupt:
-        print("Caught KeyboardInterrupt")
-        cleanup()
-        sys.exit(1)
-    cleanup()
+                _, T, q = capture(t0, timer, astate)
+                print(f"T = {T}, q = {q}")
+    finally:
+        print("quitting...")
+        astate.join()
 
 
 def parse():
@@ -162,12 +130,13 @@ def parse():
         "-c", "--config", default=DEFAULT_CONFIG_PATH, help="config file"
     )
     parser.add_argument("-o", "--output", default=None, help="output filename")
+    parser.add_argument("-H", "--hz", type=float, help="sampling frequency")
     return parser.parse_args()
 
 
 def main():
     args = parse()
-    mainloop(args.config, args.output)
+    mainloop(args.config, args.output, args.hz)
 
 
 if __name__ == "__main__":
