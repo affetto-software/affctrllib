@@ -1,5 +1,6 @@
 import itertools
 import sys
+import threading
 from pathlib import Path
 from typing import Any
 
@@ -169,3 +170,95 @@ class AffState(Affetto):
             raise RuntimeError(msg)
         if not quiet:
             sys.stdout.write("done.\n")
+
+
+class AffStateThread(threading.Thread):
+    _acom: AffComm
+    _astate: AffState
+    _lock: threading.Lock
+    _stopped: threading.Event
+
+    def __init__(
+        self,
+        config: str | Path | None = None,
+        dt: float | None = None,
+        freq: float | None = None,
+    ) -> None:
+        self._acom = AffComm(config)
+        self._astate = AffState(config, dt, freq)
+        self._lock = threading.Lock()
+        self._stopped = threading.Event()
+        threading.Thread.__init__(self)
+
+    def prepare(
+        self,
+        n_sample: int = 100,
+        freq_tol: float = 1,
+        no_error: bool = False,
+        quiet: bool = False,
+    ) -> None:
+        self._astate.idle(self._acom, n_sample, freq_tol, no_error, quiet)
+
+    def run(self):
+        while not self._stopped.is_set():
+            sarr = self._acom.receive_as_list()
+            with self._lock:
+                self._astate.update(sarr)
+
+    def join(self, timeout=None):
+        self.stop()
+        threading.Thread.join(self, timeout)
+
+    def stop(self) -> None:
+        self._acom.close_sensory_socket()
+        self._stopped.set()
+
+    def get_states(self) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+        with self._lock:
+            s = self._astate
+            return s.q, s.dq, s.pa, s.pb
+
+    @property
+    def raw_data(self) -> list[float] | list[int] | np.ndarray:
+        with self._lock:
+            return self._astate.raw_data
+
+    @property
+    def raw_q(self) -> np.ndarray:
+        with self._lock:
+            return self._astate.raw_q
+
+    @property
+    def raw_dq(self) -> np.ndarray:
+        with self._lock:
+            return self._astate.raw_dq
+
+    @property
+    def raw_pa(self) -> np.ndarray:
+        with self._lock:
+            return self._astate.raw_pa
+
+    @property
+    def raw_pb(self) -> np.ndarray:
+        with self._lock:
+            return self._astate.raw_pb
+
+    @property
+    def q(self) -> np.ndarray:
+        with self._lock:
+            return self._astate.q
+
+    @property
+    def dq(self) -> np.ndarray:
+        with self._lock:
+            return self._astate.dq
+
+    @property
+    def pa(self) -> np.ndarray:
+        with self._lock:
+            return self._astate.pa
+
+    @property
+    def pb(self) -> np.ndarray:
+        with self._lock:
+            return self._astate.pb

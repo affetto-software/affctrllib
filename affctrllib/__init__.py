@@ -35,9 +35,9 @@ from .affmock import AffMock
 
 __all__.extend(["AffMock"])
 
-from .affstate import AffState
+from .affstate import AffState, AffStateThread
 
-__all__.extend(["AffState"])
+__all__.extend(["AffState", "AffStateThread"])
 
 from .filter import Filter
 
