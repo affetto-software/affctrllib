@@ -2,6 +2,7 @@ import glob
 import os
 from pathlib import Path
 
+import numpy as np
 import pytest
 from affctrllib.logger import Logger
 
@@ -137,6 +138,16 @@ class TestLogger:
         logger = Logger()
         logger.extend_data([0, 1, 2])
         assert logger.get_data() == [[0, 1, 2]]
+
+    def test_store(self) -> None:
+        logger = Logger()
+        arr1 = [0.1]
+        arr2 = [12, 34, 56]
+        arr3 = ["a", "b", "c"]
+        arr4 = np.arange(1, 4) * 0.1 + 1.0
+        logger.store(arr1, arr2, arr3, arr4)
+        expected = [[0.1, 12, 34, 56, "a", "b", "c", 1.1, 1.2, 1.3]]
+        assert logger.get_data() == expected
 
     @pytest.mark.parametrize(
         "labels,data",

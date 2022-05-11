@@ -56,6 +56,10 @@ class Logger(object):
         except IndexError:
             self.store_data(data)
 
+    def store(self, *args: Iterable[Any]) -> None:
+        data = [x for arg in args for x in arg]
+        self.store_data(data)
+
     def get_data(self) -> list[list[Any]]:
         return self._rawdata
 
