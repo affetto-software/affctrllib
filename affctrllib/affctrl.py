@@ -1,10 +1,15 @@
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Any, Generic, TypeVar
+from threading import Event, Lock, Thread
+from typing import Any, Callable, Generic, TypeVar
 
 import numpy as np
 
+from .affcomm import AffComm
 from .affetto import Affetto
+from .affstate import AffStateThread
+from .logger import Logger
+from .timer import Timer
 
 JointT = TypeVar("JointT", int, float, np.ndarray)
 
@@ -392,3 +397,178 @@ class AffCtrl(Affetto, Generic[JointT]):
         u1, u2 = self.feedback_scheme.update(t, q, dq, pa, pb, qdes, dqdes)
         u1, u2 = self.mask(u1, u2)
         return self.scale(u1, u2)
+
+
+class AffCtrlThread(Thread):
+    _acom: AffComm
+    _actrl: AffCtrl
+    _astate: AffStateThread
+    _lock: Lock
+    _stopped: Event
+    _timer: Timer
+    _current_time: float
+    _qdes_func: Callable[[float], np.ndarray]
+    _dqdes_func: Callable[[float], np.ndarray]
+    _logger: Logger
+
+    def __init__(
+        self,
+        astate: AffStateThread,
+        config: str | Path | None = None,
+        dt: float | None = None,
+        freq: float | None = None,
+        output: str | Path | None = None,
+    ):
+        self._acom = AffComm(config)
+        self._acom.create_command_socket()
+        self._astate = astate
+        self._actrl = AffCtrl(config, dt, freq)
+        self._lock = Lock()
+        self._stopped = Event()
+        self._timer = Timer(rate=self._actrl.freq)
+        self._current_time = 0
+        self.reset_trajectory()
+        if output:
+            self._create_logger(output)
+        Thread.__init__(self)
+
+        self.acquire = self._lock.acquire
+        self.release = self._lock.release
+
+    def _create_logger(self, output: str | Path) -> Logger:
+        self._logger = Logger(output)
+        self._logger.set_labels(
+            "t",
+            # raw data
+            [f"rq{i}" for i in range(self._actrl.dof)],
+            [f"rdq{i}" for i in range(self._actrl.dof)],
+            [f"rpa{i}" for i in range(self._actrl.dof)],
+            [f"rpb{i}" for i in range(self._actrl.dof)],
+            # estimated states
+            [f"q{i}" for i in range(self._actrl.dof)],
+            [f"dq{i}" for i in range(self._actrl.dof)],
+            [f"pa{i}" for i in range(self._actrl.dof)],
+            [f"pb{i}" for i in range(self._actrl.dof)],
+            # command data
+            [f"qdes{i}" for i in range(self._actrl.dof)],
+            [f"dqdes{i}" for i in range(self._actrl.dof)],
+            [f"ca{i}" for i in range(self._actrl.dof)],
+            [f"cb{i}" for i in range(self._actrl.dof)],
+        )
+        return self._logger
+
+    def run(self):
+        if not self._astate.is_alive():
+            raise RuntimeError("AffStateThread.start() must be executed first")
+        self._timer.start()
+        while not self._stopped.is_set():
+            t = self._timer.elapsed_time()
+            rq, rdq, rpa, rpb = self._astate.get_raw_states()
+            q, dq, pa, pb = self._astate.get_states()
+            with self._lock:
+                self._current_time = t
+                qdes = self._qdes_func(t)
+                dqdes = self._dqdes_func(t)
+                ca, cb = self._actrl.update(t, q, dq, pa, pb, qdes, dqdes)
+            self._acom.send_commands(ca, cb)
+            try:
+                self._logger.store(
+                    [t], rq, rdq, rpa, rpb, q, dq, pa, pb, qdes, dqdes, ca, cb
+                )
+            except AttributeError:
+                pass
+            self._timer.block()
+
+    def join(self, timeout=None):
+        self.stop()
+        Thread.join(self, timeout)
+
+    def stop(self) -> None:
+        self._acom.close_command_socket()
+        try:
+            self._logger.dump()
+        except AttributeError:
+            pass
+        self._stopped.set()
+
+    @property
+    def dof(self) -> int:
+        with self._lock:
+            return self._actrl.dof
+
+    @property
+    def current_time(self) -> float:
+        with self._lock:
+            return self._current_time
+
+    @property
+    def dt(self) -> float:
+        with self._lock:
+            return self._actrl.dt
+
+    @dt.setter
+    def dt(self, dt: float) -> None:
+        with self._lock:
+            self._actrl.dt = dt
+
+    @property
+    def freq(self) -> float:
+        with self._lock:
+            return self._actrl.freq
+
+    @freq.setter
+    def freq(self, freq: float) -> None:
+        with self._lock:
+            self._actrl.freq = freq
+
+    @property
+    def feedback_scheme(self) -> Feedback:
+        with self._lock:
+            return self._actrl.feedback_scheme
+
+    def load_feedback_scheme(
+        self, scheme: str, ctrl_config: dict[str, Any] | None = None
+    ) -> None:
+        with self._lock:
+            self._actrl.load_feedback_scheme(scheme, ctrl_config)
+
+    @property
+    def inactive_joints(self) -> np.ndarray:
+        with self._lock:
+            return np.copy(self._actrl.inactive_joints)
+
+    def set_inactive_joints(
+        self,
+        index: int | str,
+        pressure: float | None = None,
+    ) -> None:
+        with self._lock:
+            self._actrl.set_inactive_joint(index, pressure)
+
+    def reset_inactive_joints(self) -> None:
+        with self._lock:
+            self._actrl.reset_inactive_joints()
+
+    def set_qdes_func(self, qdes_func: Callable[[float], np.ndarray]) -> None:
+        with self._lock:
+            self._qdes_func = qdes_func
+
+    def set_dqdes_func(self, dqdes_func: Callable[[float], np.ndarray]) -> None:
+        with self._lock:
+            self._dqdes_func = dqdes_func
+
+    def set_trajectory(
+        self,
+        qdes_func: Callable[[float], np.ndarray],
+        dqdes_func: Callable[[float], np.ndarray],
+    ) -> None:
+        with self._lock:
+            self._qdes_func = qdes_func
+            self._dqdes_func = dqdes_func
+
+    def reset_trajectory(self) -> None:
+        dof = self._actrl.dof
+        self.set_trajectory(
+            lambda _: np.zeros((dof,)),
+            lambda _: np.zeros((dof,)),
+        )

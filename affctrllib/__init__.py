@@ -27,9 +27,9 @@ __all__.extend(
     ]
 )
 
-from .affctrl import AffCtrl
+from .affctrl import AffCtrl, AffCtrlThread
 
-__all__.extend(["AffCtrl"])
+__all__.extend(["AffCtrl", "AffCtrlThread"])
 
 from .affmock import AffMock
 

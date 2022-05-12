@@ -2,7 +2,7 @@ import os
 
 import numpy as np
 import pytest
-from affctrllib.affctrl import AffCtrl, FeedbackPID, FeedbackPIDF
+from affctrllib.affctrl import AffCtrl, AffCtrlThread, FeedbackPID, FeedbackPIDF
 from numpy.testing import assert_array_equal
 
 CONFIG_DIR_PATH = os.path.join(os.path.dirname(__file__), "config")
@@ -405,3 +405,27 @@ class TestAffCtrl:
         expected[7:] = 100 * 255 / 600
         assert_array_equal(u1, expected)
         assert_array_equal(u2, expected)
+
+
+class TestAffCtrlThread:
+    def test_init_config(self) -> None:
+        config = os.path.join(CONFIG_DIR_PATH, "default.toml")
+        ctrl = AffCtrlThread(config)
+        assert ctrl.freq == 30
+
+    def test_init_alternative_freq(self) -> None:
+        config = os.path.join(CONFIG_DIR_PATH, "default.toml")
+        ctrl = AffCtrlThread(config, freq=50)
+        assert ctrl.freq == 50
+
+    def test_set_freq(self) -> None:
+        config = os.path.join(CONFIG_DIR_PATH, "default.toml")
+        ctrl = AffCtrlThread(config)
+        assert ctrl.freq == 30
+        ctrl.freq = 50
+        assert ctrl.freq == 50
+
+    def test_get_current_time(self) -> None:
+        config = os.path.join(CONFIG_DIR_PATH, "default.toml")
+        ctrl = AffCtrlThread(config)
+        assert ctrl.current_time == 0
