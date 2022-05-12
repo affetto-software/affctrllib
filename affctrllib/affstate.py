@@ -208,13 +208,13 @@ class AffStateThread(threading.Thread):
             sarr = self._acom.receive_as_list()
             with self._lock:
                 self._astate.update(sarr)
+        self._acom.close_sensory_socket()
 
     def join(self, timeout=None):
         self.stop()
         threading.Thread.join(self, timeout)
 
     def stop(self) -> None:
-        self._acom.close_sensory_socket()
         self._stopped.set()
 
     @property

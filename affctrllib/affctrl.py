@@ -478,13 +478,13 @@ class AffCtrlThread(Thread):
             except AttributeError:
                 pass
             self._timer.block()
+        self._acom.close_command_socket()
 
     def join(self, timeout=None):
         self.stop()
         Thread.join(self, timeout)
 
     def stop(self) -> None:
-        self._acom.close_command_socket()
         try:
             self._logger.dump()
         except AttributeError:
