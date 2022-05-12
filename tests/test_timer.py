@@ -4,7 +4,7 @@ from typing import Callable
 import pytest
 from affctrllib.timer import Timer
 
-TOL = 8e-2
+TOL = 1e-1
 
 
 class TestTimer:
