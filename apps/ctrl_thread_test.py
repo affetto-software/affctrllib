@@ -122,15 +122,14 @@ class Trajectory:
             return self.trajectories[-1]
 
     def qdes(self, t: float) -> np.ndarray:
-        return self.get_trajectory(t).q(t)
+        return np.array(self.get_trajectory(t).q(t))
 
     def dqdes(self, t: float) -> np.ndarray:
-        return self.get_trajectory(t).dq(t)
+        return np.array(self.get_trajectory(t).dq(t))
 
 
 def check_trajectory(joint: int = 0, output: str | None = None):
     T = 12
-    t0 = 0
     q0 = np.full((13,), 50)
     waypoints = [0, 100, q0[joint]]
     intervals = [T / 4, T / 2, T / 4]
@@ -179,7 +178,7 @@ def mainloop(
     q0 = astate.q
     waypoints = [0, 100, q0[joint]]
     intervals = [T / 4, T / 2, T / 4]
-    traj = Trajectory(joint, waypoints, intervals, q0, t0)
+    traj = Trajectory(joint, waypoints, intervals, q0, t0, profile)
 
     print("Start moving!")
     activate_single_joint(actrl, joint, inactive_pressure)
