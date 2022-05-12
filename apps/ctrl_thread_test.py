@@ -9,6 +9,9 @@ from affctrllib import PTP, AffCtrlThread, AffStateThread
 
 DEFAULT_CONFIG_PATH = Path(__file__).parent.joinpath("config.toml")
 
+# Set printing options for numpy array.
+np.set_printoptions(precision=1, linewidth=np.inf, suppress=True)
+
 
 def activate_single_joint(
     actrl: AffCtrlThread,
@@ -155,9 +158,14 @@ def mainloop(
     # Start moving.
     activate_single_joint(actrl, joint, inactive_pressure)
     actrl.set_trajectory(traj.qdes, traj.dqdes)
+    t = t0
     try:
-        while actrl.current_time < t0 + T + 1:
+        while t < t0 + T + 1:
+            t = actrl.current_time
+            q = actrl.q
+            print(f"\rt: {t:.2f}, q: {q}", end="")
             time.sleep(0.1)
+        print()
     finally:
         actrl.join()
         astate.join()
