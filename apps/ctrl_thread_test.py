@@ -5,12 +5,12 @@ import time
 from pathlib import Path
 
 import numpy as np
-from affctrllib import PTP, AffCtrlThread, AffStateThread
+from affctrllib import PTP, AffCtrlThread, AffStateThread, Logger
 
 DEFAULT_CONFIG_PATH = Path(__file__).parent.joinpath("config.toml")
 
 # Set printing options for numpy array.
-np.set_printoptions(precision=1, linewidth=np.inf, suppress=True)
+np.set_printoptions(precision=1, linewidth=1000, suppress=True)
 
 
 def activate_single_joint(
@@ -112,17 +112,43 @@ class Trajectory:
         try:
             if t >= self.passing_times[self.ptp_i + 1]:
                 self.ptp_i += 1
-        except IndexError:
-            pass
         except AttributeError:
             raise RuntimeError("Trajectory.create_trajedtory() must be called")
-        return self.trajectories[self.ptp_i]
+        except IndexError:
+            pass
+        try:
+            return self.trajectories[self.ptp_i]
+        except IndexError:
+            return self.trajectories[-1]
 
     def qdes(self, t: float) -> np.ndarray:
         return self.get_trajectory(t).q(t)
 
     def dqdes(self, t: float) -> np.ndarray:
         return self.get_trajectory(t).dq(t)
+
+
+def check_trajectory(joint: int = 0, output: str | None = None):
+    T = 12
+    t0 = 0
+    q0 = np.full((13,), 50)
+    waypoints = [0, 100, q0[joint]]
+    intervals = [T / 4, T / 2, T / 4]
+    traj = Trajectory(joint, waypoints, intervals, q0)
+    N = 1000
+    logger = Logger(output) if output is not None else None
+    if logger:
+        logger.set_labels(
+            ["t"], [f"qdes{i}" for i in range(13)], [f"dqdes{i}" for i in range(13)]
+        )
+    for i in range(N + 1):
+        t = i * T / N
+        qdes = traj.qdes(t)
+        dqdes = traj.dqdes(t)
+        if logger:
+            logger.store([t], qdes, dqdes)
+    if logger:
+        logger.dump()
 
 
 def mainloop(
@@ -144,29 +170,30 @@ def mainloop(
     # Start AffCtrlThread.
     activate_single_joint(actrl, None, inactive_pressure)
     actrl.start()
-    # Wait until robot gets stationary.
+    print("Waiting until robot gets stationary...")
     time.sleep(5)
 
     # Create trajectory.
-    T = 12
+    T = 20
     t0 = actrl.current_time
     q0 = astate.q
     waypoints = [0, 100, q0[joint]]
     intervals = [T / 4, T / 2, T / 4]
-    traj = Trajectory(joint, waypoints, intervals, q0)
+    traj = Trajectory(joint, waypoints, intervals, q0, t0)
 
-    # Start moving.
+    print("Start moving!")
     activate_single_joint(actrl, joint, inactive_pressure)
     actrl.set_trajectory(traj.qdes, traj.dqdes)
     t = t0
     try:
         while t < t0 + T + 1:
             t = actrl.current_time
-            q = actrl.q
+            q = astate.q
             print(f"\rt: {t:.2f}, q: {q}", end="")
             time.sleep(0.1)
         print()
     finally:
+        print("Quitting...")
         actrl.join()
         astate.join()
 
@@ -181,7 +208,6 @@ def parse():
         "-F",
         "--sensor-freq",
         dest="sfreq",
-        default=100,
         type=float,
         help="sensor frequency",
     )
@@ -189,18 +215,23 @@ def parse():
         "-f",
         "--control-freq",
         dest="cfreq",
-        default=30,
         type=float,
         help="control frequency",
     )
     parser.add_argument(
         "-j", "--joint", default=0, type=int, help="Joint index to move"
     )
+    parser.add_argument(
+        "-p",
+        "--profile",
+        help="Point to Point interpolation profile",
+    )
     return parser.parse_args()
 
 
 def main():
     args = parse()
+    # check_trajectory(args.joint, args.output)  # for debug
     mainloop(
         args.config,
         args.output,
