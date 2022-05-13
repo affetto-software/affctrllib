@@ -163,6 +163,7 @@ def mainloop(
     actrl = AffCtrlThread(config=config, freq=cfreq, sensor_freq=sfreq, output=output)
     activate_single_joint(actrl, None, inactive_pressure)
     actrl.start()
+    actrl.wait_for_idling()
     print("Waiting until robot gets stationary...")
     time.sleep(5)
 

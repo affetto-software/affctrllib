@@ -476,6 +476,11 @@ class AffCtrlThread(Thread):
         return self._logger
 
     def run(self):
+        # Since idling process may take several seconds to finish,
+        # interaction with control thread should be started after
+        # idling process has finished by using
+        # AffCtrlThread.wait_for_idling().
+
         # Start state estimator thread if not started.
         if not self._astate.is_alive():
             if not self._astate.prepared():
@@ -517,6 +522,9 @@ class AffCtrlThread(Thread):
         except AttributeError:
             pass
         self._stopped.set()
+
+    def wait_for_idling(self, timeout=None) -> bool:
+        return self._astate.wait_for_idling(timeout)
 
     @property
     def dof(self) -> int:

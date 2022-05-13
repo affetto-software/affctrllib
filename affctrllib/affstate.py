@@ -186,6 +186,7 @@ class AffStateThread(Thread):
     _astate: AffState
     _lock: Lock
     _stopped: Event
+    _idled: Event
 
     def __init__(
         self,
@@ -197,6 +198,7 @@ class AffStateThread(Thread):
         self._astate = AffState(config, dt, freq)
         self._lock = Lock()
         self._stopped = Event()
+        self._idled = Event()
         Thread.__init__(self)
 
         self.acquire = self._lock.acquire
@@ -210,9 +212,13 @@ class AffStateThread(Thread):
         quiet: bool = False,
     ) -> None:
         self._astate.idle(self._acom, n_sample, freq_tol, no_error, quiet)
+        self._idled.set()
 
     def prepared(self) -> bool:
-        return self._astate.idled()
+        return self._astate.idled() and self._idled.is_set()
+
+    def wait_for_idling(self, timeout=None) -> bool:
+        return self._idled.wait(timeout)
 
     def run(self):
         if not self.prepared():
