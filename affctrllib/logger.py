@@ -58,8 +58,9 @@ class Logger(object):
         except IndexError:
             self.store_data(data)
 
-    def store(self, *args: Iterable[Any]) -> None:
-        data = [x for arg in args for x in arg]
+    def store(self, *args: float | int | Iterable[Any]) -> None:
+        listed = [[arg] if isinstance(arg, (float, int)) else arg for arg in args]
+        data = [x for l in listed for x in l]
         self.store_data(data)
 
     def get_data(self) -> list[list[Any]]:

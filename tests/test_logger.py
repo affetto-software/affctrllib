@@ -173,6 +173,16 @@ class TestLogger:
         expected = [[0.1, 12, 34, 56, "a", "b", "c", 1.1, 1.2, 1.3]]
         assert logger.get_data() == expected
 
+    def test_store_float(self) -> None:
+        logger = Logger()
+        t = 0.001
+        arr1 = np.array([1, 2, 3])
+        arr2 = [0.1, 0.2, 0.3]
+        t2 = 10
+        logger.store(t, arr1, arr2, t2)
+        expected = [[0.001, 1, 2, 3, 0.1, 0.2, 0.3, 10]]
+        assert logger.get_data() == expected
+
     @pytest.mark.parametrize(
         "labels,data",
         [
