@@ -268,9 +268,9 @@ class AffCtrl(Affetto, Generic[JointT]):
             for inactive_joint in ctrl_config["inactive_joints"]:
                 index = inactive_joint["index"]
                 try:
-                    self.set_inactive_joint(index, inactive_joint["pressure"])
+                    self.add_inactive_joints(index, inactive_joint["pressure"])
                 except KeyError:
-                    self.set_inactive_joint(index)
+                    self.add_inactive_joints(index)
 
     @classmethod
     def _load_feedback_scheme_find_array(
@@ -350,28 +350,44 @@ class AffCtrl(Affetto, Generic[JointT]):
         return indices
 
     def _expand_as_index(self, pattern: str) -> list[int]:
-        indices = []
+        index = []
         for p in pattern.split(","):
             if "-" in p:
-                indices.extend(self._expand_as_index_range(p))
+                index.extend(self._expand_as_index_range(p))
             else:
-                indices.extend([int(p)])
-        return indices
+                index.extend([int(p)])
+        return index
 
-    def set_inactive_joint(
-        self,
-        index: int | str,
-        pressure: float | None = None,
-    ) -> None:
+    def _make_inactive_joints_array(
+        self, pattern: int | str, pressure: float | None = None
+    ) -> np.ndarray:
         if pressure is None:
             pressure = self.DEFAULT_INACTIVE_PRESSURE
-        if isinstance(index, str):
-            indices = self._expand_as_index(index)
+        if isinstance(pattern, str):
+            index = self._expand_as_index(pattern)
         else:
-            indices = [int(index)]
-        arr = np.full((len(indices), 3), pressure)
-        arr[:, 0] = indices
-        self._inactive_joints = np.append(self._inactive_joints, arr, axis=0)
+            index = [int(pattern)]
+        arr = np.full((len(index), 3), pressure)
+        arr[:, 0] = index
+        return arr
+
+    def set_inactive_joints(
+        self,
+        pattern: int | str,
+        pressure: float | None = None,
+    ) -> None:
+        self._inactive_joints = self._make_inactive_joints_array(pattern, pressure)
+
+    def add_inactive_joints(
+        self,
+        pattern: int | str,
+        pressure: float | None = None,
+    ) -> None:
+        self._inactive_joints = np.append(
+            self._inactive_joints,
+            self._make_inactive_joints_array(pattern, pressure),
+            axis=0,
+        )
 
     def reset_inactive_joints(self) -> None:
         self._inactive_joints = np.empty((0, 3), dtype=float)
@@ -578,11 +594,19 @@ class AffCtrlThread(Thread):
 
     def set_inactive_joints(
         self,
-        index: int | str,
+        pattern: int | str,
         pressure: float | None = None,
     ) -> None:
         with self._lock:
-            self._actrl.set_inactive_joint(index, pressure)
+            self._actrl.set_inactive_joints(pattern, pressure)
+
+    def add_inactive_joints(
+        self,
+        pattern: int | str,
+        pressure: float | None = None,
+    ) -> None:
+        with self._lock:
+            self._actrl.add_inactive_joints(pattern, pressure)
 
     def reset_inactive_joints(self) -> None:
         with self._lock:

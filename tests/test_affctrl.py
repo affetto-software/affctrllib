@@ -310,12 +310,12 @@ class TestAffCtrl:
     )
     def test_set_inactive_joints(self, i, p):
         ctrl = AffCtrl()
-        ctrl.set_inactive_joint(i, p)
+        ctrl.set_inactive_joints(i, p)
         assert_array_equal(ctrl.inactive_joints, [[int(i), p, p]])
 
     def test_set_inactive_joints_default_press(self):
         ctrl = AffCtrl()
-        ctrl.set_inactive_joint(3)
+        ctrl.set_inactive_joints(3)
         assert_array_equal(ctrl.inactive_joints, [[3, 0, 0]])
 
     @pytest.mark.parametrize(
@@ -369,13 +369,20 @@ class TestAffCtrl:
     )
     def test_set_inactive_joints_pattern(self, pattern, pressure, expected):
         ctrl = AffCtrl()
-        ctrl.set_inactive_joint(pattern, pressure)
+        ctrl.set_inactive_joints(pattern, pressure)
         assert_array_equal(ctrl.inactive_joints, expected)
 
-    def test_set_inactive_joints_multi(self):
+    def test_set_inactive_joints_overwrite(self):
         ctrl = AffCtrl()
-        ctrl.set_inactive_joint(1)
-        ctrl.set_inactive_joint("7-12", 100)
+        ctrl.set_inactive_joints(1, 100)
+        assert_array_equal(ctrl.inactive_joints, [[1, 100, 100]])
+        ctrl.set_inactive_joints(2, 200)
+        assert_array_equal(ctrl.inactive_joints, [[2, 200, 200]])
+
+    def test_add_inactive_joints(self):
+        ctrl = AffCtrl()
+        ctrl.add_inactive_joints(1)
+        ctrl.add_inactive_joints("7-12", 100)
         assert_array_equal(
             ctrl.inactive_joints,
             [
@@ -391,7 +398,7 @@ class TestAffCtrl:
 
     def test_reset_inactive_joints(self):
         ctrl = AffCtrl()
-        ctrl.set_inactive_joint(1)
+        ctrl.set_inactive_joints(1)
         assert_array_equal(ctrl.inactive_joints, [[1, 0, 0]])
         ctrl.reset_inactive_joints()
         assert_array_equal(ctrl.inactive_joints, np.empty(shape=(0, 3)))
