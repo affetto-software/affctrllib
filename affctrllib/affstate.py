@@ -1,6 +1,7 @@
 import itertools
 import sys
 import threading
+import warnings
 from pathlib import Path
 from typing import Any
 
@@ -31,11 +32,16 @@ class AffState(Affetto):
         dt: float | None = None,
         freq: float | None = None,
     ) -> None:
-        self.set_freq(self.DEFAULT_FREQ)
         super().__init__(config)
 
         self.set_frequency(dt=dt, freq=freq)
         self._filter_list = [Filter(), Filter(), Filter()]
+
+        if not hasattr(self, "_freq"):
+            self.set_freq(self.DEFAULT_FREQ)
+            warnings.warn(
+                f"Sensor frequency is not provided, set to default: {self._freq}"
+            )
 
     def load_config(self, config: dict[str, Any]) -> None:
         super().load_config(config)
@@ -60,9 +66,6 @@ class AffState(Affetto):
         elif freq is not None:
             self._freq = freq
             self._dt = 1.0 / freq
-
-        if not hasattr(self, "_dt") and not hasattr(self, "_freq"):
-            raise ValueError("Require DT or FREQ")
 
     @property
     def dt(self) -> float:

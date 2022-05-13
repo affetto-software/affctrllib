@@ -157,6 +157,7 @@ class TestFeedbackPIDF:
             assert pidf.press_gain == press_gain
 
 
+@pytest.mark.filterwarnings("ignore:Control frequency is not provided")
 class TestAffCtrl:
     def test_init(self) -> None:
         ctrl = AffCtrl()
@@ -248,6 +249,18 @@ class TestAffCtrl:
         assert_array_equal(ctrl.feedback_scheme.kD, np.array([30] * 13))
         assert_array_equal(ctrl.feedback_scheme.kI, np.array([0.3] * 13))
         assert_array_equal(ctrl.feedback_scheme.stiff, np.array([180] * 13))
+
+    def test_init_config_empty(self) -> None:
+        config = os.path.join(CONFIG_DIR_PATH, "empty.toml")
+        with pytest.warns() as record:
+            ctrl = AffCtrl(config)
+        assert len(record) == 2
+        assert str(record[0].message) == "'chain' field is not defined"
+        assert (
+            str(record[1].message)
+            == "Control frequency is not provided, set to default: 30"
+        )
+        assert ctrl.freq == 30
 
     def test_load_inactive_joints(self) -> None:
         config = os.path.join(CONFIG_DIR_PATH, "default.toml")
@@ -407,6 +420,7 @@ class TestAffCtrl:
         assert_array_equal(u2, expected)
 
 
+@pytest.mark.filterwarnings("ignore:Control frequency is not provided")
 class TestAffCtrlThread:
     def test_init_config(self) -> None:
         config = os.path.join(CONFIG_DIR_PATH, "default.toml")

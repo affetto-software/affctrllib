@@ -7,6 +7,7 @@ from numpy.testing import assert_array_equal
 CONFIG_DIR_PATH = os.path.join(os.path.dirname(__file__), "config")
 
 
+@pytest.mark.filterwarnings("ignore:Sensor frequency is not provided")
 class TestAffState:
     def test_init(self) -> None:
         state = AffState()
@@ -58,6 +59,18 @@ class TestAffState:
         state = AffState(config)
         assert str(state.config_path) == config
         assert state.dof == 14
+        assert state.freq == 100
+
+    def test_init_config_empty(self) -> None:
+        config = os.path.join(CONFIG_DIR_PATH, "empty.toml")
+        with pytest.warns() as record:
+            state = AffState(config)
+        assert len(record) == 2
+        assert str(record[0].message) == "'chain' field is not defined"
+        assert (
+            str(record[1].message)
+            == "Sensor frequency is not provided, set to default: 100"
+        )
         assert state.freq == 100
 
     def test_update_raw_data(self) -> None:
@@ -133,6 +146,7 @@ class TestAffState:
         assert_array_equal(state.dq, expected)
 
 
+@pytest.mark.filterwarnings("ignore:Sensor frequency is not provided")
 class TestAffStateThread:
     def test_init_config(self) -> None:
         config = os.path.join(CONFIG_DIR_PATH, "default.toml")

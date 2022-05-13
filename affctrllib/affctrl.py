@@ -1,3 +1,4 @@
+import warnings
 from abc import ABC, abstractmethod
 from pathlib import Path
 from threading import Event, Lock, Thread
@@ -184,10 +185,15 @@ class AffCtrl(Affetto, Generic[JointT]):
         dt: float | None = None,
         freq: float | None = None,
     ) -> None:
-        self.set_freq(self.DEFAULT_FREQ)
         self.reset_inactive_joints()
         super().__init__(config_path)
         self.set_frequency(dt=dt, freq=freq)
+
+        if not hasattr(self, "_freq"):
+            self.set_freq(self.DEFAULT_FREQ)
+            warnings.warn(
+                f"Control frequency is not provided, set to default: {self._freq}"
+            )
 
     def __repr__(self) -> str:
         return ""
@@ -204,9 +210,6 @@ class AffCtrl(Affetto, Generic[JointT]):
         elif freq is not None:
             self._freq = freq
             self._dt = 1.0 / freq
-
-        if not hasattr(self, "_dt") and not hasattr(self, "_freq"):
-            raise ValueError("Require DT or FREQ")
 
     @property
     def dt(self) -> float:
