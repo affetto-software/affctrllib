@@ -5,7 +5,7 @@ import time
 from pathlib import Path
 
 import numpy as np
-from affctrllib import PTP, AffCtrlThread, AffStateThread, Logger
+from affctrllib import PTP, AffCtrlThread, Logger
 
 DEFAULT_CONFIG_PATH = Path(__file__).parent.joinpath("config.toml")
 
@@ -159,14 +159,8 @@ def mainloop(
     profile: str = "trapezoidal",
     inactive_pressure: float = 400,
 ):
-    astate = AffStateThread(config=config, freq=sfreq)
-    actrl = AffCtrlThread(astate, config=config, freq=cfreq, output=output)
-
-    # Start AffStateThread.
-    astate.prepare()  # idling
-    astate.start()
-
     # Start AffCtrlThread.
+    actrl = AffCtrlThread(config=config, freq=cfreq, sensor_freq=sfreq, output=output)
     activate_single_joint(actrl, None, inactive_pressure)
     actrl.start()
     print("Waiting until robot gets stationary...")
@@ -175,7 +169,7 @@ def mainloop(
     # Create trajectory.
     T = 20
     t0 = actrl.current_time
-    q0 = astate.q
+    q0 = actrl.state.q
     waypoints = [0, 100, q0[joint]]
     intervals = [T / 4, T / 2, T / 4]
     traj = Trajectory(joint, waypoints, intervals, q0, t0, profile)
@@ -187,14 +181,13 @@ def mainloop(
     try:
         while t < t0 + T + 1:
             t = actrl.current_time
-            q = astate.q
+            q = actrl.state.q
             print(f"\rt: {t:.2f}, q: {q}", end="")
             time.sleep(0.1)
         print()
     finally:
         print("Quitting...")
         actrl.join()
-        astate.join()
 
 
 def parse():
