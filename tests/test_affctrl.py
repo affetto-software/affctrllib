@@ -424,22 +424,22 @@ class TestAffCtrl:
 class TestAffCtrlThread:
     def test_init_config(self) -> None:
         config = os.path.join(CONFIG_DIR_PATH, "default.toml")
-        ctrl = AffCtrlThread(config)
+        ctrl = AffCtrlThread(config=config)
         assert ctrl.freq == 30
 
     def test_init_alternative_freq(self) -> None:
         config = os.path.join(CONFIG_DIR_PATH, "default.toml")
-        ctrl = AffCtrlThread(config, freq=50)
+        ctrl = AffCtrlThread(config=config, freq=50)
         assert ctrl.freq == 50
 
     def test_set_freq(self) -> None:
         config = os.path.join(CONFIG_DIR_PATH, "default.toml")
-        ctrl = AffCtrlThread(config)
+        ctrl = AffCtrlThread(config=config)
         assert ctrl.freq == 30
         ctrl.freq = 50
         assert ctrl.freq == 50
 
     def test_get_current_time(self) -> None:
         config = os.path.join(CONFIG_DIR_PATH, "default.toml")
-        ctrl = AffCtrlThread(config)
+        ctrl = AffCtrlThread(config=config)
         assert ctrl.current_time == 0
