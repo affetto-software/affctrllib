@@ -36,6 +36,7 @@ class AffState(Affetto):
 
         self.set_frequency(dt=dt, freq=freq)
         self._filter_list = [Filter(), Filter(), Filter()]
+        self._idled = False
 
         if not hasattr(self, "_freq"):
             self.set_freq(self.DEFAULT_FREQ)
@@ -140,6 +141,9 @@ class AffState(Affetto):
             self._dq = np.zeros(shape=self.q.shape)
         self._q_prev = self.q
 
+    def idled(self) -> bool:
+        return self._idled
+
     def idle(
         self,
         acom: AffComm,
@@ -174,6 +178,7 @@ class AffState(Affetto):
             raise RuntimeError(msg)
         if not quiet:
             sys.stdout.write("done.\n")
+        self._idled = True
 
 
 class AffStateThread(threading.Thread):
@@ -206,11 +211,20 @@ class AffStateThread(threading.Thread):
     ) -> None:
         self._astate.idle(self._acom, n_sample, freq_tol, no_error, quiet)
 
+    def prepared(self) -> bool:
+        return self._astate.idled()
+
     def run(self):
+        if not self.prepared():
+            warnings.warn("Skipped idling process for sensory module")
+
+        # Start the main loop.
         while not self._stopped.is_set():
             sarr = self._acom.receive_as_list()
             with self._lock:
                 self._astate.update(sarr)
+
+        # Close socket after having left the loop.
         self._acom.close_sensory_socket()
 
     def join(self, timeout=None):

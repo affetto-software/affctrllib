@@ -416,15 +416,22 @@ class AffCtrlThread(Thread):
 
     def __init__(
         self,
-        astate: AffStateThread,
+        astate: AffStateThread | None = None,
         config: str | Path | None = None,
         dt: float | None = None,
         freq: float | None = None,
         output: str | Path | None = None,
+        sensor_dt: float | None = None,
+        sensor_freq: float | None = None,
     ):
         self._acom = AffComm(config)
         self._acom.create_command_socket()
-        self._astate = astate
+        if astate is not None:
+            self._astate = astate
+        else:
+            self._astate = self._create_state_estimator(
+                config, dt=sensor_dt, freq=sensor_freq
+            )
         self._actrl = AffCtrl(config, dt, freq)
         self._lock = Lock()
         self._stopped = Event()
@@ -437,6 +444,14 @@ class AffCtrlThread(Thread):
 
         self.acquire = self._lock.acquire
         self.release = self._lock.release
+
+    def _create_state_estimator(
+        self,
+        config: str | Path | None = None,
+        dt: float | None = None,
+        freq: float | None = None,
+    ) -> AffStateThread:
+        return AffStateThread(config, dt=dt, freq=freq)
 
     def _create_logger(self, output: str | Path) -> Logger:
         self._logger = Logger(output)
@@ -461,9 +476,16 @@ class AffCtrlThread(Thread):
         return self._logger
 
     def run(self):
+        # Start state estimator thread if not started.
         if not self._astate.is_alive():
-            raise RuntimeError("AffStateThread.start() must be executed first")
+            if not self._astate.prepared():
+                self._astate.prepare()
+            self._astate.start()
+
+        # Start timer.
         self._timer.start()
+
+        # Start the main loop.
         while not self._stopped.is_set():
             t = self._timer.elapsed_time()
             rq, rdq, rpa, rpb = self._astate.get_raw_states()
@@ -476,11 +498,13 @@ class AffCtrlThread(Thread):
             self._acom.send_commands(ca, cb)
             try:
                 self._logger.store(
-                    [t], rq, rdq, rpa, rpb, q, dq, pa, pb, qdes, dqdes, ca, cb
+                    t, rq, rdq, rpa, rpb, q, dq, pa, pb, qdes, dqdes, ca, cb
                 )
             except AttributeError:
                 pass
             self._timer.block()
+
+        # Close socket after having left the loop.
         self._acom.close_command_socket()
 
     def join(self, timeout=None):
@@ -503,6 +527,10 @@ class AffCtrlThread(Thread):
     def current_time(self) -> float:
         with self._lock:
             return self._current_time
+
+    @property
+    def state(self) -> AffStateThread:
+        return self._astate
 
     @property
     def dt(self) -> float:
