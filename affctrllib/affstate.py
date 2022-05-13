@@ -1,8 +1,8 @@
 import itertools
 import sys
-import threading
 import warnings
 from pathlib import Path
+from threading import Event, Lock, Thread
 from typing import Any
 
 import numpy as np
@@ -181,11 +181,11 @@ class AffState(Affetto):
         self._idled = True
 
 
-class AffStateThread(threading.Thread):
+class AffStateThread(Thread):
     _acom: AffComm
     _astate: AffState
-    _lock: threading.Lock
-    _stopped: threading.Event
+    _lock: Lock
+    _stopped: Event
 
     def __init__(
         self,
@@ -195,9 +195,9 @@ class AffStateThread(threading.Thread):
     ) -> None:
         self._acom = AffComm(config)
         self._astate = AffState(config, dt, freq)
-        self._lock = threading.Lock()
-        self._stopped = threading.Event()
-        threading.Thread.__init__(self)
+        self._lock = Lock()
+        self._stopped = Event()
+        Thread.__init__(self)
 
         self.acquire = self._lock.acquire
         self.release = self._lock.release
@@ -229,7 +229,7 @@ class AffStateThread(threading.Thread):
 
     def join(self, timeout=None):
         self.stop()
-        threading.Thread.join(self, timeout)
+        Thread.join(self, timeout)
 
     def stop(self) -> None:
         self._stopped.set()
