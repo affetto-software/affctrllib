@@ -1,5 +1,6 @@
 import warnings
 from abc import ABC, abstractmethod
+from collections.abc import Sequence
 from pathlib import Path
 from threading import Event, Lock, Thread
 from typing import Any, Callable, Generic, TypeVar
@@ -359,12 +360,14 @@ class AffCtrl(Affetto, Generic[JointT]):
         return index
 
     def _make_inactive_joints_array(
-        self, pattern: int | str, pressure: float | None = None
+        self, pattern: int | Sequence[int] | str, pressure: float | None = None
     ) -> np.ndarray:
         if pressure is None:
             pressure = self.DEFAULT_INACTIVE_PRESSURE
         if isinstance(pattern, str):
             index = self._expand_as_index(pattern)
+        elif isinstance(pattern, Sequence):
+            index = list(pattern)
         else:
             index = [int(pattern)]
         arr = np.full((len(index), 3), pressure)
@@ -373,14 +376,14 @@ class AffCtrl(Affetto, Generic[JointT]):
 
     def set_inactive_joints(
         self,
-        pattern: int | str,
+        pattern: int | Sequence[int] | str,
         pressure: float | None = None,
     ) -> None:
         self._inactive_joints = self._make_inactive_joints_array(pattern, pressure)
 
     def add_inactive_joints(
         self,
-        pattern: int | str,
+        pattern: int | Sequence[int] | str,
         pressure: float | None = None,
     ) -> None:
         self._inactive_joints = np.append(
@@ -594,7 +597,7 @@ class AffCtrlThread(Thread):
 
     def set_inactive_joints(
         self,
-        pattern: int | str,
+        pattern: int | Sequence[int] | str,
         pressure: float | None = None,
     ) -> None:
         with self._lock:
@@ -602,7 +605,7 @@ class AffCtrlThread(Thread):
 
     def add_inactive_joints(
         self,
-        pattern: int | str,
+        pattern: int | Sequence[int] | str,
         pressure: float | None = None,
     ) -> None:
         with self._lock:

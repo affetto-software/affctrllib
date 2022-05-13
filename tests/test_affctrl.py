@@ -313,6 +313,21 @@ class TestAffCtrl:
         ctrl.set_inactive_joints(i, p)
         assert_array_equal(ctrl.inactive_joints, [[int(i), p, p]])
 
+    @pytest.mark.parametrize(
+        "seq,p",
+        [
+            ([0, 1, 2], 10),
+            ([3, 7, 12], 30),
+            ((4, 6), 50),
+            ((10,), 80),
+        ],
+    )
+    def test_set_inactive_joints_sequence(self, seq, p):
+        ctrl = AffCtrl()
+        ctrl.set_inactive_joints(seq, p)
+        expected = [[int(i), p, p] for i in seq]
+        assert_array_equal(ctrl.inactive_joints, expected)
+
     def test_set_inactive_joints_default_press(self):
         ctrl = AffCtrl()
         ctrl.set_inactive_joints(3)
