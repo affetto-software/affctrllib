@@ -644,6 +644,21 @@ class AffCtrlThread(Thread):
         with self._lock:
             self._actrl.reset_inactive_joints()
 
+    def set_active_joints(
+        self,
+        pattern: int | Sequence[int] | str | None = None,
+        pressure: float | None = None,
+    ) -> None:
+        with self._lock:
+            self._actrl.set_active_joints(pattern, pressure)
+
+    def add_active_joints(
+        self,
+        pattern: int | Sequence[int] | str,
+    ) -> None:
+        with self._lock:
+            self._actrl.add_active_joints(pattern)
+
     def set_qdes_func(self, qdes_func: Callable[[float], np.ndarray]) -> None:
         with self._lock:
             self._qdes_func = qdes_func
