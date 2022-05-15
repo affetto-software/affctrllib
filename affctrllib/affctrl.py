@@ -356,7 +356,10 @@ class AffCtrl(Affetto, Generic[JointT]):
             if "-" in p:
                 index.extend(self._expand_as_index_range(p))
             else:
-                index.extend([int(p)])
+                try:
+                    index.extend([int(p)])
+                except ValueError:
+                    pass
         return index
 
     def _make_inactive_joints_array(
