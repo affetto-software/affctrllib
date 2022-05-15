@@ -13,37 +13,6 @@ DEFAULT_CONFIG_PATH = Path(__file__).parent.joinpath("config.toml")
 np.set_printoptions(precision=1, linewidth=1000, suppress=True)
 
 
-def activate_single_joint(
-    actrl: AffCtrlThread,
-    joint: int | None = None,
-    inactive_pressure: float | None = None,
-):
-    pattern: str
-    if joint is None:
-        pattern = "-"
-    else:
-        if joint < 0 or actrl.dof <= joint:
-            raise ValueError(f"joint index {joint} is out of bounds")
-        bef = joint - 1
-        aft = joint + 1
-        pattern_list = []
-        if bef == -1:
-            pass
-        elif bef == 0:
-            pattern_list.append("0")
-        else:
-            pattern_list.append(f"0-{bef}")
-        if aft == 13:
-            pass
-        elif aft == 12:
-            pattern_list.append("12")
-        else:
-            pattern_list.append(f"{aft}-12")
-        pattern = ",".join(pattern_list)
-    actrl.reset_inactive_joints()
-    actrl.set_inactive_joints(pattern, inactive_pressure)
-
-
 class Trajectory:
     joint: int
     waypoints: list[float]
@@ -161,7 +130,7 @@ def mainloop(
 ):
     # Start AffCtrlThread.
     actrl = AffCtrlThread(config=config, freq=cfreq, sensor_freq=sfreq, output=output)
-    activate_single_joint(actrl, None, inactive_pressure)
+    actrl.set_active_joints(None, inactive_pressure)
     actrl.start()
     actrl.wait_for_idling()
     print("Waiting until robot gets stationary...")
@@ -176,7 +145,7 @@ def mainloop(
     traj = Trajectory(joint, waypoints, intervals, q0, t0, profile)
 
     print("Start moving!")
-    activate_single_joint(actrl, joint, inactive_pressure)
+    actrl.set_active_joints(joint, inactive_pressure)
     actrl.set_trajectory(traj.qdes, traj.dqdes)
     t = t0
     try:
