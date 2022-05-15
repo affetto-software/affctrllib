@@ -362,8 +362,10 @@ class AffCtrl(Affetto, Generic[JointT]):
                     pass
         return index
 
-    def _make_index_list(self, pattern: int | Sequence[int] | str) -> list[int]:
-        if isinstance(pattern, str):
+    def _make_index_list(self, pattern: int | Sequence[int] | str | None) -> list[int]:
+        if pattern is None:
+            index = []
+        elif isinstance(pattern, str):
             index = self._expand_as_index(pattern)
         elif isinstance(pattern, Sequence):
             index = list(pattern)
@@ -404,7 +406,7 @@ class AffCtrl(Affetto, Generic[JointT]):
 
     def set_active_joints(
         self,
-        pattern: int | Sequence[int] | str,
+        pattern: int | Sequence[int] | str | None = None,
         inactive_pressure: float | None = None,
     ) -> None:
         index_list = self._make_index_list(pattern)

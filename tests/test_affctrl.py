@@ -498,6 +498,7 @@ class TestAffCtrl:
             ("4-2", 30),
             ("a", 40),
             ([], 50),
+            (None, 60),
         ],
     )
     def test_set_active_joints_inactivate_all(self, pattern, p):
