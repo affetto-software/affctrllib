@@ -449,6 +449,166 @@ class TestAffCtrl:
         ctrl.reset_inactive_joints()
         assert_array_equal(ctrl.inactive_joints, np.empty(shape=(0, 3)))
 
+    @pytest.mark.parametrize(
+        "i,p",
+        [
+            (1, 10),
+            (3, 30),
+            ("5", 50),
+            ("8", 80),
+        ],
+    )
+    def test_set_active_joints(self, i, p):
+        ctrl = AffCtrl()
+        ctrl.set_active_joints(i, p)
+        inactive_index = list(range(13))
+        inactive_index.pop(int(i))
+        expected = [[i, p, p] for i in inactive_index]
+        assert_array_equal(ctrl.inactive_joints, expected)
+
+    def test_set_active_joints_default_press(self):
+        ctrl = AffCtrl()
+        ctrl.set_active_joints(3)
+        inactive_index = list(range(13))
+        inactive_index.pop(int(3))
+        expected = [[i, 0, 0] for i in inactive_index]
+        assert_array_equal(ctrl.inactive_joints, expected)
+
+    @pytest.mark.parametrize(
+        "seq,p",
+        [
+            (list(range(10)), 10),
+            ((1, 2, 3, 5, 7, 9, 11, 12), 30),
+        ],
+    )
+    def test_set_active_joints_sequence(self, seq, p):
+        ctrl = AffCtrl()
+        ctrl.set_active_joints(seq, p)
+        index = list(range(13))
+        for i in seq:
+            index.remove(i)
+        expected = [[i, p, p] for i in index]
+        assert_array_equal(ctrl.inactive_joints, expected)
+
+    @pytest.mark.parametrize(
+        "pattern,p",
+        [
+            ("", 10),
+            (",", 20),
+            ("4-2", 30),
+            ("a", 40),
+            ([], 50),
+        ],
+    )
+    def test_set_active_joints_inactivate_all(self, pattern, p):
+        ctrl = AffCtrl()
+        ctrl.set_active_joints(pattern, p)
+        expected = [[i, p, p] for i in range(13)]
+        assert_array_equal(ctrl.inactive_joints, expected)
+
+    @pytest.mark.parametrize(
+        "pattern,pressure,expected",
+        [
+            ("1-10", 30, [[0, 30, 30], [11, 30, 30], [12, 30, 30]]),
+            (
+                "3-3",
+                50,
+                [
+                    [0, 50, 50],
+                    [1, 50, 50],
+                    [2, 50, 50],
+                    [4, 50, 50],
+                    [5, 50, 50],
+                    [6, 50, 50],
+                    [7, 50, 50],
+                    [8, 50, 50],
+                    [9, 50, 50],
+                    [10, 50, 50],
+                    [11, 50, 50],
+                    [12, 50, 50],
+                ],
+            ),
+            ("3-2", 60, [[i, 60, 60] for i in range(13)]),
+            ("-8", 70, [[9, 70, 70], [10, 70, 70], [11, 70, 70], [12, 70, 70]]),
+            ("3-", 80, [[0, 80, 80], [1, 80, 80], [2, 80, 80]]),
+            (
+                "1,3,5,7,9",
+                90,
+                [
+                    [0, 90, 90],
+                    [2, 90, 90],
+                    [4, 90, 90],
+                    [6, 90, 90],
+                    [8, 90, 90],
+                    [10, 90, 90],
+                    [11, 90, 90],
+                    [12, 90, 90],
+                ],
+            ),
+            (
+                "2,3-8,11",
+                100,
+                [
+                    [0, 100, 100],
+                    [1, 100, 100],
+                    [9, 100, 100],
+                    [10, 100, 100],
+                    [12, 100, 100],
+                ],
+            ),
+            (
+                "-3,8-",
+                110,
+                [[4, 110, 110], [5, 110, 110], [6, 110, 110], [7, 110, 110]],
+            ),
+            ("-", 120, np.empty(shape=(0, 3))),
+        ],
+    )
+    def test_set_active_joints_pattern(self, pattern, pressure, expected):
+        ctrl = AffCtrl()
+        ctrl.set_active_joints(pattern, pressure)
+        assert_array_equal(ctrl.inactive_joints, expected)
+
+    def test_set_active_joints_overwrite(self):
+        ctrl = AffCtrl()
+        ctrl.set_active_joints("10-", 100)
+        assert_array_equal(
+            ctrl.inactive_joints,
+            [
+                [0, 100, 100],
+                [1, 100, 100],
+                [2, 100, 100],
+                [3, 100, 100],
+                [4, 100, 100],
+                [5, 100, 100],
+                [6, 100, 100],
+                [7, 100, 100],
+                [8, 100, 100],
+                [9, 100, 100],
+            ],
+        )
+        ctrl.set_active_joints("-10", 200)
+        assert_array_equal(ctrl.inactive_joints, [[11, 200, 200], [12, 200, 200]])
+
+    def test_add_active_joints(self):
+        ctrl = AffCtrl()
+        ctrl.set_active_joints(1, 100)
+        ctrl.add_active_joints("3-7")
+        ctrl.add_active_joints("9-")
+        assert_array_equal(
+            ctrl.inactive_joints,
+            [
+                [0, 100, 100],
+                [2, 100, 100],
+                [8, 100, 100],
+            ],
+        )
+
+    def test_add_active_joints_do_nothing(self):
+        ctrl = AffCtrl()
+        ctrl.add_active_joints(1)
+        assert_array_equal(ctrl.inactive_joints, np.empty(shape=(0, 3)))
+
     def test_mask(self):
         config = os.path.join(CONFIG_DIR_PATH, "default.toml")
         ctrl = AffCtrl(config)

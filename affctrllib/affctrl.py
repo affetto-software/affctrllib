@@ -362,19 +362,23 @@ class AffCtrl(Affetto, Generic[JointT]):
                     pass
         return index
 
-    def _make_inactive_joints_array(
-        self, pattern: int | Sequence[int] | str, pressure: float | None = None
-    ) -> np.ndarray:
-        if pressure is None:
-            pressure = self.DEFAULT_INACTIVE_PRESSURE
+    def _make_index_list(self, pattern: int | Sequence[int] | str) -> list[int]:
         if isinstance(pattern, str):
             index = self._expand_as_index(pattern)
         elif isinstance(pattern, Sequence):
             index = list(pattern)
         else:
             index = [int(pattern)]
-        arr = np.full((len(index), 3), pressure)
-        arr[:, 0] = index
+        return index
+
+    def _make_inactive_joints_array(
+        self, pattern: int | Sequence[int] | str, pressure: float | None = None
+    ) -> np.ndarray:
+        if pressure is None:
+            pressure = self.DEFAULT_INACTIVE_PRESSURE
+        index_list = self._make_index_list(pattern)
+        arr = np.full((len(index_list), 3), pressure)
+        arr[:, 0] = index_list
         return arr
 
     def set_inactive_joints(
@@ -397,6 +401,26 @@ class AffCtrl(Affetto, Generic[JointT]):
 
     def reset_inactive_joints(self) -> None:
         self._inactive_joints = np.empty((0, 3), dtype=float)
+
+    def set_active_joints(
+        self,
+        pattern: int | Sequence[int] | str,
+        inactive_pressure: float | None = None,
+    ) -> None:
+        index_list = self._make_index_list(pattern)
+        inactive_index = [e for e in range(self.dof) if e not in index_list]
+        self.set_inactive_joints(inactive_index, inactive_pressure)
+
+    def add_active_joints(
+        self,
+        pattern: int | Sequence[int] | str,
+    ) -> None:
+        index_list = self._make_index_list(pattern)
+        removing_index = []
+        for i, inactive_joint in enumerate(self._inactive_joints):
+            if inactive_joint[0] in index_list:
+                removing_index.append(i)
+        self._inactive_joints = np.delete(self._inactive_joints, removing_index, axis=0)
 
     def mask(self, u1: JointT, u2: JointT) -> tuple[JointT, JointT]:
         mask = self.inactive_joints[:, 0].astype(int)
