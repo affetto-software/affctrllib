@@ -5,7 +5,7 @@ import os
 
 import numpy as np
 import tomli
-from affctrllib import PTP, AffComm, AffCtrl, AffState, Logger, Timer
+from affctrllib import PTP, AffComm, AffPosCtrl, AffState, Logger, Timer
 
 DEFAULT_CONFIG_PATH = os.path.join(os.path.dirname(__file__), "config.toml")
 DOF = 13
@@ -55,7 +55,7 @@ def mainloop(config, output, freq, keyframes, initial=None, profile="tri"):
         astate.freq = freq
     astate.idle(acom)
 
-    actrl = AffCtrl(config)
+    actrl = AffPosCtrl(config)
     timer = Timer(rate=astate.freq)
 
     def cleanup():

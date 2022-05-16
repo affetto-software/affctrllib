@@ -5,7 +5,7 @@ import time
 from pathlib import Path
 
 import numpy as np
-from affctrllib import PTP, AffCtrlThread, Logger
+from affctrllib import PTP, AffPosCtrlThread, Logger
 
 DEFAULT_CONFIG_PATH = Path(__file__).parent.joinpath("config.toml")
 
@@ -128,8 +128,10 @@ def mainloop(
     profile: str = "trapezoidal",
     inactive_pressure: float = 400,
 ):
-    # Start AffCtrlThread.
-    actrl = AffCtrlThread(config=config, freq=cfreq, sensor_freq=sfreq, output=output)
+    # Start AffPosCtrlThread.
+    actrl = AffPosCtrlThread(
+        config=config, freq=cfreq, sensor_freq=sfreq, output=output
+    )
     actrl.set_active_joints(None, inactive_pressure)
     actrl.start()
     actrl.wait_for_idling()
