@@ -201,6 +201,12 @@ class AffCtrl(Affetto, Generic[JointT]):
         pattern: int | Sequence[int] | str,
         pressure: float | None = None,
     ) -> None:
+        index_list = self._make_index_list(pattern)
+        removing_index = []
+        for i, inactive_joint in enumerate(self._inactive_joints):
+            if inactive_joint[0] in index_list:
+                removing_index.append(i)
+        self._inactive_joints = np.delete(self._inactive_joints, removing_index, axis=0)
         self._inactive_joints = np.append(
             self._inactive_joints,
             self._make_inactive_joints_array(pattern, pressure),

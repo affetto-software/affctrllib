@@ -272,6 +272,25 @@ class TestAffCtrl:
         expected.extend([[int(i), p, p] for i in seq2])
         assert_array_equal(ctrl.inactive_joints, expected)
 
+    def test_add_inactive_joints_overwrite(self):
+        ctrl = AffCtrl()
+        ctrl.add_inactive_joints(1)
+        ctrl.add_inactive_joints("7-12", 100)
+        ctrl.add_inactive_joints([10, 11], 200)
+        ctrl.add_inactive_joints(7, 300)
+        assert_array_equal(
+            ctrl.inactive_joints,
+            [
+                [1, 0, 0],
+                [8, 100, 100],
+                [9, 100, 100],
+                [12, 100, 100],
+                [10, 200, 200],
+                [11, 200, 200],
+                [7, 300, 300],
+            ],
+        )
+
     def test_reset_inactive_joints(self):
         ctrl = AffCtrl()
         ctrl.set_inactive_joints(1)
