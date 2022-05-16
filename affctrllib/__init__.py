@@ -35,6 +35,10 @@ from .affmock import AffMock
 
 __all__.extend(["AffMock"])
 
+from .affposctrl import AffPosCtrl, AffPosCtrlThread
+
+__all__.extend(["AffPosCtrl", "AffPosCtrlThread"])
+
 from .affstate import AffState, AffStateThread
 
 __all__.extend(["AffState", "AffStateThread"])
