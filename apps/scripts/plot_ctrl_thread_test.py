@@ -182,8 +182,8 @@ def main():
         args.joint = [11]
 
     data = Data(args.data)
-    plot_command(data, args.joint, **sfparam)
-    plot_pressure(data, args.joint, **sfparam)
+    # plot_command(data, args.joint, **sfparam)
+    # plot_pressure(data, args.joint, **sfparam)
     plot_pressure_command(data, args.joint, **sfparam)
     plot_q(data, args.joint, **sfparam)
     plot_dq(data, args.joint, **sfparam)
