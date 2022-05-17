@@ -1,4 +1,5 @@
 import warnings
+import time
 from collections.abc import Sequence
 from pathlib import Path
 from threading import Event, Lock, Thread
@@ -260,6 +261,7 @@ class AffCtrlThread(Thread):
     _acom: AffComm
     _actrl: AffCtrl
     _astate: AffStateThread
+    _astate_created_inside: bool
     _lock: Lock
     _stopped: Event
     _timer: Timer
@@ -279,12 +281,14 @@ class AffCtrlThread(Thread):
     ):
         self._acom = AffComm(config)
         self._acom.create_command_socket()
+        self._astate_created_inside = False
         if astate is not None:
             self._astate = astate
         else:
             self._astate = self._create_state_estimator(
                 config, dt=sensor_dt, freq=sensor_freq
             )
+            self._astate_created_inside = True
         self._actrl = AffCtrl(config, dt, freq)
         self._lock = Lock()
         self._stopped = Event()
@@ -369,6 +373,9 @@ class AffCtrlThread(Thread):
         except AttributeError:
             pass
         self._stopped.set()
+        time.sleep(0.1)
+        if self._astate_created_inside:
+            self._astate.join()
 
     def wait_for_idling(self, timeout=None) -> bool:
         return self._astate.wait_for_idling(timeout)
