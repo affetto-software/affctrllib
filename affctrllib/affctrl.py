@@ -1,5 +1,5 @@
-import warnings
 import time
+import warnings
 from collections.abc import Sequence
 from pathlib import Path
 from threading import Event, Lock, Thread
