@@ -188,6 +188,7 @@ def parse():
     parser.add_argument(
         "-p",
         "--profile",
+        default="trapezoidal",
         help="Point to Point interpolation profile",
     )
     return parser.parse_args()
