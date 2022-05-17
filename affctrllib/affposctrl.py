@@ -307,7 +307,7 @@ class AffPosCtrlThread(AffCtrlThread):
             self._acom.send_commands(ca, cb)
             try:
                 self._logger.store(
-                    t, rq, rdq, rpa, rpb, q, dq, pa, pb, qdes, dqdes, ca, cb
+                    t, rq, rdq, rpa, rpb, q, dq, pa, pb, ca, cb, qdes, dqdes
                 )
             except AttributeError:
                 pass
