@@ -258,6 +258,7 @@ class AffCtrlThread(Thread):
         config: str | Path | None = None,
         dt: float | None = None,
         freq: float | None = None,
+        logging: bool = True,
         output: str | Path | None = None,
         sensor_dt: float | None = None,
         sensor_freq: float | None = None,
@@ -278,7 +279,7 @@ class AffCtrlThread(Thread):
         self._timer = Timer(rate=self._actrl.freq)
         self._current_time = 0
         self.reset_ctrl_input()
-        if output:
+        if logging:
             self._create_logger(output)
         Thread.__init__(self)
 
@@ -293,7 +294,7 @@ class AffCtrlThread(Thread):
     ) -> AffStateThread:
         return AffStateThread(config, dt=dt, freq=freq)
 
-    def _create_logger(self, output: str | Path) -> Logger:
+    def _create_logger(self, output: str | Path | None) -> Logger:
         self._logger = Logger(output)
         self._logger.set_labels(
             "t",
@@ -352,7 +353,8 @@ class AffCtrlThread(Thread):
 
     def stop(self) -> None:
         try:
-            self._logger.dump()
+            if self._logger.fpath is not None:
+                self._logger.dump()
         except AttributeError:
             pass
         self._stopped.set()
