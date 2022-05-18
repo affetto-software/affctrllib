@@ -7,11 +7,9 @@ from typing import Any, Callable, Generic, TypeVar
 
 import numpy as np
 
-from .affcomm import AffComm
 from .affctrl import AffCtrl, AffCtrlThread
 from .affstate import AffStateThread
 from .logger import Logger
-from .timer import Timer
 
 JointT = TypeVar("JointT", int, float, np.ndarray)
 
@@ -262,11 +260,14 @@ class AffPosCtrlThread(AffCtrlThread):
         config: str | Path | None = None,
         dt: float | None = None,
         freq: float | None = None,
+        logging: bool = True,
         output: str | Path | None = None,
         sensor_dt: float | None = None,
         sensor_freq: float | None = None,
     ):
-        super().__init__(astate, config, dt, freq, output, sensor_dt, sensor_freq)
+        super().__init__(
+            astate, config, dt, freq, logging, output, sensor_dt, sensor_freq
+        )
         del self._actrl
         self._actrl = AffPosCtrl(config, dt, freq)
         self.reset_trajectory()
