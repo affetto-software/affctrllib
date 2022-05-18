@@ -299,6 +299,15 @@ class TestAffCtrl:
         ctrl.reset_inactive_joints()
         assert_array_equal(ctrl.inactive_joints, np.empty(shape=(0, 3)))
 
+    def test_get_inactive_joints_index(self):
+        ctrl = AffCtrl()
+        ctrl.set_inactive_joints(1)
+        assert ctrl.inactive_joints_index == [1]
+        assert ctrl.active_joints_index == [0, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+        ctrl.set_inactive_joints([10, 11, 12])
+        assert ctrl.inactive_joints_index == [10, 11, 12]
+        assert ctrl.active_joints_index == [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+
     @pytest.mark.parametrize(
         "i,p",
         [
@@ -459,6 +468,15 @@ class TestAffCtrl:
         ctrl = AffCtrl()
         ctrl.add_active_joints(1)
         assert_array_equal(ctrl.inactive_joints, np.empty(shape=(0, 3)))
+
+    def test_get_active_joints(self):
+        ctrl = AffCtrl()
+        ctrl.set_active_joints(1)
+        assert ctrl.active_joints_index == [1]
+        assert ctrl.inactive_joints_index == [0, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+        ctrl.set_active_joints([10, 11, 12])
+        assert ctrl.active_joints_index == [10, 11, 12]
+        assert ctrl.inactive_joints_index == [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
 
     def test_mask(self):
         config = os.path.join(CONFIG_DIR_PATH, "default.toml")

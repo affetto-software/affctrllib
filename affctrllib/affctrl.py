@@ -110,6 +110,13 @@ class AffCtrl(Affetto, PeriodicRunner, Generic[JointT]):
     def inactive_joints(self) -> np.ndarray:
         return self._inactive_joints
 
+    @property
+    def inactive_joints_index(self) -> list[int]:
+        index = []
+        for i, _, _ in self._inactive_joints:
+            index.append(i)
+        return index
+
     def _expand_as_index_range(self, pattern: str) -> list[int]:
         indices = []
         _range = pattern.split("-")
@@ -184,6 +191,13 @@ class AffCtrl(Affetto, PeriodicRunner, Generic[JointT]):
 
     def reset_inactive_joints(self) -> None:
         self._inactive_joints = np.empty((0, 3), dtype=float)
+
+    @property
+    def active_joints_index(self) -> list[int]:
+        index = list(range(self.dof))
+        for i, _, _ in self._inactive_joints:
+            index.remove(i)
+        return index
 
     def set_active_joints(
         self,
@@ -388,6 +402,11 @@ class AffCtrlThread(Thread):
         with self._lock:
             return np.copy(self._actrl.inactive_joints)
 
+    @property
+    def inactive_joints_index(self) -> list[int]:
+        with self._lock:
+            return self._actrl.inactive_joints_index.copy()
+
     def set_inactive_joints(
         self,
         pattern: int | Sequence[int] | str,
@@ -422,6 +441,11 @@ class AffCtrlThread(Thread):
     ) -> None:
         with self._lock:
             self._actrl.add_active_joints(pattern)
+
+    @property
+    def active_joints_index(self) -> list[int]:
+        with self._lock:
+            return self._actrl.active_joints_index.copy()
 
     def set_ctrl_input(
         self, ctrl_input_func: Callable[[float], tuple[np.ndarray, np.ndarray]]
