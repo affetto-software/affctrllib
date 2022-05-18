@@ -3,21 +3,20 @@ from collections.abc import Iterable
 from pathlib import Path
 from typing import Any
 
+from attr import Attribute
+
 
 class Logger(object):
     _sep: str
     _eol: str
     _labels: list[str]
     _rawdata: list[list[Any]]
-    _fpath: Path | None
+    _fpath: Path
 
     def __init__(
         self, fname: str | Path | None = None, sep: str = ",", eol: str = "\n"
     ) -> None:
-        if fname is None:
-            self._fpath = None
-        else:
-            self.fpath = fname
+        self.fpath = fname
         self._sep = sep
         self._eol = eol
         self._labels = []
@@ -32,14 +31,23 @@ class Logger(object):
         return self._eol
 
     @property
-    def fpath(self) -> str:
-        return str(self._fpath)
+    def fpath(self) -> str | None:
+        try:
+            return str(self._fpath)
+        except AttributeError:
+            return None
 
     @fpath.setter
-    def fpath(self, fname: str | Path) -> None:
-        self._fpath = Path(fname)
+    def fpath(self, fname: str | Path | None) -> None:
+        if fname is not None:
+            self._fpath = Path(fname)
+        else:
+            try:
+                del self._fpath
+            except AttributeError:
+                pass
 
-    def get_filename(self) -> str:
+    def get_filename(self) -> str | None:
         return self.fpath
 
     def set_filename(self, fname: str | Path) -> None:
@@ -136,7 +144,7 @@ class Logger(object):
         fpath: Path
         if fname is not None:
             fpath = Path(fname)
-        elif self._fpath is not None:
+        elif self.fpath is not None:
             fpath = self._fpath
         else:
             self._dump_print()

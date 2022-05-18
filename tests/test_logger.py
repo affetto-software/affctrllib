@@ -12,7 +12,7 @@ OUTPUT_DIR_PATH = os.path.join(os.path.dirname(__file__), "output")
 class TestLogger:
     def test_init(self) -> None:
         logger = Logger()
-        assert logger._fpath is None
+        assert logger.fpath is None
         assert logger.sep == ","
         assert logger.eol == "\n"
         assert logger._labels == []
@@ -306,14 +306,22 @@ class TestLogger:
 
     def test_fpath_setter(self) -> None:
         logger = Logger()
-        assert logger._fpath is None
+        assert logger.fpath is None
         output_filename = os.path.join(OUTPUT_DIR_PATH, "output.csv")
         logger.fpath = output_filename
         assert logger.fpath == output_filename
+        logger.fpath = None
+        assert logger.fpath is None
+
+    def test_fpath_setter_set_None(self) -> None:
+        logger = Logger()
+        assert logger.fpath is None
+        logger.fpath = None
+        assert logger.fpath is None
 
     def test_set_filename(self) -> None:
         logger = Logger()
-        assert logger._fpath is None
+        assert logger.fpath is None
         output_filename = os.path.join(OUTPUT_DIR_PATH, "output.csv")
         logger.set_filename(output_filename)
         assert logger.fpath == output_filename
