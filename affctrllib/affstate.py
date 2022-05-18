@@ -7,16 +7,15 @@ from typing import Any
 
 import numpy as np
 
+from ._periodic_runner import PeriodicRunner
 from .affcomm import AffComm, unzip_array_as_ndarray
 from .affetto import Affetto
 from .filter import Filter
 from .timer import Timer
 
 
-class AffState(Affetto):
+class AffState(Affetto, PeriodicRunner):
     state_config: dict[str, Any]
-    _dt: float
-    _freq: float
     _filter_list: list[Filter | None]
     _raw_data: list[float] | list[int] | np.ndarray
     _data_ndarray: np.ndarray
@@ -33,6 +32,7 @@ class AffState(Affetto):
         freq: float | None = None,
     ) -> None:
         super().__init__(config)
+        PeriodicRunner.__init__(self)
 
         self.set_frequency(dt=dt, freq=freq)
         self._filter_list = [Filter(), Filter(), Filter()]
@@ -57,38 +57,6 @@ class AffState(Affetto):
         dt = self.state_config.get("dt", None)
         freq = self.state_config.get("freq", None)
         self.set_frequency(dt=dt, freq=freq)
-
-    def set_frequency(self, dt: float | None = None, freq: float | None = None) -> None:
-        if dt is not None and freq is not None:
-            raise ValueError("Unable to specify DT and FREQ simultaneously")
-        if dt is not None:
-            self._dt = dt
-            self._freq = 1.0 / dt
-        elif freq is not None:
-            self._freq = freq
-            self._dt = 1.0 / freq
-
-    @property
-    def dt(self) -> float:
-        return self._dt
-
-    def set_dt(self, dt: float) -> None:
-        self.set_frequency(dt=dt)
-
-    @dt.setter
-    def dt(self, dt: float) -> None:
-        self.set_dt(dt)
-
-    @property
-    def freq(self) -> float:
-        return self._freq
-
-    def set_freq(self, freq: float) -> None:
-        self.set_frequency(freq=freq)
-
-    @freq.setter
-    def freq(self, freq: float) -> None:
-        self.set_freq(freq)
 
     @property
     def raw_data(self) -> list[float] | list[int] | np.ndarray:
@@ -140,6 +108,7 @@ class AffState(Affetto):
         except AttributeError:
             self._dq = np.zeros(shape=self.q.shape)
         self._q_prev = self.q
+        PeriodicRunner.update(self)
 
     def idled(self) -> bool:
         return self._idled

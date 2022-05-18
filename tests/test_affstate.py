@@ -13,6 +13,7 @@ class TestAffState:
         state = AffState()
         assert state.dt == 0.01
         assert state.freq == 100
+        assert state.n_steps == 0
 
     @pytest.mark.parametrize("dt,freq", [(0.01, 100), (0.001, 1000), (0.02, 50)])
     def test_init_specify_dt(self, dt, freq) -> None:
@@ -78,6 +79,7 @@ class TestAffState:
         data = list(range(15))
         state.update(data)
         assert state.raw_data == list(range(15))
+        assert state.n_steps == 1
 
     def test_update_split_data_no_filtering(self) -> None:
         state = AffState(dt=0.01)
@@ -125,6 +127,7 @@ class TestAffState:
         assert_array_equal(state.q, expected)
         assert_array_equal(state.pa, expected)
         assert_array_equal(state.pb, expected)
+        assert state.n_steps == 5
 
     def test_update_calc_dq(self) -> None:
         state = AffState(dt=0.01)
@@ -134,16 +137,17 @@ class TestAffState:
         expected = [0, 0]
         state.update(data)
         assert_array_equal(state.dq, expected)
-        # update 1
+        # update 2
         data = [1, 3] * 3
         expected = [100, 200]
         state.update(data)
         assert_array_equal(state.dq, expected)
-        # update 1
+        # update 3
         data = [2, 5] * 3
         expected = [100, 200]
         state.update(data)
         assert_array_equal(state.dq, expected)
+        assert state.n_steps == 3
 
 
 @pytest.mark.filterwarnings("ignore:Sensor frequency is not provided")

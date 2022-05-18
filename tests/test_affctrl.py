@@ -15,6 +15,7 @@ class TestAffCtrl:
         assert isinstance(ctrl, AffCtrl)
         assert ctrl.freq == 30
         assert ctrl.dt == 1.0 / 30
+        assert ctrl.n_steps == 0
         assert ctrl.inactive_joints.shape == (0, 3)
 
     @pytest.mark.parametrize("dt,freq", [(0.01, 100), (0.001, 1000), (0.02, 50)])
@@ -481,6 +482,7 @@ class TestAffCtrl:
         expected[7:] = 100 * 255 / 600
         assert_array_equal(u1, expected)
         assert_array_equal(u2, expected)
+        assert ctrl.n_steps == 1
 
 
 @pytest.mark.filterwarnings("ignore:Control frequency is not provided")

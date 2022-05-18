@@ -7,6 +7,7 @@ from typing import Any, Callable, Generic, TypeVar
 
 import numpy as np
 
+from ._periodic_runner import PeriodicRunner
 from .affcomm import AffComm
 from .affetto import Affetto
 from .affstate import AffStateThread
@@ -16,10 +17,8 @@ from .timer import Timer
 JointT = TypeVar("JointT", int, float, np.ndarray)
 
 
-class AffCtrl(Affetto, Generic[JointT]):
+class AffCtrl(Affetto, PeriodicRunner, Generic[JointT]):
     ctrl_config: dict[str, Any]
-    _dt: float
-    _freq: float
     _input_range: tuple[float, float]
     _scale_gain: float
     _inactive_joints: np.ndarray
@@ -35,6 +34,7 @@ class AffCtrl(Affetto, Generic[JointT]):
     ) -> None:
         self.reset_inactive_joints()
         super().__init__(config_path)
+        PeriodicRunner.__init__(self)
         self.set_frequency(dt=dt, freq=freq)
 
         if not hasattr(self, "_freq"):
@@ -48,38 +48,6 @@ class AffCtrl(Affetto, Generic[JointT]):
 
     def __str__(self) -> str:
         return ""
-
-    def set_frequency(self, dt: float | None = None, freq: float | None = None) -> None:
-        if dt is not None and freq is not None:
-            raise ValueError("Unable to specify DT and FREQ simultaneously")
-        if dt is not None:
-            self._dt = dt
-            self._freq = 1.0 / dt
-        elif freq is not None:
-            self._freq = freq
-            self._dt = 1.0 / freq
-
-    @property
-    def dt(self) -> float:
-        return self._dt
-
-    def set_dt(self, dt: float) -> None:
-        self.set_frequency(dt=dt)
-
-    @dt.setter
-    def dt(self, dt: float) -> None:
-        self.set_dt(dt)
-
-    @property
-    def freq(self) -> float:
-        return self._freq
-
-    def set_freq(self, freq: float) -> None:
-        self.set_frequency(freq=freq)
-
-    @freq.setter
-    def freq(self, freq: float) -> None:
-        self.set_freq(freq)
 
     def load_config(self, config: dict[str, Any]) -> None:
         super().load_config(config)
@@ -253,6 +221,7 @@ class AffCtrl(Affetto, Generic[JointT]):
         u1: JointT,
         u2: JointT,
     ) -> tuple[JointT, JointT]:
+        PeriodicRunner.update(self)
         u1, u2 = self.mask(u1, u2)
         return self.scale(u1, u2)
 
