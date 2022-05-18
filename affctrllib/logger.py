@@ -3,8 +3,6 @@ from collections.abc import Iterable
 from pathlib import Path
 from typing import Any
 
-from attr import Attribute
-
 
 class Logger(object):
     _sep: str
