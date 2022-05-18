@@ -17,7 +17,7 @@ class Logger(object):
         if fname is None:
             self._fpath = None
         else:
-            self._fpath = Path(fname)
+            self.fpath = fname
         self._sep = sep
         self._eol = eol
         self._labels = []
@@ -35,8 +35,15 @@ class Logger(object):
     def fpath(self) -> str:
         return str(self._fpath)
 
+    @fpath.setter
+    def fpath(self, fname: str | Path) -> None:
+        self._fpath = Path(fname)
+
     def get_filename(self) -> str:
         return self.fpath
+
+    def set_filename(self, fname: str | Path) -> None:
+        self.fpath = fname
 
     def set_labels(self, *args: str | Iterable[str]) -> None:
         listed = [[arg] if isinstance(arg, str) else arg for arg in args]

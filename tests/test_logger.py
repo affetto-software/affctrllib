@@ -286,6 +286,20 @@ class TestLogger:
         with open(output_filename, mode="r", newline="\r\n") as f:
             assert f.read() == expected
 
+    def test_fpath_setter(self) -> None:
+        logger = Logger()
+        assert logger._fpath is None
+        output_filename = os.path.join(OUTPUT_DIR_PATH, "output.csv")
+        logger.fpath = output_filename
+        assert logger.fpath == output_filename
+
+    def test_set_filename(self) -> None:
+        logger = Logger()
+        assert logger._fpath is None
+        output_filename = os.path.join(OUTPUT_DIR_PATH, "output.csv")
+        logger.set_filename(output_filename)
+        assert logger.fpath == output_filename
+
     def test_dump_overwrite_false(self) -> None:
         for f in glob.glob(os.path.join(OUTPUT_DIR_PATH, "*.csv")):
             os.remove(f)
