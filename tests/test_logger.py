@@ -184,6 +184,24 @@ class TestLogger:
         assert logger.get_data() == expected
 
     @pytest.mark.parametrize(
+        "label,index,expected",
+        [
+            ("x0", (1, 4), [[5, 10, 15]]),
+            (1, (0, 4), [[1, 6, 11, 16]]),
+            (["x2", "x3"], (2, 5), [[12, 17, 22], [13, 18, 23]]),
+            (["x1", 4], (3,), [[16, 21], [19, 24]]),
+            ("x1", None, [[1, 6, 11, 16, 21]]),
+            ("x3", (), [[3, 8, 13, 18, 23]]),
+        ],
+    )
+    def test_slice_data(self, label, index, expected) -> None:
+        logger = Logger()
+        logger.set_labels([f"x{i}" for i in range(5)])
+        for i in range(5):
+            logger.store(range(5 * i, 5 * i + 5))
+        assert logger.slice_data(label, index) == expected
+
+    @pytest.mark.parametrize(
         "labels,data",
         [
             (["t", "x", "y"], [[0.0, 10, 10], [0.1, 20, 30], [0.2, 30, 50]]),

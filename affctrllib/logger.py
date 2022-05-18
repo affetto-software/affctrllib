@@ -73,6 +73,35 @@ class Logger(object):
     def get_data(self) -> list[list[Any]]:
         return self._rawdata
 
+    def _slice_data_get_index_list(
+        self, label: str | int | Iterable[str | int]
+    ) -> list[int]:
+        def ensure_index(label_or_index: str | int) -> int:
+            if isinstance(label_or_index, str):
+                return self._labels.index(label_or_index)
+            else:
+                return label_or_index
+
+        if isinstance(label, (str, int)):
+            return [ensure_index(label)]
+        else:
+            return [ensure_index(i) for i in label]
+
+    def slice_data(
+        self,
+        label: str | int | Iterable[str | int],
+        index: tuple[int, int] | None = None,
+    ) -> list[list[Any]]:
+        cols = self._slice_data_get_index_list(label)
+        row_range = (0, len(self._rawdata))
+        if index is not None:
+            row_range = (
+                index[0] if len(index) > 0 else 0,
+                index[1] if len(index) > 1 else len(self._rawdata),
+            )
+        extracted_data = self._rawdata[row_range[0] : row_range[1]]
+        return [[row[c] for row in extracted_data] for c in cols]
+
     def _generate_alternative_fname(self, basefn: Path) -> Path:
         stem = basefn.stem
         suffix = basefn.suffix
