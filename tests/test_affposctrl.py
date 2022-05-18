@@ -15,8 +15,8 @@ CONFIG_DIR_PATH = os.path.join(os.path.dirname(__file__), "config")
 
 class TestFeedbackPID:
     def test_init(self) -> None:
-        _ = FeedbackPID()
-        assert True
+        pid = FeedbackPID()
+        assert pid.scheme_name == "pid"
 
     @pytest.mark.parametrize("kP", [50, [10, 20], np.array([10, 20, 30])])
     def test_init_with_kP(self, kP) -> None:
@@ -141,8 +141,8 @@ class TestFeedbackPID:
 
 class TestFeedbackPIDF:
     def test_init(self) -> None:
-        _ = FeedbackPIDF()
-        assert True
+        pidf = FeedbackPIDF()
+        assert pidf.scheme_name == "pidf"
 
     @pytest.mark.parametrize("press_gain", [0.1, [0.2, 0.2], np.array([0.3, 0.3, 0.3])])
     def test_init_with_stiff(self, press_gain) -> None:

@@ -21,6 +21,7 @@ class Feedback(ABC, Generic[JointT]):
     _kD: JointT
     _kI: JointT
     _accum_qerr: JointT
+    _scheme_name: str
 
     def __init__(self, **kwargs) -> None:
         if "kP" in kwargs:
@@ -29,6 +30,11 @@ class Feedback(ABC, Generic[JointT]):
             self.kD = kwargs["kD"]
         if "kI" in kwargs:
             self.kI = kwargs["kI"]
+        self._scheme_name = ""
+
+    @property
+    def scheme_name(self) -> str:
+        return self._scheme_name
 
     @property
     def kP(self) -> JointT:
@@ -102,6 +108,7 @@ class FeedbackPID(Feedback[JointT]):
         super().__init__(**kwargs)
         if "stiff" in kwargs:
             self.stiff = kwargs["stiff"]
+        self._scheme_name = "pid"
 
     def update(
         self,
@@ -128,6 +135,7 @@ class FeedbackPIDF(Feedback[JointT]):
             self.stiff = kwargs["stiff"]
         if "press_gain" in kwargs:
             self.press_gain = kwargs["press_gain"]
+        self._scheme_name = "pidf"
 
     @property
     def press_gain(self) -> JointT:
