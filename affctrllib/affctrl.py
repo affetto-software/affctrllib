@@ -380,6 +380,10 @@ class AffCtrlThread(Thread):
         return self._astate
 
     @property
+    def logger(self) -> Logger:
+        return self._logger
+
+    @property
     def dt(self) -> float:
         with self._lock:
             return self._actrl.dt
