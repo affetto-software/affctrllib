@@ -404,6 +404,11 @@ class AffCtrlThread(Thread):
             self._actrl.freq = freq
 
     @property
+    def n_steps(self) -> int:
+        with self._lock:
+            return self._actrl.n_steps
+
+    @property
     def inactive_joints(self) -> np.ndarray:
         with self._lock:
             return np.copy(self._actrl.inactive_joints)
