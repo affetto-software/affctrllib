@@ -672,3 +672,31 @@ class TestAffPosCtrlThread:
         config = os.path.join(CONFIG_DIR_PATH, "default.toml")
         ctrl = AffPosCtrlThread(config=config)
         assert ctrl.current_time == 0
+
+    def test_reset_trajectory(self) -> None:
+        config = os.path.join(CONFIG_DIR_PATH, "default.toml")
+        ctrl = AffPosCtrlThread(config=config)
+        ctrl.reset_trajectory()
+        assert len(ctrl._qdes_func(0)) == ctrl.dof
+        assert_array_equal(ctrl._qdes_func(0), 0)
+        assert len(ctrl._dqdes_func(0)) == ctrl.dof
+        assert_array_equal(ctrl._dqdes_func(0), 0)
+
+    def test_reset_trajectory_float(self) -> None:
+        config = os.path.join(CONFIG_DIR_PATH, "default.toml")
+        ctrl = AffPosCtrlThread(config=config)
+        ctrl.reset_trajectory(50)
+        assert len(ctrl._qdes_func(0)) == ctrl.dof
+        assert_array_equal(ctrl._qdes_func(0), 50)
+        assert len(ctrl._dqdes_func(0)) == ctrl.dof
+        assert_array_equal(ctrl._dqdes_func(0), 0)
+
+    def test_reset_trajectory_ndarray(self) -> None:
+        config = os.path.join(CONFIG_DIR_PATH, "default.toml")
+        ctrl = AffPosCtrlThread(config=config)
+        q0 = np.arange(ctrl.dof) * 10
+        ctrl.reset_trajectory(q0)
+        assert len(ctrl._qdes_func(0)) == ctrl.dof
+        assert_array_equal(ctrl._qdes_func(0), q0)
+        assert len(ctrl._dqdes_func(0)) == ctrl.dof
+        assert_array_equal(ctrl._dqdes_func(0), 0)

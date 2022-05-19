@@ -355,9 +355,9 @@ class AffPosCtrlThread(AffCtrlThread):
             self._qdes_func = qdes_func
             self._dqdes_func = dqdes_func
 
-    def reset_trajectory(self) -> None:
+    def reset_trajectory(self, q0: float | np.ndarray = 0) -> None:
         dof = self._actrl.dof
         self.set_trajectory(
-            lambda _: np.zeros((dof,)),
+            lambda _: np.full((dof,), q0),
             lambda _: np.zeros((dof,)),
         )
