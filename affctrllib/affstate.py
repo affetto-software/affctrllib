@@ -23,7 +23,7 @@ class AffState(Affetto, PeriodicRunner):
     _q_prev: np.ndarray
     _dq: np.ndarray
 
-    DEFAULT_FREQ = 100
+    DEFAULT_FREQ: float = 100
 
     def __init__(
         self,

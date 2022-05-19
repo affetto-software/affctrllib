@@ -23,8 +23,8 @@ class AffCtrl(Affetto, PeriodicRunner, Generic[JointT]):
     _scale_gain: float
     _inactive_joints: np.ndarray
 
-    DEFAULT_FREQ = 30
-    DEFAULT_INACTIVE_PRESSURE = 0
+    DEFAULT_FREQ: float = 30
+    DEFAULT_INACTIVE_PRESSURE: float = 0
 
     def __init__(
         self,

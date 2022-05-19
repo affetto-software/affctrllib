@@ -177,8 +177,8 @@ AFFPOSCTRL_FEEDBACK_SCHEME_TO_CONFIG_KEY = {
 class AffPosCtrl(AffCtrl[JointT]):
     _feedback_scheme: Feedback
 
-    DEFAULT_FREQ = 30
-    DEFAULT_INACTIVE_PRESSURE = 0
+    DEFAULT_FREQ: float = 30
+    DEFAULT_INACTIVE_PRESSURE: float = 0
 
     def __init__(
         self,
