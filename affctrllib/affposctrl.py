@@ -213,7 +213,9 @@ class AffPosCtrl(AffCtrl[JointT]):
         kwargs: dict[str, Any],
     ) -> dict[str, Any]:
         try:
-            kwargs[param_key] = np.array(ctrl_config[scheme_key][param_key])
+            kwargs[param_key] = np.array(
+                ctrl_config[scheme_key][param_key], dtype=float
+            )
         except KeyError:
             pass
         return kwargs

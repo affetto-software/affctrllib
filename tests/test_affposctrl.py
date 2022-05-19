@@ -224,6 +224,10 @@ class TestAffPosCtrl:
             ],
         )
         assert isinstance(ctrl.feedback_scheme, FeedbackPID)
+        assert ctrl.feedback_scheme.kP.dtype == float
+        assert ctrl.feedback_scheme.kD.dtype == float
+        assert ctrl.feedback_scheme.kI.dtype == float
+        assert ctrl.feedback_scheme.stiff.dtype == float
         assert_array_equal(ctrl.feedback_scheme.kP, np.array([20] * 13))
         assert_array_equal(ctrl.feedback_scheme.kD, np.array([200] * 13))
         assert_array_equal(ctrl.feedback_scheme.kI, np.array([2] * 13))
@@ -250,10 +254,16 @@ class TestAffPosCtrl:
             ],
         )
         assert isinstance(ctrl.feedback_scheme, FeedbackPIDF)
+        assert ctrl.feedback_scheme.kP.dtype == float
+        assert ctrl.feedback_scheme.kD.dtype == float
+        assert ctrl.feedback_scheme.kI.dtype == float
+        assert ctrl.feedback_scheme.stiff.dtype == float
+        assert ctrl.feedback_scheme.press_gain.dtype == float
         assert_array_equal(ctrl.feedback_scheme.kP, np.array([3] * 13))
         assert_array_equal(ctrl.feedback_scheme.kD, np.array([30] * 13))
         assert_array_equal(ctrl.feedback_scheme.kI, np.array([0.3] * 13))
         assert_array_equal(ctrl.feedback_scheme.stiff, np.array([180] * 13))
+        assert_array_equal(ctrl.feedback_scheme.press_gain, np.array([0.1] * 13))
 
     def test_init_config_empty(self) -> None:
         config = os.path.join(CONFIG_DIR_PATH, "empty.toml")
