@@ -336,7 +336,8 @@ class AffCtrlThread(Thread):
             q, dq, pa, pb = self._astate.get_states()
             with self._lock:
                 self._current_time = t
-                ca, cb = self._ctrl_input(t)
+                u1, u2 = self._ctrl_input(t)
+                ca, cb = self._actrl.update(t, u1, u2)
             self._acom.send_commands(ca, cb)
             try:
                 self._logger.store(t, rq, rdq, rpa, rpb, q, dq, pa, pb, ca, cb)
