@@ -232,6 +232,7 @@ class AffCtrl(Affetto, PeriodicRunner, Generic[JointT]):
 
     def update(
         self,
+        _: float,
         u1: JointT,
         u2: JointT,
     ) -> tuple[JointT, JointT]:
