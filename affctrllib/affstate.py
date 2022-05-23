@@ -210,6 +210,11 @@ class AffStateThread(Thread):
         self._stopped.set()
 
     @property
+    def dof(self) -> int:
+        with self._lock:
+            return self._astate.dof
+
+    @property
     def dt(self) -> float:
         with self._lock:
             return self._astate.dt
