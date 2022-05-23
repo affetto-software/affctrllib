@@ -234,6 +234,11 @@ class AffStateThread(Thread):
         with self._lock:
             self._astate.freq = freq
 
+    @property
+    def n_steps(self) -> int:
+        with self._lock:
+            return self._astate.n_steps
+
     def get_raw_states(self) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
         with self._lock:
             s = self._astate
