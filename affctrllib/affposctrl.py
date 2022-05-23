@@ -1,8 +1,5 @@
-import warnings
 from abc import ABC, abstractmethod
-from collections.abc import Sequence
 from pathlib import Path
-from threading import Event, Lock, Thread
 from typing import Any, Callable, Generic, TypeVar
 
 import numpy as np
@@ -248,7 +245,7 @@ class AffPosCtrl(AffCtrl[JointT]):
         dqdes: JointT,
     ) -> tuple[JointT, JointT]:
         u1, u2 = self.feedback_scheme.update(t, q, dq, pa, pb, qdes, dqdes)
-        return super().update(u1, u2)
+        return super().update(t, u1, u2)
 
 
 class AffPosCtrlThread(AffCtrlThread):
