@@ -293,7 +293,7 @@ class AffCtrlThread(Thread):
         dt: float | None = None,
         freq: float | None = None,
     ) -> AffStateThread:
-        return AffStateThread(config, dt=dt, freq=freq)
+        return AffStateThread(config, dt=dt, freq=freq, logging=False, output=None)
 
     def _create_logger(self, output: str | Path | None) -> Logger:
         self._logger = Logger(output)
@@ -354,11 +354,8 @@ class AffCtrlThread(Thread):
         Thread.join(self, timeout)
 
     def stop(self) -> None:
-        try:
-            if self._logger.fpath is not None:
-                self._logger.dump()
-        except AttributeError:
-            pass
+        if self._logger.fpath is not None:
+            self._logger.dump()
         self._stopped.set()
         time.sleep(0.1)
         if self._astate_created_inside:

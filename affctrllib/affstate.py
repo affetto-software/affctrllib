@@ -11,6 +11,7 @@ from ._periodic_runner import PeriodicRunner
 from .affcomm import AffComm, unzip_array_as_ndarray
 from .affetto import Affetto
 from .filter import Filter
+from .logger import Logger
 from .timer import Timer
 
 
@@ -156,22 +157,48 @@ class AffStateThread(Thread):
     _lock: Lock
     _stopped: Event
     _idled: Event
+    _timer: Timer
+    _current_time: float
+    _logger: Logger
 
     def __init__(
         self,
         config: str | Path | None = None,
         dt: float | None = None,
         freq: float | None = None,
+        logging: bool = True,
+        output: str | Path | None = None,
     ) -> None:
         self._acom = AffComm(config)
         self._astate = AffState(config, dt, freq)
         self._lock = Lock()
         self._stopped = Event()
         self._idled = Event()
+        self._timer = Timer(rate=self._astate.freq)
+        self._current_time = 0
+        if logging:
+            self._create_logger(output)
         Thread.__init__(self)
 
         self.acquire = self._lock.acquire
         self.release = self._lock.release
+
+    def _create_logger(self, output: str | Path | None) -> Logger:
+        self._logger = Logger(output)
+        self._logger.set_labels(
+            "t",
+            # raw data
+            [f"rq{i}" for i in range(self._astate.dof)],
+            [f"rdq{i}" for i in range(self._astate.dof)],
+            [f"rpa{i}" for i in range(self._astate.dof)],
+            [f"rpb{i}" for i in range(self._astate.dof)],
+            # estimated states
+            [f"q{i}" for i in range(self._astate.dof)],
+            [f"dq{i}" for i in range(self._astate.dof)],
+            [f"pa{i}" for i in range(self._astate.dof)],
+            [f"pb{i}" for i in range(self._astate.dof)],
+        )
+        return self._logger
 
     def prepare(
         self,
@@ -193,11 +220,24 @@ class AffStateThread(Thread):
         if not self.prepared():
             warnings.warn("Skipped idling process for sensory module")
 
+        # Start timer.
+        self._timer.start()
+
         # Start the main loop.
         while not self._stopped.is_set():
+            t = self._timer.elapsed_time()
             sarr = self._acom.receive_as_list()
             with self._lock:
+                self._current_time = t
                 self._astate.update(sarr)
+                s = self._astate
+                rq, rdq, rpa, rpb = s.raw_q, s.raw_dq, s.raw_pa, s.raw_pb
+                q, dq, pa, pb = s.q, s.dq, s.pa, s.pb
+            try:
+                self._logger.store(t, rq, rdq, rpa, rpb, q, dq, pa, pb)
+            except AttributeError:
+                pass
+            # self._timer.block()
 
         # Close socket after having left the loop.
         self._acom.close_sensory_socket()
@@ -207,12 +247,23 @@ class AffStateThread(Thread):
         Thread.join(self, timeout)
 
     def stop(self) -> None:
+        if self._logger.fpath is not None:
+            self._logger.dump()
         self._stopped.set()
 
     @property
     def dof(self) -> int:
         with self._lock:
             return self._astate.dof
+
+    @property
+    def current_time(self) -> float:
+        with self._lock:
+            return self._current_time
+
+    @property
+    def logger(self) -> Logger:
+        return self._logger
 
     @property
     def dt(self) -> float:
