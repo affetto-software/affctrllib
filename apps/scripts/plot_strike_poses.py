@@ -4,9 +4,11 @@ import argparse
 from pathlib import Path
 
 import matplotlib.pyplot as plt
+import numpy as np
 from pyplotutil.datautil import Data
 
 sfparam_tmpl = {
+    "time": None,
     "savefig": False,
     "basedir": "fig",
     "filename": None,
@@ -32,11 +34,21 @@ def savefig(fig, **sfparam):
         fig.savefig(str(fname), bbox_inches="tight")
 
 
+def make_mask(t, between=None):
+    if between is None:
+        return np.full(t.size, True)
+    elif len(between) == 1:
+        return t <= between[0]
+    else:
+        return (t >= between[0]) & (t <= between[1])
+
+
 def plot_command(data, joints, **sfparam):
     fig, ax = plt.subplots()
+    mask = make_mask(data.t, sfparam["time"])
     for i in joints:
-        ax.plot(data.t, getattr(data, f"ca{i}"), label=f"ca[{i}]")
-        ax.plot(data.t, getattr(data, f"cb{i}"), label=f"cb[{i}]")
+        ax.plot(data.t[mask], getattr(data, f"ca{i}")[mask], label=f"ca[{i}]")
+        ax.plot(data.t[mask], getattr(data, f"cb{i}")[mask], label=f"cb[{i}]")
     ax.grid(axis="y")
     ax.legend(title="Command")
     pparam = {
@@ -51,9 +63,10 @@ def plot_command(data, joints, **sfparam):
 
 def plot_pressure(data, joints, **sfparam):
     fig, ax = plt.subplots()
+    mask = make_mask(data.t, sfparam["time"])
     for i in joints:
-        ax.plot(data.t, getattr(data, f"pa{i}"), label=f"pa[{i}]")
-        ax.plot(data.t, getattr(data, f"pb{i}"), label=f"pb[{i}]")
+        ax.plot(data.t[mask], getattr(data, f"pa{i}")[mask], label=f"pa[{i}]")
+        ax.plot(data.t[mask], getattr(data, f"pb{i}")[mask], label=f"pb[{i}]")
     ax.grid(axis="y")
     ax.legend(title="Measured pressure")
     pparam = {
@@ -68,29 +81,30 @@ def plot_pressure(data, joints, **sfparam):
 
 def plot_pressure_command(data, joints, **sfparam):
     fig, ax = plt.subplots()
+    mask = make_mask(data.t, sfparam["time"])
     for i in joints:
         (line,) = ax.plot(
-            data.t,
-            getattr(data, f"ca{i}") * 600 / 255,
+            data.t[mask],
+            getattr(data, f"ca{i}")[mask] * 600 / 255,
             ls="--",
             label=f"ca[{i}]",
         )
         (line,) = ax.plot(
-            data.t,
-            getattr(data, f"pa{i}"),
+            data.t[mask],
+            getattr(data, f"pa{i}")[mask],
             c=line.get_color(),
             ls="-",
             label=f"pa[{i}]",
         )
         (line,) = ax.plot(
-            data.t,
-            getattr(data, f"cb{i}") * 600 / 255,
+            data.t[mask],
+            getattr(data, f"cb{i}")[mask] * 600 / 255,
             ls="--",
             label=f"cb[{i}]",
         )
         (line,) = ax.plot(
-            data.t,
-            getattr(data, f"pb{i}"),
+            data.t[mask],
+            getattr(data, f"pb{i}")[mask],
             c=line.get_color(),
             ls="-",
             label=f"pb[{i}]",
@@ -109,9 +123,10 @@ def plot_pressure_command(data, joints, **sfparam):
 
 def plot_q(data, joints, **sfparam):
     fig, ax = plt.subplots()
+    mask = make_mask(data.t, sfparam["time"])
     for i in joints:
-        ax.plot(data.t, getattr(data, f"qdes{i}"), label=f"qdes[{i}]")
-        ax.plot(data.t, getattr(data, f"q{i}"), label=f"q[{i}]")
+        ax.plot(data.t[mask], getattr(data, f"qdes{i}")[mask], label=f"qdes[{i}]")
+        ax.plot(data.t[mask], getattr(data, f"q{i}")[mask], label=f"q[{i}]")
     ax.grid(axis="y")
     ax.legend(title="Joint angle")
     pparam = {
@@ -126,9 +141,10 @@ def plot_q(data, joints, **sfparam):
 
 def plot_dq(data, joints, **sfparam):
     fig, ax = plt.subplots()
+    mask = make_mask(data.t, sfparam["time"])
     for i in joints:
-        ax.plot(data.t, getattr(data, f"dqdes{i}"), label=f"dqdes[{i}]")
-        ax.plot(data.t, getattr(data, f"dq{i}"), label=f"dq[{i}]")
+        ax.plot(data.t[mask], getattr(data, f"dqdes{i}")[mask], label=f"dqdes[{i}]")
+        ax.plot(data.t[mask], getattr(data, f"dq{i}")[mask], label=f"dq[{i}]")
     ax.grid(axis="y")
     ax.legend(title="Joint angle velocity")
     pparam = {
@@ -164,6 +180,9 @@ def parse():
         help="extensions to save as figures",
     )
     parser.add_argument(
+        "-t", "--time", nargs="+", type=float, help="time range to show in figure"
+    )
+    parser.add_argument(
         "-s", "--savefig", action="store_true", help="export figures if specified"
     )
     parser.add_argument(
@@ -175,6 +194,7 @@ def parse():
 def main():
     args = parse()
     sfparam = sfparam_tmpl.copy()
+    sfparam["time"] = args.time
     sfparam["savefig"] = args.savefig
     sfparam["basedir"] = args.basedir
     sfparam["extensions"] = args.extension
