@@ -130,6 +130,10 @@ class Logger(object):
             extracted_data = self._rawdata[row_range[0] : row_range[1]]
         return [[row[c] for row in extracted_data] for c in cols]
 
+    def erase_data(self) -> None:
+        del self._rawdata
+        self._rawdata = []
+
     def _generate_alternative_fname(self, basefn: Path) -> Path:
         stem = basefn.stem
         suffix = basefn.suffix

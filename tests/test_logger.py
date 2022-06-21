@@ -201,6 +201,16 @@ class TestLogger:
             logger.store(range(5 * i, 5 * i + 5))
         assert logger.slice_data(label, index) == expected
 
+    def test_erase_data(self) -> None:
+        logger = Logger()
+        logger.set_labels([f"x{i}" for i in range(5)])
+        for i in range(5):
+            logger.store(range(5 * i, 5 * i + 5))
+        assert len(logger) == 5
+        logger.erase_data()
+        assert len(logger) == 0
+        assert logger.get_header() == ",".join([f"x{i}" for i in range(5)])
+
     @pytest.mark.parametrize(
         "labels,data",
         [
