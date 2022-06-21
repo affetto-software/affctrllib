@@ -328,11 +328,13 @@ class AffCtrlThread(Thread):
             self._astate.start()
 
         # Start timer.
-        self._timer.start()
+        with self._lock:
+            self._timer.start()
 
         # Start the main loop.
         while not self._stopped.is_set():
-            t = self._timer.elapsed_time()
+            with self._lock:
+                t = self._timer.elapsed_time()
             rq, rdq, rpa, rpb = self._astate.get_raw_states()
             q, dq, pa, pb = self._astate.get_states()
             with self._lock:
@@ -344,7 +346,8 @@ class AffCtrlThread(Thread):
                 self._logger.store(t, rq, rdq, rpa, rpb, q, dq, pa, pb, ca, cb)
             except AttributeError:
                 pass
-            self._timer.block()
+            with self._lock:
+                self._timer.block()
 
         # Close socket after having left the loop.
         self._acom.close_command_socket()
@@ -363,6 +366,11 @@ class AffCtrlThread(Thread):
 
     def wait_for_idling(self, timeout=None) -> bool:
         return self._astate.wait_for_idling(timeout)
+
+    def reset_timer(self) -> None:
+        self._astate.reset_timer()
+        with self._lock:
+            self._timer.reset()
 
     @property
     def dof(self) -> int:

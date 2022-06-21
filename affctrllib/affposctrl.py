@@ -300,11 +300,13 @@ class AffPosCtrlThread(AffCtrlThread):
             self._astate.start()
 
         # Start timer.
-        self._timer.start()
+        with self._lock:
+            self._timer.start()
 
         # Start the main loop.
         while not self._stopped.is_set():
-            t = self._timer.elapsed_time()
+            with self._lock:
+                t = self._timer.elapsed_time()
             rq, rdq, rpa, rpb = self._astate.get_raw_states()
             q, dq, pa, pb = self._astate.get_states()
             with self._lock:
@@ -319,7 +321,8 @@ class AffPosCtrlThread(AffCtrlThread):
                 )
             except AttributeError:
                 pass
-            self._timer.block()
+            with self._lock:
+                self._timer.block()
 
         # Close socket after having left the loop.
         self._acom.close_command_socket()

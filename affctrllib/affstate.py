@@ -221,11 +221,13 @@ class AffStateThread(Thread):
             warnings.warn("Skipped idling process for sensory module")
 
         # Start timer.
-        self._timer.start()
+        with self._lock:
+            self._timer.start()
 
         # Start the main loop.
         while not self._stopped.is_set():
-            t = self._timer.elapsed_time()
+            with self._lock:
+                t = self._timer.elapsed_time()
             sarr = self._acom.receive_as_list()
             with self._lock:
                 self._current_time = t
@@ -237,7 +239,8 @@ class AffStateThread(Thread):
                 self._logger.store(t, rq, rdq, rpa, rpb, q, dq, pa, pb)
             except AttributeError:
                 pass
-            # self._timer.block()
+            # with self._lock:
+            #     self._timer.block()
 
         # Close socket after having left the loop.
         self._acom.close_sensory_socket()
@@ -250,6 +253,10 @@ class AffStateThread(Thread):
         if self._logger.fpath is not None:
             self._logger.dump()
         self._stopped.set()
+
+    def reset_timer(self) -> None:
+        with self._lock:
+            self._timer.reset()
 
     @property
     def dof(self) -> int:
