@@ -24,6 +24,10 @@ class Logger(object):
         self._lock = Lock()
         self.fpath = fname
 
+    def __len__(self) -> int:
+        with self._lock:
+            return len(self._rawdata)
+
     @property
     def sep(self) -> str:
         return self._sep
