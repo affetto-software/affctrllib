@@ -60,6 +60,9 @@ class Timer(object):
         self._time_started_ns = self._time_ns_func()
         self._time_last_blocked_ns = self._time_started_ns
 
+    def reset(self) -> None:
+        self.start()
+
     def elapsed_time(self) -> float:
         return (self._time_ns_func() - self._time_started_ns) * 1e-9
 

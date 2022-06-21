@@ -77,6 +77,17 @@ class TestTimer:
         timer.set_rate(rate)
         assert timer.period_ns == int(1e9 / rate)
 
+    def test_reset(self) -> None:
+        timer = Timer()
+        timer.start()
+        time.sleep(0.01)
+        t = timer.elapsed_time()
+        assert t > 0.01
+        timer.reset()
+        time.sleep(0.01)
+        t = timer.elapsed_time()
+        assert t == pytest.approx(0.01, rel=TOL)
+
     def test_elapsed_time(self) -> None:
         timer = Timer()
         timer.start()
