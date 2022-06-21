@@ -494,7 +494,7 @@ class TestAffCtrl:
         u = np.ones((13,)) * 150
         config = os.path.join(CONFIG_DIR_PATH, "default.toml")
         ctrl = AffCtrl(config)
-        u1, u2 = ctrl.update(u, u)
+        u1, u2 = ctrl.update(0, u, u)
         expected = np.full((13,), 150 * 255 / 600)
         expected[1] = 0
         expected[7:] = 100 * 255 / 600
