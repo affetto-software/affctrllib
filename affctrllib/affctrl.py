@@ -357,8 +357,11 @@ class AffCtrlThread(Thread):
         Thread.join(self, timeout)
 
     def stop(self) -> None:
-        if self._logger.fpath is not None:
-            self._logger.dump()
+        try:
+            if self._logger.fpath is not None:
+                self._logger.dump()
+        except AttributeError:
+            pass
         self._stopped.set()
         time.sleep(0.1)
         if self._astate_created_inside:

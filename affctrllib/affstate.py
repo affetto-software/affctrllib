@@ -250,8 +250,11 @@ class AffStateThread(Thread):
         Thread.join(self, timeout)
 
     def stop(self) -> None:
-        if self._logger.fpath is not None:
-            self._logger.dump()
+        try:
+            if self._logger.fpath is not None:
+                self._logger.dump()
+        except AttributeError:
+            pass
         self._stopped.set()
 
     def reset_timer(self) -> None:
