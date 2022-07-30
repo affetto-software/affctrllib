@@ -11,7 +11,7 @@ from affctrllib import PTP, AffPosCtrlThread, Logger
 DEFAULT_CONFIG_PATH = Path(__file__).parent.joinpath("config.toml")
 
 DEFAULT_UPDATE_T_RANGE = (0.5, 1.5)
-DEFAULT_UPDATE_Q_RANGE = (30.0, 60.0)
+DEFAULT_UPDATE_Q_RANGE = (15.0, 40.0)
 DEFAULT_Q_LIMIT = (5.0, 95.0)
 
 # Set printing options for numpy array.
@@ -66,7 +66,7 @@ class RandomTrajectory:
     ) -> tuple[float, float]:
         qmin, qmax = min(q_limit), max(q_limit)
         T = random.uniform(min(t_range), max(t_range))
-        q_diff = random.uniform(min(q_range), max(q_range)) * 0.5
+        q_diff = random.uniform(min(q_range), max(q_range))
         qdes = random.choice([-1, 1]) * q_diff + q0
         if qdes < qmin:
             qdes = qmin + (qmin - qdes)
