@@ -25,6 +25,7 @@ class RandomTrajectory:
     update_t_range: tuple[float, float]
     update_q_range: tuple[float, float]
     q_limit: tuple[float, float]
+    q_limits: list[tuple[float, float]]
     ptp_list: list[PTP]
     profile: str
 
@@ -45,6 +46,11 @@ class RandomTrajectory:
         self.update_t_range = update_t_range
         self.update_q_range = update_q_range
         self.q_limit = q_limit
+        self.q_limits = [self.q_limit for _ in self.joints]
+        for i, j in enumerate(self.joints):
+            if j == 0:
+                # Reduce limits of waist joint.
+                self.q_limits[i] = (40.0, 60.0)
         self.profile = profile
         if seed is not None:
             random.seed(seed)
@@ -66,13 +72,14 @@ class RandomTrajectory:
             qdes = qmin + (qmin - qdes)
         elif qdes > qmax:
             qdes = qmax - (qdes - qmax)
+        qdes = max(min(qmax, qdes), qmin)
         return T, qdes
 
     def initialize_ptp(self) -> list[PTP]:
         ptp_list: list[PTP] = []
         for i in self.joints:
             T, qdes = self._get_new_T_qdes(
-                self.q0[i], self.update_t_range, self.update_q_range, self.q_limit
+                self.q0[i], self.update_t_range, self.update_q_range, self.q_limits[i]
             )
             ptp_list.append(
                 PTP(self.q0[i], qdes, T, self.t0, profile_name=self.profile)
@@ -85,7 +92,7 @@ class RandomTrajectory:
                 new_t0 = ptp.t0 + ptp.T
                 new_q0 = ptp.qF
                 new_T, new_qdes = self._get_new_T_qdes(
-                    new_q0, self.update_t_range, self.update_q_range, self.q_limit
+                    new_q0, self.update_t_range, self.update_q_range, self.q_limits[i]
                 )
                 new_ptp = PTP(
                     new_q0, new_qdes, new_T, new_t0, profile_name=self.profile
