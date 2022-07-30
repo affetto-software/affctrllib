@@ -11,7 +11,7 @@ from affctrllib import PTP, AffPosCtrlThread, Logger
 DEFAULT_CONFIG_PATH = Path(__file__).parent.joinpath("config.toml")
 
 DEFAULT_UPDATE_T_RANGE = (0.5, 1.5)
-DEFAULT_UPDATE_Q_RANGE = (10.0, 50.0)
+DEFAULT_UPDATE_Q_RANGE = (30.0, 60.0)
 DEFAULT_Q_LIMIT = (5.0, 95.0)
 
 # Set printing options for numpy array.
@@ -91,9 +91,6 @@ class RandomTrajectory:
                     new_q0, new_qdes, new_T, new_t0, profile_name=self.profile
                 )
                 self.ptp_list[i] = new_ptp
-                print(
-                    f"Updated {i} ({new_q0}) at {new_t0} => T:{new_T}, qdes:{new_qdes}"
-                )
 
     def qdes(self, t: float) -> np.ndarray:
         self.update_ptp(t)
@@ -136,7 +133,7 @@ def check_trajectory(
 
 def mainloop(
     config: str,
-    joints: list[int],
+    joints: list[int] | None,
     t_range: tuple[float, float] = DEFAULT_UPDATE_T_RANGE,
     q_range: tuple[float, float] = DEFAULT_UPDATE_Q_RANGE,
     q_limit: tuple[float, float] = DEFAULT_Q_LIMIT,
@@ -161,6 +158,8 @@ def mainloop(
     T = duration if duration is not None else 24 * 60 * 60
     t0 = actrl.current_time
     q0 = actrl.state.q
+    if joints is None:
+        joints = list(range(actrl.dof))
     traj = RandomTrajectory(joints, q0, t0, t_range, q_range, q_limit, profile)
 
     print("Start moving!")
@@ -235,6 +234,7 @@ def parse():
     parser.add_argument(
         "-T",
         "--duration",
+        type=float,
         help="Total time duration",
     )
     return parser.parse_args()
