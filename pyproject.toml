@@ -1,6 +1,6 @@
 [project]
 name = "affctrllib"
-version = "0.2.0"
+version = "0.3.0"
 description = "Small library to control Affetto"
 authors = [
     {name = "Hiroshi Atsuta", email = "atsuta@ieee.org"},
