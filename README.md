@@ -48,7 +48,7 @@ Follow the instructions below to get `affctrllib` ready to use.
 
   1. Check out this repository where you want to install it.
      ``` shell
-     git clone git@github.com:affetto-software/affctrllib.git
+     git clone https://github.com/affetto-software/affctrllib.git
 
      ```
   2. Move to the `affctrllib` directory.
@@ -67,7 +67,7 @@ Follow the instructions below to get `affctrllib` ready to use.
      pdm install
 
      ```
-  5. Run test to check if `affctrllib` works on your system. If you
+  5. (Optional) Run test to check if `affctrllib` works on your system. If you
      use `pyenv`, type the following.
      ``` shell
      pdm run pytest
