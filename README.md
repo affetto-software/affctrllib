@@ -75,6 +75,36 @@ Follow the instructions below to get `affctrllib` ready to use.
      ```
 
 ## Usage of apps
+### Configuration file
+
+You need a configuration file to use application programs in `apps` directory.
+To create a configuration file, copy an example configuration file
+and modify values in it if you need.
+
+An example configuration is
+[config_example.toml](apps/config/config_example.toml) directory.
+Please copy it in `apps` directory, renaming to `config.toml`.
+``` shell
+cp apps/config/config_example.toml apps/config.toml
+
+```
+
+Please check the following items carefully.
+```
+[affetto.comm]
+[affetto.comm.remote]
+host = "192.168.5.10"  # IP address of Affetto PC
+port = 50010
+
+[affetto.comm.local]
+host = "192.168.5.109"  # IP address of your machine
+port = 50000
+
+[affetto.state]
+freq = 100  # Use exact the same value in Affetto_AbstractionLayer.exe
+
+```
+
 ### filter_sensory_data.py
 [filter_sensory_data.py](apps/filter_sensory_data.py) records sensory
 data and can output it as a file. It allows you to save joint angle
