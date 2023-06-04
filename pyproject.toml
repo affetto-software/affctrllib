@@ -1,6 +1,6 @@
 [project]
 name = "affctrllib"
-version = "0.2.0"
+version = "0.3.0"
 description = "Small library to control Affetto"
 authors = [
     {name = "Hiroshi Atsuta", email = "atsuta@ieee.org"},
@@ -20,6 +20,10 @@ Homepage = ""
 [tool.pdm.dev-dependencies]
 test = [
     "pytest>=7.1.0",
+    "ipython>=7.34.0",
+]
+doc = [
+    "sphinx>=5.3.0",
 ]
 
 [tool.pyright]
