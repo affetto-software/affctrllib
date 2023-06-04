@@ -94,7 +94,7 @@ ipython_config.py
 __pypackages__/
 
 # pdm
-.pdm.toml
+.pdm-python
 pdm.lock
 
 # Environments
