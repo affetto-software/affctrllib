@@ -66,13 +66,17 @@ class RandomTrajectory:
     ) -> tuple[float, float]:
         qmin, qmax = min(q_limit), max(q_limit)
         T = random.uniform(min(t_range), max(t_range))
-        q_diff = random.uniform(min(q_range), max(q_range))
-        qdes = random.choice([-1, 1]) * q_diff + q0
-        if qdes < qmin:
-            qdes = qmin + (qmin - qdes)
-        elif qdes > qmax:
-            qdes = qmax - (qdes - qmax)
-        qdes = max(min(qmax, qdes), qmin)
+        not_zero = False
+        while not not_zero:
+            q_diff = random.uniform(min(q_range), max(q_range))
+            qdes = random.choice([-1, 1]) * q_diff + q0
+            if qdes < qmin:
+                qdes = qmin + (qmin - qdes)
+            elif qdes > qmax:
+                qdes = qmax - (qdes - qmax)
+            qdes = max(min(qmax, qdes), qmin)
+            if abs(qdes - q0) > 0.0001:
+                not_zero = True
         return T, qdes
 
     def initialize_ptp(self) -> list[PTP]:
