@@ -11,7 +11,7 @@ from affctrllib import PTP, AffPosCtrlThread, Logger
 DEFAULT_CONFIG_PATH = Path(__file__).parent.joinpath("config.toml")
 
 DEFAULT_UPDATE_T_RANGE = (0.5, 1.5)
-DEFAULT_UPDATE_Q_RANGE = (15.0, 40.0)
+DEFAULT_UPDATE_Q_RANGE = (20.0, 40.0)
 DEFAULT_Q_LIMIT = (5.0, 95.0)
 
 # Set printing options for numpy array.
