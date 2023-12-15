@@ -56,7 +56,7 @@ test = "pytest tests/"
 # lint = "pre-commit run --all-files"
 
 [tool.black]
-line-length = 100
+line-length = 120
 target-version = ["py310"]
 
 [tool.isort]
