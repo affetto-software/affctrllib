@@ -1,9 +1,13 @@
+import sys
 import warnings
 from abc import abstractmethod
 from pathlib import Path
 from typing import Any, final
 
-import tomli
+if sys.version_info < (3, 11):
+    import tomli as tomllib
+else:
+    import tomllib
 
 
 class Chain(object):
@@ -47,7 +51,7 @@ class Affetto(object):
     def load_config_path(self, config_path: str | Path):
         self._config_path = Path(config_path)
         with open(self._config_path, "rb") as f:
-            c = tomli.load(f)
+            c = tomllib.load(f)
         self.load_config(c)
 
     @property

@@ -1,9 +1,15 @@
 import os
+import sys
 
 import pytest
-import tomli
 
 from affctrllib.affetto import Affetto, Chain
+
+if sys.version_info < (3, 11):
+    import tomli as tomllib
+else:
+    import tomllib
+
 
 CONFIG_DIR_PATH = os.path.join(os.path.dirname(__file__), "config")
 
@@ -78,7 +84,7 @@ class TestChain:
     def test_load_from_file(self, cfile, dof) -> None:
         cpath = os.path.join(CONFIG_DIR_PATH, cfile)
         with open(cpath, "rb") as f:
-            config = tomli.load(f)
+            config = tomllib.load(f)
         chain = Chain(config["chain"])
         assert chain.dof == dof
 

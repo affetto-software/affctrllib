@@ -2,11 +2,16 @@
 
 import argparse
 import os
+import sys
 
 import numpy as np
-import tomli
 
 from affctrllib import PTP, AffComm, AffPosCtrl, AffState, Logger, Timer
+
+if sys.version_info < (3, 11):
+    import tomli as tomllib
+else:
+    import tomllib
 
 DEFAULT_CONFIG_PATH = os.path.join(os.path.dirname(__file__), "config.toml")
 DOF = 13
@@ -104,7 +109,7 @@ def mainloop(config, output, freq, keyframes, initial=None, profile="tri"):
 
 def load_keyframe(keyframe):
     with open(keyframe, "rb") as f:
-        d = tomli.load(f)
+        d = tomllib.load(f)
     k = d["keyframe"]
     profile = k["profile"]
     q0 = k["initial"]["q"]

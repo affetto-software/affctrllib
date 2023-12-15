@@ -3,12 +3,18 @@
 import argparse
 import copy
 import os
+import sys
 from typing import Any
 
 import numpy as np
-import tomli
 
 from affctrllib import AffComm, Logger, Timer
+
+if sys.version_info < (3, 11):
+    import tomli as tomllib
+else:
+    import tomllib
+
 
 DEFAULT_CONFIG_PATH = os.path.join(os.path.dirname(__file__), "config.toml")
 DOF = 13
@@ -71,7 +77,7 @@ def print_parameters(default_params, specific_params_list):
 
 def load_parameters(config):
     with open(config, "rb") as f:
-        config_dict = tomli.load(f)
+        config_dict = tomllib.load(f)
     try:
         command = config_dict["command"]
     except KeyError:
