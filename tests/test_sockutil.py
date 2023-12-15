@@ -1,6 +1,7 @@
 import socket
 
 import pytest
+
 from affctrllib._sockutil import Socket
 
 

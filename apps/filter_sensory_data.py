@@ -3,8 +3,9 @@
 import argparse
 import os
 
-import affctrllib as acl
 import numpy as np
+
+import affctrllib as acl
 from affctrllib import AffComm, AffState, Logger, Timer
 
 DEFAULT_CONFIG_PATH = os.path.join(os.path.dirname(__file__), "config.toml")

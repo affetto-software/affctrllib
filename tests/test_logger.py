@@ -4,6 +4,7 @@ from pathlib import Path
 
 import numpy as np
 import pytest
+
 from affctrllib.logger import Logger
 
 OUTPUT_DIR_PATH = os.path.join(os.path.dirname(__file__), "output")

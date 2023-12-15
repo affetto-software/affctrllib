@@ -2,13 +2,14 @@ import os
 
 import numpy as np
 import pytest
+from numpy.testing import assert_array_equal
+
 from affctrllib.affposctrl import (
     AffPosCtrl,
     AffPosCtrlThread,
     FeedbackPID,
     FeedbackPIDF,
 )
-from numpy.testing import assert_array_equal
 
 CONFIG_DIR_PATH = os.path.join(os.path.dirname(__file__), "config")
 

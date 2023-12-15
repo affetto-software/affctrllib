@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import numpy as np
+
 from affctrllib import Filter, Logger
 
 N = 1000  # number of samples

@@ -4,6 +4,7 @@ import argparse
 import os
 
 import numpy as np
+
 from affctrllib import AffComm, Logger, Timer
 
 DEFAULT_CONFIG_PATH = os.path.join(os.path.dirname(__file__), "config.toml")

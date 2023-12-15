@@ -1,6 +1,7 @@
 import os
 
 import pytest
+
 from affctrllib._sockutil import Socket
 from affctrllib.affmock import AffMock
 

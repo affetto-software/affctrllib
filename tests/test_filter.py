@@ -1,7 +1,8 @@
 import numpy as np
 import pytest
-from affctrllib.filter import Filter
 from numpy.testing import assert_array_equal
+
+from affctrllib.filter import Filter
 
 
 class TestFilter:

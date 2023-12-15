@@ -7,6 +7,7 @@ from typing import Any
 
 import numpy as np
 import tomli
+
 from affctrllib import AffComm, Logger, Timer
 
 DEFAULT_CONFIG_PATH = os.path.join(os.path.dirname(__file__), "config.toml")

@@ -1,4 +1,5 @@
 import pytest
+
 from affctrllib._periodic_runner import PeriodicRunner
 
 

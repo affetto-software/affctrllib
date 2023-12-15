@@ -1,8 +1,9 @@
 import os
 
 import pytest
-from affctrllib.affstate import AffState, AffStateThread
 from numpy.testing import assert_array_equal
+
+from affctrllib.affstate import AffState, AffStateThread
 
 CONFIG_DIR_PATH = os.path.join(os.path.dirname(__file__), "config")
 

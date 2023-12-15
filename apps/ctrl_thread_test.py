@@ -5,6 +5,7 @@ import time
 from pathlib import Path
 
 import numpy as np
+
 from affctrllib import PTP, AffPosCtrlThread, Logger
 
 DEFAULT_CONFIG_PATH = Path(__file__).parent.joinpath("config.toml")

@@ -2,6 +2,7 @@ import os
 
 import pytest
 import tomli
+
 from affctrllib.affetto import Affetto, Chain
 
 CONFIG_DIR_PATH = os.path.join(os.path.dirname(__file__), "config")

@@ -2,6 +2,7 @@ import time
 from typing import Callable
 
 import pytest
+
 from affctrllib.timer import Timer
 
 TOL = 1e-1

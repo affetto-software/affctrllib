@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import numpy as np
+
 from affctrllib import PTP, Logger
 
 q0 = np.array([0, 0, 127])
