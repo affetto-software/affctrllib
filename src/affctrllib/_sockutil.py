@@ -2,7 +2,6 @@ import socket as sock
 
 
 class Socket(object):
-
     _family: str
     _host: str
     _port: int

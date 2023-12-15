@@ -74,9 +74,7 @@ class Timer(object):
 
     def block(self) -> None:
         try:
-            elapsed_since_last_blocked = (
-                self._time_ns_func() - self._time_last_blocked_ns
-            )
+            elapsed_since_last_blocked = self._time_ns_func() - self._time_last_blocked_ns
         except AttributeError:
             raise RuntimeError("Timer.start() must be called before Timer.block()")
 

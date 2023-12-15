@@ -152,9 +152,7 @@ class TestTimer:
             # time.thread_time_ns,
         ],
     )
-    def test_alternative_time_ns_function(
-        self, time_ns_func: Callable[[], int]
-    ) -> None:
+    def test_alternative_time_ns_function(self, time_ns_func: Callable[[], int]) -> None:
         timer = Timer(rate=100)
         timer._time_ns_func = time_ns_func
         timer.start()
@@ -173,6 +171,4 @@ class TestTimer:
                 timer.block()
         assert len(record) == 3
         for i in range(3):
-            assert str(record[i].message).startswith(
-                "It took longer than specified period at t="
-            )
+            assert str(record[i].message).startswith("It took longer than specified period at t=")

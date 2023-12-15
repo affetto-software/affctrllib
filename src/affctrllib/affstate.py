@@ -41,9 +41,7 @@ class AffState(Affetto, PeriodicRunner):
 
         if not hasattr(self, "_freq"):
             self.set_freq(self.DEFAULT_FREQ)
-            warnings.warn(
-                f"Sensor frequency is not provided, set to default: {self._freq}"
-            )
+            warnings.warn(f"Sensor frequency is not provided, set to default: {self._freq}")
 
     def load_config(self, config: dict[str, Any]) -> None:
         super().load_config(config)
@@ -100,8 +98,7 @@ class AffState(Affetto, PeriodicRunner):
         self._data_ndarray = unzip_array_as_ndarray(self._raw_data, ncol=3)
         # Process input signal filtering.
         self._filtered_data = [
-            f.update(d) if f is not None else d
-            for f, d in zip(self._filter_list, self._data_ndarray)
+            f.update(d) if f is not None else d for f, d in zip(self._filter_list, self._data_ndarray)
         ]
         # Calculate time derivative of q.
         try:

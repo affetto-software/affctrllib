@@ -126,9 +126,7 @@ def mainloop(config, output, freq=None):
 
 def parse():
     parser = argparse.ArgumentParser(description="Capture static poses.")
-    parser.add_argument(
-        "-c", "--config", default=DEFAULT_CONFIG_PATH, help="config file"
-    )
+    parser.add_argument("-c", "--config", default=DEFAULT_CONFIG_PATH, help="config file")
     parser.add_argument("-o", "--output", default=None, help="output filename")
     parser.add_argument("-H", "--hz", type=float, help="sampling frequency")
     return parser.parse_args()

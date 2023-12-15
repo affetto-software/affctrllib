@@ -111,9 +111,7 @@ class TestLogger:
         label1 = [f"q{i}" for i in range(3)]
         label2 = [f"dq{i}" for i in range(3)]
         logger.extend_labels(label1, label2, "rq0")
-        assert logger.get_header() == ",".join(
-            ["t", "q0", "q1", "q2", "dq0", "dq1", "dq2", "rq0"]
-        )
+        assert logger.get_header() == ",".join(["t", "q0", "q1", "q2", "dq0", "dq1", "dq2", "rq0"])
 
     def test_extend_labels_string(self) -> None:
         logger = Logger()

@@ -83,12 +83,8 @@ class RandomTrajectory:
     def initialize_ptp(self) -> list[PTP]:
         ptp_list: list[PTP] = []
         for i in self.joints:
-            T, qdes = self._get_new_T_qdes(
-                self.q0[i], self.update_t_range, self.update_q_range, self.q_limits[i]
-            )
-            ptp_list.append(
-                PTP(self.q0[i], qdes, T, self.t0, profile_name=self.profile)
-            )
+            T, qdes = self._get_new_T_qdes(self.q0[i], self.update_t_range, self.update_q_range, self.q_limits[i])
+            ptp_list.append(PTP(self.q0[i], qdes, T, self.t0, profile_name=self.profile))
         return ptp_list
 
     def update_ptp(self, t: float) -> None:
@@ -99,9 +95,7 @@ class RandomTrajectory:
                 new_T, new_qdes = self._get_new_T_qdes(
                     new_q0, self.update_t_range, self.update_q_range, self.q_limits[i]
                 )
-                new_ptp = PTP(
-                    new_q0, new_qdes, new_T, new_t0, profile_name=self.profile
-                )
+                new_ptp = PTP(new_q0, new_qdes, new_T, new_t0, profile_name=self.profile)
                 self.ptp_list[i] = new_ptp
 
     def qdes(self, t: float) -> np.ndarray:
@@ -130,9 +124,7 @@ def check_trajectory(
     N = 1000
     logger = Logger(output) if output is not None else None
     if logger is not None:
-        logger.set_labels(
-            ["t"], [f"q{i}" for i in range(13)], [f"dq{i}" for i in range(13)]
-        )
+        logger.set_labels(["t"], [f"q{i}" for i in range(13)], [f"dq{i}" for i in range(13)])
     for i in range(N + 1):
         t = i * T / N
         qdes = traj.qdes(t)
@@ -157,9 +149,7 @@ def mainloop(
     inactive_pressure: float = 400,
 ):
     # Start AffPosCtrlThread.
-    actrl = AffPosCtrlThread(
-        config=config, freq=cfreq, sensor_freq=sfreq, output=output
-    )
+    actrl = AffPosCtrlThread(config=config, freq=cfreq, sensor_freq=sfreq, output=output)
     actrl.set_active_joints(None, inactive_pressure)
     actrl.start()
     actrl.wait_for_idling()
@@ -192,9 +182,7 @@ def mainloop(
 
 def parse():
     parser = argparse.ArgumentParser(description="Get joints to move at random.")
-    parser.add_argument(
-        "-c", "--config", default=DEFAULT_CONFIG_PATH, help="config file"
-    )
+    parser.add_argument("-c", "--config", default=DEFAULT_CONFIG_PATH, help="config file")
     parser.add_argument("-o", "--output", default=None, help="output filename")
     parser.add_argument(
         "-F",
@@ -210,9 +198,7 @@ def parse():
         type=float,
         help="control frequency",
     )
-    parser.add_argument(
-        "-j", "--joints", nargs="+", type=int, help="Joint index to move"
-    )
+    parser.add_argument("-j", "--joints", nargs="+", type=int, help="Joint index to move")
     parser.add_argument(
         "-t",
         "--t-range",

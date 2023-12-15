@@ -126,9 +126,7 @@ def load_parameters(config):
                     if ith_params_side["profile"] == ith_params["profile"]:
                         ith_params_side["params"] = ith_params["params"].copy()
                     else:
-                        ith_params_side["params"] = default_profiles[
-                            affetto[ith][side]["profile"]
-                        ].copy()
+                        ith_params_side["params"] = default_profiles[affetto[ith][side]["profile"]].copy()
                 else:
                     ith_params_side["profile"] = ith_params["profile"]
                     ith_params_side["params"] = ith_params["params"].copy()
@@ -145,9 +143,7 @@ PROFILE_TO_FUNC_MAP = {
 }
 
 
-def generate_commands(
-    t, default_params, specific_params_list
-) -> tuple[np.ndarray, np.ndarray]:
+def generate_commands(t, default_params, specific_params_list) -> tuple[np.ndarray, np.ndarray]:
     # Set default values.
     val = PROFILE_TO_FUNC_MAP[default_params["profile"]](t, **default_params["params"])
     ca = np.full((DOF,), val)
@@ -158,13 +154,9 @@ def generate_commands(
         ca[i] = val
         cb[i] = val
         if "ca" in params:
-            ca[i] = PROFILE_TO_FUNC_MAP[params["ca"]["profile"]](
-                t, **params["ca"]["params"]
-            )
+            ca[i] = PROFILE_TO_FUNC_MAP[params["ca"]["profile"]](t, **params["ca"]["params"])
         if "cb" in params:
-            cb[i] = PROFILE_TO_FUNC_MAP[params["cb"]["profile"]](
-                t, **params["cb"]["params"]
-            )
+            cb[i] = PROFILE_TO_FUNC_MAP[params["cb"]["profile"]](t, **params["cb"]["params"])
     return (ca, cb)
 
 
@@ -209,9 +201,7 @@ def mainloop(config, output, freq, time, default_params, specific_params_list):
 
 def parse():
     parser = argparse.ArgumentParser(description="Send sinusoidal actuation commands.")
-    parser.add_argument(
-        "-c", "--config", default=DEFAULT_CONFIG_PATH, help="config file"
-    )
+    parser.add_argument("-c", "--config", default=DEFAULT_CONFIG_PATH, help="config file")
     parser.add_argument("-o", "--output", default=None, help="output filename")
     parser.add_argument(
         "-C",

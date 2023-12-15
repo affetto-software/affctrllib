@@ -39,9 +39,7 @@ class AffCtrl(Affetto, PeriodicRunner, Generic[JointT]):
 
         if not hasattr(self, "_freq"):
             self.set_freq(self.DEFAULT_FREQ)
-            warnings.warn(
-                f"Control frequency is not provided, set to default: {self._freq}"
-            )
+            warnings.warn(f"Control frequency is not provided, set to default: {self._freq}")
 
     def __repr__(self) -> str:
         return ""
@@ -270,9 +268,7 @@ class AffCtrlThread(Thread):
         if astate is not None:
             self._astate = astate
         else:
-            self._astate = self._create_state_estimator(
-                config, dt=sensor_dt, freq=sensor_freq
-            )
+            self._astate = self._create_state_estimator(config, dt=sensor_dt, freq=sensor_freq)
             self._astate_created_inside = True
         self._actrl = AffCtrl(config, dt, freq)
         self._lock = Lock()
@@ -468,9 +464,7 @@ class AffCtrlThread(Thread):
         with self._lock:
             return self._actrl.active_joints_index.copy()
 
-    def set_ctrl_input(
-        self, ctrl_input_func: Callable[[float], tuple[np.ndarray, np.ndarray]]
-    ) -> None:
+    def set_ctrl_input(self, ctrl_input_func: Callable[[float], tuple[np.ndarray, np.ndarray]]) -> None:
         with self._lock:
             self._ctrl_input = ctrl_input_func
 

@@ -373,14 +373,10 @@ class PTP(Generic[JointT]):
     def profile(self) -> Profile:
         return self._profile
 
-    def select_profile(
-        self, q0: JointT, qF: JointT, T: float, t0: float, profile_name: str, **kwargs
-    ) -> None:
+    def select_profile(self, q0: JointT, qF: JointT, T: float, t0: float, profile_name: str, **kwargs) -> None:
         if not profile_name in PTP_ACCEPTABLE_PROFILE_NAMES.keys():
             raise ValueError(f"Invalid profile name: {profile_name}")
-        self._profile = PTP_ACCEPTABLE_PROFILE_NAMES[profile_name](
-            q0, qF, T, t0, **kwargs
-        )
+        self._profile = PTP_ACCEPTABLE_PROFILE_NAMES[profile_name](q0, qF, T, t0, **kwargs)
 
     def q(self, t: float) -> JointT | float:
         return self.profile.q(t)

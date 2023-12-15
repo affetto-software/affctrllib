@@ -52,9 +52,7 @@ def convert_array_to_bytes(
     return convert_array_to_string(array, sep, f_spec, precision).encode()
 
 
-def unzip_array_as_ndarray(
-    array: list[float] | list[int] | np.ndarray, ncol: int = 3
-) -> np.ndarray:
+def unzip_array_as_ndarray(array: list[float] | list[int] | np.ndarray, ncol: int = 3) -> np.ndarray:
     ret = np.array(array).reshape((int(len(array) / ncol), ncol))
     return ret.T
 
@@ -130,9 +128,7 @@ AffComm configuration:
         self.sensory_socket.addr = self.comm_config["local"]
         self.command_socket.addr = self.comm_config["remote"]
 
-    def create_sensory_socket(
-        self, addr: tuple[str, int] | None = None
-    ) -> socket.socket:
+    def create_sensory_socket(self, addr: tuple[str, int] | None = None) -> socket.socket:
         s = self.sensory_socket.create()
         self.sensory_socket.bind(addr)
         return s
@@ -140,9 +136,7 @@ AffComm configuration:
     def create_command_socket(self) -> socket.socket:
         return self.command_socket.create()
 
-    def create_sockets(
-        self, sensory_addr: tuple[str, int] | None = None
-    ) -> tuple[socket.socket, socket.socket]:
+    def create_sockets(self, sensory_addr: tuple[str, int] | None = None) -> tuple[socket.socket, socket.socket]:
         return (self.create_sensory_socket(sensory_addr), self.create_command_socket())
 
     def close_sensory_socket(self) -> None:
@@ -165,9 +159,7 @@ AffComm configuration:
         bufsize=1024,
         function: Callable[[str], R] = float,
     ) -> list[R]:
-        return split_received_msg(
-            self.sensory_socket.recvfrom(bufsize), function=function
-        )
+        return split_received_msg(self.sensory_socket.recvfrom(bufsize), function=function)
 
     def receive_as_2darray(
         self,
@@ -184,6 +176,4 @@ AffComm configuration:
         *arrays: np.ndarray,
         addr: tuple[str, int] | None = None,
     ) -> int:
-        return self.command_socket.sendto(
-            convert_array_to_bytes(zip_arrays_as_ndarray(*arrays)), addr
-        )
+        return self.command_socket.sendto(convert_array_to_bytes(zip_arrays_as_ndarray(*arrays)), addr)

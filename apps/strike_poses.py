@@ -75,9 +75,7 @@ def mainloop(config, output, freq, keyframes, initial=None, profile="tri"):
             qdes = ptp.q(t)
             dqdes = ptp.dq(t)
             # dqdes = np.zeros(shape=(actrl.dof,))
-            ca, cb = actrl.update(
-                t, astate.q, astate.dq, astate.pa, astate.pb, qdes, dqdes
-            )
+            ca, cb = actrl.update(t, astate.q, astate.dq, astate.pa, astate.pb, qdes, dqdes)
             acom.send_commands(ca, cb)
             logging(logger, t, astate, qdes, dqdes, ca, cb)
             print(f"\rt = {t:.2f}", end="")
@@ -117,9 +115,7 @@ def load_keyframe(keyframe):
 
 def parse():
     parser = argparse.ArgumentParser(description="Strike poses")
-    parser.add_argument(
-        "-c", "--config", default=DEFAULT_CONFIG_PATH, help="config file"
-    )
+    parser.add_argument("-c", "--config", default=DEFAULT_CONFIG_PATH, help="config file")
     parser.add_argument("-k", "--keyframe", required=True, help="keyframe file")
     parser.add_argument("-o", "--output", default=None, help="output filename")
     parser.add_argument(

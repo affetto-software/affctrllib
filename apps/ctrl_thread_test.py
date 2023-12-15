@@ -58,9 +58,7 @@ class Trajectory:
             self.waypoints_q.append(q)
 
         # Calculate time when trajectory passes a waypoint.
-        self.passing_times = [
-            sum(self.intervals[: i + 1]) + self.t0 for i in range(len(self.intervals))
-        ]
+        self.passing_times = [sum(self.intervals[: i + 1]) + self.t0 for i in range(len(self.intervals))]
         self.passing_times.insert(0, self.t0)
 
         # Create trajectory that passes all waypoints.
@@ -106,9 +104,7 @@ def check_trajectory(joint: int = 0, output: str | None = None):
     N = 1000
     logger = Logger(output) if output is not None else None
     if logger:
-        logger.set_labels(
-            ["t"], [f"qdes{i}" for i in range(13)], [f"dqdes{i}" for i in range(13)]
-        )
+        logger.set_labels(["t"], [f"qdes{i}" for i in range(13)], [f"dqdes{i}" for i in range(13)])
     for i in range(N + 1):
         t = i * T / N
         qdes = traj.qdes(t)
@@ -129,9 +125,7 @@ def mainloop(
     inactive_pressure: float = 400,
 ):
     # Start AffPosCtrlThread.
-    actrl = AffPosCtrlThread(
-        config=config, freq=cfreq, sensor_freq=sfreq, output=output
-    )
+    actrl = AffPosCtrlThread(config=config, freq=cfreq, sensor_freq=sfreq, output=output)
     actrl.set_active_joints(None, inactive_pressure)
     actrl.start()
     actrl.wait_for_idling()
@@ -164,9 +158,7 @@ def mainloop(
 
 def parse():
     parser = argparse.ArgumentParser(description="Let single joint move from 0 to 100")
-    parser.add_argument(
-        "-c", "--config", default=DEFAULT_CONFIG_PATH, help="config file"
-    )
+    parser.add_argument("-c", "--config", default=DEFAULT_CONFIG_PATH, help="config file")
     parser.add_argument("-o", "--output", default=None, help="output filename")
     parser.add_argument(
         "-F",
@@ -182,9 +174,7 @@ def parse():
         type=float,
         help="control frequency",
     )
-    parser.add_argument(
-        "-j", "--joint", default=0, type=int, help="Joint index to move"
-    )
+    parser.add_argument("-j", "--joint", default=0, type=int, help="Joint index to move")
     parser.add_argument(
         "-p",
         "--profile",

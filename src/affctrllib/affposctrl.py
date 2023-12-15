@@ -210,16 +210,12 @@ class AffPosCtrl(AffCtrl[JointT]):
         kwargs: dict[str, Any],
     ) -> dict[str, Any]:
         try:
-            kwargs[param_key] = np.array(
-                ctrl_config[scheme_key][param_key], dtype=float
-            )
+            kwargs[param_key] = np.array(ctrl_config[scheme_key][param_key], dtype=float)
         except KeyError:
             pass
         return kwargs
 
-    def load_feedback_scheme(
-        self, scheme: str, ctrl_config: dict[str, Any] | None = None
-    ) -> None:
+    def load_feedback_scheme(self, scheme: str, ctrl_config: dict[str, Any] | None = None) -> None:
         if ctrl_config is None:
             ctrl_config = self.ctrl_config
         scheme_class = AFFPOSCTRL_ACCEPTABLE_FEEDBACK_SCHEME_NAMES[scheme]
@@ -229,9 +225,7 @@ class AffPosCtrl(AffCtrl[JointT]):
         self._load_feedback_scheme_find_array(ctrl_config, scheme_key, "kD", kwargs)
         self._load_feedback_scheme_find_array(ctrl_config, scheme_key, "kI", kwargs)
         self._load_feedback_scheme_find_array(ctrl_config, scheme_key, "stiff", kwargs)
-        self._load_feedback_scheme_find_array(
-            ctrl_config, scheme_key, "press_gain", kwargs
-        )
+        self._load_feedback_scheme_find_array(ctrl_config, scheme_key, "press_gain", kwargs)
         self._feedback_scheme = scheme_class(**kwargs)
 
     def update(
@@ -264,9 +258,7 @@ class AffPosCtrlThread(AffCtrlThread):
         sensor_dt: float | None = None,
         sensor_freq: float | None = None,
     ):
-        super().__init__(
-            astate, config, dt, freq, logging, output, sensor_dt, sensor_freq
-        )
+        super().__init__(astate, config, dt, freq, logging, output, sensor_dt, sensor_freq)
         del self._actrl
         self._actrl = AffPosCtrl(config, dt, freq)
         self.reset_trajectory()
@@ -316,9 +308,7 @@ class AffPosCtrlThread(AffCtrlThread):
                 ca, cb = self._actrl.update(t, q, dq, pa, pb, qdes, dqdes)
             self._acom.send_commands(ca, cb)
             try:
-                self._logger.store(
-                    t, rq, rdq, rpa, rpb, q, dq, pa, pb, ca, cb, qdes, dqdes
-                )
+                self._logger.store(t, rq, rdq, rpa, rpb, q, dq, pa, pb, ca, cb, qdes, dqdes)
             except AttributeError:
                 pass
             with self._lock:
@@ -332,9 +322,7 @@ class AffPosCtrlThread(AffCtrlThread):
         with self._lock:
             return self._actrl.feedback_scheme
 
-    def load_feedback_scheme(
-        self, scheme: str, ctrl_config: dict[str, Any] | None = None
-    ) -> None:
+    def load_feedback_scheme(self, scheme: str, ctrl_config: dict[str, Any] | None = None) -> None:
         with self._lock:
             self._actrl.load_feedback_scheme(scheme, ctrl_config)
 

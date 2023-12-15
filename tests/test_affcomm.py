@@ -130,9 +130,7 @@ def test_convert_array_to_string_specify_f_spec(arr, f_spec, expected_str) -> No
         ([0.54892, 1.289285, 2.889013], "5", "0.54892 1.28929 2.88901"),
     ],
 )
-def test_convert_array_to_string_specify_precision(
-    arr, precision, expected_str
-) -> None:
+def test_convert_array_to_string_specify_precision(arr, precision, expected_str) -> None:
     s = convert_array_to_string(arr, precision=precision)
     assert s == expected_str
 

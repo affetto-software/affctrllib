@@ -271,18 +271,13 @@ class TestAffPosCtrl:
             ctrl = AffPosCtrl(config)
         assert len(record) == 2
         assert str(record[0].message) == "'chain' field is not defined"
-        assert (
-            str(record[1].message)
-            == "Control frequency is not provided, set to default: 30"
-        )
+        assert str(record[1].message) == "Control frequency is not provided, set to default: 30"
         assert ctrl.freq == 30
 
     def test_load_inactive_joints(self) -> None:
         config = os.path.join(CONFIG_DIR_PATH, "default.toml")
         ctrl = AffPosCtrl(config)
-        inactive_joints = {
-            "inactive_joints": [{"index": 3}, {"index": "9,10-11", "pressure": 400}]
-        }
+        inactive_joints = {"inactive_joints": [{"index": 3}, {"index": "9,10-11", "pressure": 400}]}
         ctrl.reset_inactive_joints()
         ctrl.load_inactive_joints(inactive_joints)
         assert_array_equal(

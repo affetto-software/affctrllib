@@ -385,9 +385,7 @@ class TestPTP:
             assert ptp.ddq(t) == ddq
 
     def test_update_trapezoidal_velocity_ndarray(self) -> None:
-        ptp = PTP(
-            np.array([0, 0, 0]), np.array([1, 1, 1]), 5, vmax=0.25, profile_name="tra"
-        )
+        ptp = PTP(np.array([0, 0, 0]), np.array([1, 1, 1]), 5, vmax=0.25, profile_name="tra")
         expectation_table = [
             # t, q, dq, ddq
             (-1, 0, 0, 0),

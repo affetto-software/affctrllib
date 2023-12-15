@@ -91,16 +91,10 @@ def mainloop(config, output, freq, period):
 
 def parse():
     parser = argparse.ArgumentParser(description="Read sensory data forever.")
-    parser.add_argument(
-        "-c", "--config", default=DEFAULT_CONFIG_PATH, help="config file"
-    )
+    parser.add_argument("-c", "--config", default=DEFAULT_CONFIG_PATH, help="config file")
     parser.add_argument("-o", "--output", default=None, help="output filename")
-    parser.add_argument(
-        "-H", "--hz", dest="freq", default=0, type=float, help="frequency to read data"
-    )
-    parser.add_argument(
-        "-T", "--period", default=0, type=float, help="time [s] until program ends"
-    )
+    parser.add_argument("-H", "--hz", dest="freq", default=0, type=float, help="frequency to read data")
+    parser.add_argument("-T", "--period", default=0, type=float, help="time [s] until program ends")
     return parser.parse_args()
 
 

@@ -15,9 +15,7 @@ class Sinusoidal:
     _phase: float
     _omega: float
 
-    def __init__(
-        self, amplitude: float, period: float, base: float, phase: float = 0.0
-    ):
+    def __init__(self, amplitude: float, period: float, base: float, phase: float = 0.0):
         self._amplitude = amplitude
         self._period = period
         self._base = base
@@ -25,9 +23,7 @@ class Sinusoidal:
         self._omega = 2.0 * np.pi / self._period
 
     def __call__(self, t: float, phi: np.ndarray) -> np.ndarray:
-        return (
-            self._amplitude * np.sin(t * self._omega - self._phase - phi) + self._base
-        )
+        return self._amplitude * np.sin(t * self._omega - self._phase - phi) + self._base
 
     @property
     def omega(self) -> float:
@@ -87,7 +83,5 @@ class AffMock(Affetto):
             msg = generate_pseudo_sensory_data_string(t, self.dof)
             sz = self.sensory_socket.sendto(msg.encode())
             if not quiet:
-                print(
-                    f"t={t:.2f}: sent <{msg}> to {self.sensory_socket.addr} ({sz} bytes)"
-                )
+                print(f"t={t:.2f}: sent <{msg}> to {self.sensory_socket.addr} ({sz} bytes)")
             timer.block()

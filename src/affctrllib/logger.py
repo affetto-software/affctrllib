@@ -14,9 +14,7 @@ class Logger(object):
     _fpath: Path
     _lock: Lock
 
-    def __init__(
-        self, fname: str | Path | None = None, sep: str = ",", eol: str = "\n"
-    ) -> None:
+    def __init__(self, fname: str | Path | None = None, sep: str = ",", eol: str = "\n") -> None:
         self._sep = sep
         self._eol = eol
         self._labels = []
@@ -100,9 +98,7 @@ class Logger(object):
         with self._lock:
             return copy.deepcopy(self._rawdata)
 
-    def _slice_data_get_index_list(
-        self, label: str | int | Iterable[str | int]
-    ) -> list[int]:
+    def _slice_data_get_index_list(self, label: str | int | Iterable[str | int]) -> list[int]:
         def ensure_index(label_or_index: str | int) -> int:
             if isinstance(label_or_index, str):
                 return self._labels.index(label_or_index)
@@ -156,10 +152,7 @@ class Logger(object):
             if len(self._labels):
                 fobj.write(self.get_header() + self.eol)
             with self._lock:
-                fobj.writelines(
-                    self.sep.join(f"{x}" for x in line) + self.eol
-                    for line in self._rawdata
-                )
+                fobj.writelines(self.sep.join(f"{x}" for x in line) + self.eol for line in self._rawdata)
 
     def dump(
         self,

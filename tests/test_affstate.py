@@ -68,10 +68,7 @@ class TestAffState:
             state = AffState(config)
         assert len(record) == 2
         assert str(record[0].message) == "'chain' field is not defined"
-        assert (
-            str(record[1].message)
-            == "Sensor frequency is not provided, set to default: 100"
-        )
+        assert str(record[1].message) == "Sensor frequency is not provided, set to default: 100"
         assert state.freq == 100
 
     def test_update_raw_data(self) -> None:

@@ -17,9 +17,7 @@ def mainloop(config, freq, quiet):
 
 def parse():
     parser = argparse.ArgumentParser(description="Spawn mock Affetto.")
-    parser.add_argument(
-        "-c", "--config", default=DEFAULT_CONFIG_PATH, help="config file"
-    )
+    parser.add_argument("-c", "--config", default=DEFAULT_CONFIG_PATH, help="config file")
     parser.add_argument(
         "-H",
         "--hz",
@@ -27,9 +25,7 @@ def parse():
         type=float,
         help="frequency to send data",
     )
-    parser.add_argument(
-        "-q", "--quiet", action="store_true", help="silence if specified"
-    )
+    parser.add_argument("-q", "--quiet", action="store_true", help="silence if specified")
     return parser.parse_args()
 
 

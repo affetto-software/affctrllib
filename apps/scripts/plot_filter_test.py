@@ -48,16 +48,10 @@ def plot(data, i, **sfparam):
 
 
 def parse():
-    parser = argparse.ArgumentParser(
-        description="Plot script for send_sinusoidal_command.py"
-    )
+    parser = argparse.ArgumentParser(description="Plot script for send_sinusoidal_command.py")
     parser.add_argument("data", help="path to data file")
-    parser.add_argument(
-        "-i", "--index", default=[0, 1, 2], nargs="+", type=int, help="index to show"
-    )
-    parser.add_argument(
-        "-d", "--basedir", default="fig", help="directory where figures will be saved"
-    )
+    parser.add_argument("-i", "--index", default=[0, 1, 2], nargs="+", type=int, help="index to show")
+    parser.add_argument("-d", "--basedir", default="fig", help="directory where figures will be saved")
     parser.add_argument(
         "-e",
         "--extension",
@@ -65,12 +59,8 @@ def parse():
         nargs="+",
         help="extensions to save as figures",
     )
-    parser.add_argument(
-        "-s", "--savefig", action="store_true", help="export figures if specified"
-    )
-    parser.add_argument(
-        "-x", "--noshow", action="store_true", help="do not show figures if specified"
-    )
+    parser.add_argument("-s", "--savefig", action="store_true", help="export figures if specified")
+    parser.add_argument("-x", "--noshow", action="store_true", help="do not show figures if specified")
     return parser.parse_args()
 
 
