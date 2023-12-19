@@ -1,0 +1,54 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+    branches:
+    - main
+    - develop
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  LANG: en_US.utf-8
+  LC_ALL: en_US.utf-8
+  PYTHONIOENCODING: UTF-8
+
+jobs:
+
+  tests:
+
+    strategy:
+      max-parallel: 4
+      matrix:
+        os:
+        - ubuntu-latest
+        - macos-latest
+        - windows-latest
+        python-version:
+        - "3.10"
+        - "3.11"
+        - "3.12"
+    runs-on: ${{ matrix.os }}
+    continue-on-error: ${{ matrix.python-version == '3.12' }}
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    - name: Set up PDM
+      uses: pdm-project/setup-pdm@v3
+      with:
+        python-version: ${{ matrix.python-version }}
+        allow-python-prereleases: true
+
+    - name: Resolving dependencies
+      run: pdm lock -v --no-cross-platform -G tests
+
+    - name: Install dependencies
+      run: pdm install --no-editable -G tests
+
+    - name: Run the test suite
+      run: pdm run nox -s tests
