@@ -1,8 +1,8 @@
-"""This module contains utilities to handle the BSD socket interface.
+"""This module encompasses utilities to handle the BSD socket interface.
 
-Basically, we only use a socket object with the SOCK_DGRAM type using the AF_INET
-address family to communicate with NEDO Affetto. This module easily creates such a
-socket object and wraps mehtods regarding communications.
+Currently, it is structured to facilitate communication with NEDO Affetto through a UDP
+connection over the Internet. To facilitate the communication, this module is equipped
+to instantiate a socket object and encapsulate the requisite methods.
 """
 
 from __future__ import annotations
