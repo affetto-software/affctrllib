@@ -9,7 +9,9 @@ from __future__ import annotations
 
 import socket
 from socket import AF_INET, SOCK_DGRAM, SOCK_NONBLOCK, SOCK_STREAM
-from typing import Callable, TypeVar
+from typing import Callable, Sequence, TypeVar
+
+import numpy as np
 
 # The default maximum amount of data when receiving or sending used in this
 # module.
@@ -215,3 +217,84 @@ def split_data(
     elif strip:
         decoded_data = decoded_data.strip(strip)
     return list(map(converter, decoded_data.split(sep)))
+
+
+def unzip_items_as_array(items: Sequence, n: int) -> np.ndarray:
+    """Return a numpy array where each row selects every `n`-th item in `items`.
+
+    This function returns a two-dimensional numpy array where each row consists
+    of items picked up every `n`-th value in the given list, `items`. If the
+    length of the list is not exactly divisible by `n`, raises `ValueError`.
+
+    Parameters
+    ----------
+    items : Sequence
+        A list of items. It should be a one-dimentional list.
+    n : int
+        Pick up every `n`-th item in the list.
+
+    Returns
+    -------
+    np.ndarray
+        A numpy array having `n` rows.
+
+    Raises
+    ------
+    ValueError
+        If the length of `items` is not exactly divisible by `n`.
+
+    See Also
+    --------
+    unzip_items : Return a list of lists instead of a numpy array.
+    """
+    try:
+        # Convert a list of items into a two-dimentional array with `n` columns.
+        arr = np.asarray(items).reshape((int(len(items) / n), n))
+    except ValueError as e:
+        if len(items) % n != 0:
+            raise ValueError(f"cannot unzip data with specified number of lines (n={n})")
+        else:
+            # Raise unexpected error as it is.
+            raise ValueError(str(e))
+    # Transpose it to get each sequence as a row.
+    return arr.T
+
+
+def unzip_items(items: Sequence[T], n: int) -> list[list[T]]:
+    """Return a list of lists where an inner list selects every `n`-th item in `items`.
+
+    This function is designed to discompose a one-dimentional list (array) into
+    `n` lines, where each line consists of every `n`-th item is selected from
+    the given list.
+
+    Parameters
+    ----------
+    items : Sequence
+        A list of items. It should be a one-dimentional list.
+    n : int
+        Pick up every `n`-th item in the list.
+
+    Returns
+    -------
+    list[list[T]]
+        A list of `n` lists where each inner list consists of every `n`-th item
+    in the given `items`.
+
+    Raises
+    ------
+    ValueError
+        If the length of `items` is not exactly divisible by `n`.
+
+    See Also
+    --------
+    unzip_items_as_array : Return a numpy array composed of unzipped lines.
+
+    Examples
+    --------
+    >>> unzip_items([1, 2, 3, 4, 5, 6, 7, 8, 9], 3)
+    [[1, 4, 7], [2, 5, 8], [3, 6, 9]]
+
+    Let's say we have a list of ints, [1, 2, 3, 4, 5, 6, 7, 8, 9]. This
+    function unzips the list into 3, passed as `n`, lines shown as above:
+    """
+    return unzip_items_as_array(items, n).tolist()
