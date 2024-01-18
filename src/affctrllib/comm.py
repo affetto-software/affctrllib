@@ -294,7 +294,76 @@ def unzip_items(items: Sequence[T] | np.ndarray, n: int) -> list[list[T]]:
     >>> unzip_items([1, 2, 3, 4, 5, 6, 7, 8, 9], 3)
     [[1, 4, 7], [2, 5, 8], [3, 6, 9]]
 
-    Let's say we have a list of ints, [1, 2, 3, 4, 5, 6, 7, 8, 9]. This
-    function unzips the list into 3, passed as `n`, lines shown as above:
+    Let's say we have a list of ints, [1, 2, 3, 4, 5, 6, 7, 8, 9]. This function
+    unzips the list into 3, passed as `n`, lines shown as above:
     """
     return unzip_items_as_array(items, n).tolist()
+
+
+def zip_items_as_array(*items: Sequence | np.ndarray) -> np.ndarray:
+    """Return a one-dimensional numpy array that zipped given items.
+
+    This function returns a one-dimensional numpy array consisting of items which
+    picked up alternately from given sequences. If the size of each sequence do
+    not match, raises an error.
+
+    Parameters
+    ----------
+    *items : Sequence | np.ndarray
+        Lists of items to be zipped into one.
+
+    Returns
+    -------
+    np.ndarray
+        A numpy array obtained by being zipped given items.
+
+    Raises
+    ------
+    ValueError
+        If not all the sizes of given items are same.
+
+    See Also
+    --------
+    zip_items : Return a list composed of zipped items.
+    """
+    try:
+        arr = np.stack(items, axis=1)
+    except ValueError as e:
+        sizes = list(map(len, items))
+        if not all(sizes[0] == x for x in sizes):
+            raise ValueError("all input items must have the same size")
+        else:
+            raise ValueError(str(e))
+    return arr.flatten()
+
+
+def zip_items(*items: Sequence[T] | np.ndarray) -> list[T]:
+    """Return a list that zipped given items.
+
+    This function returns a list of values consisting of items which picked up
+    alternately from given sequences. If the size of each sequence do not match,
+    raises an error.
+
+    Parameters
+    ----------
+    *items : Sequence[T] | np.ndarray
+        Lists of items to be zipped into one.
+
+    Returns
+    -------
+    list[T]
+        A list obtained by being zipped given items.
+
+    See Also
+    --------
+    zip_items_as_array : Return a numpy array composed of zipped items.
+
+    Examples
+    --------
+    >>> zip_items([1, 2, 3], [4, 5, 6])
+    [1, 4, 2, 5, 3, 6]
+
+    Given two lists of values, it returns a list where each element is picked up
+    alternately from the given lists.
+    """
+    return list(zip_items_as_array(*items))
