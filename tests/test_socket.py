@@ -7,7 +7,7 @@ from socket import AF_INET, SOCK_DGRAM, SOCK_STREAM
 
 import pytest
 
-from affctrllib.socket import IPv4Socket
+from affctrllib.socket import IPv4Socket, split_data
 
 
 def default_address() -> tuple[str, int]:
@@ -76,3 +76,70 @@ def test_check_nonblocking_mode(nonblock: bool) -> None:
     """Check if `is_nonblocking` returns False in blocking mode."""
     s = IPv4Socket(("localhost", 123456), nonblock=nonblock)
     assert s.is_nonblocking() == nonblock
+
+
+@pytest.mark.parametrize(
+    "data,expected",
+    [("1 2 3", [1, 2, 3]), ("11 22 33 44", [11, 22, 33, 44]), (" 1  2    3  ", [1, 2, 3])],
+)
+def test_split_string_data(data: str, expected: list[int]) -> None:
+    """Test the given string data composed of numbers is split into a list of ints."""
+    arr = split_data(data)
+    assert arr == expected
+
+
+@pytest.mark.parametrize(
+    "data,expected",
+    [(b"1 2 3", [1, 2, 3]), (b"11 22 33 44", [11, 22, 33, 44]), (b" 1  2    3  ", [1, 2, 3])],
+)
+def test_split_binary_data(data: bytes, expected: list[int]) -> None:
+    """Test the given binary data composed of numbers is split into a list of ints."""
+    arr = split_data(data, converter=int)
+    assert arr == expected
+
+
+@pytest.mark.parametrize(
+    "data,converter,expected",
+    [("1 2 3", int, [1, 2, 3]), (b"1 2 3", float, [1.0, 2.0, 3.0]), (b"1 2 3", str, ["1", "2", "3"])],
+)
+def test_convert_types_when_split_data(data: bytes | str, converter, expected) -> None:
+    """Test a specified converter is applied when splitting data."""
+    arr = split_data(data, converter=converter)
+    assert arr == expected
+    assert type(arr[0]) is converter
+
+
+@pytest.mark.parametrize(
+    "data,sep,expected",
+    [("1,2,3", ",", [1, 2, 3]), (b"1<>2<>3", "<>", [1, 2, 3]), (b"1 2 3", " ", [1, 2, 3])],
+)
+def test_separator_to_split_data(data: bytes | str, sep: str, expected: list[int]) -> None:
+    """Test the given data composed of numbers is split into a list of ints."""
+    arr = split_data(data, sep=sep)
+    assert arr == expected
+
+
+@pytest.mark.parametrize(
+    "data,sep,expected",
+    [(b" 1 2 3 ", " ", ["", "1", "2", "3", ""])],
+)
+def test_not_strip_when_split_data(data: bytes | str, sep: str, expected: list[str]) -> None:
+    """Test that stripping the given data is not occur."""
+    arr = split_data(data, converter=str, sep=sep, strip=False)
+    assert arr == expected
+
+
+@pytest.mark.parametrize(
+    "data,converter,sep,strip,expected",
+    [
+        (b" 1 2 3 ", int, None, True, [1, 2, 3]),
+        (b" 1 2 3 ", str, " ", True, ["1", "2", "3"]),
+        (b"| 1 2 3 |", int, " ", "| ", [1, 2, 3]),
+    ],
+)
+def test_complicated_cases_when_split_data(
+    data: bytes | str, converter, sep: str, strip: bool | str, expected: list
+) -> None:
+    """Test complicated cases to split data."""
+    arr = split_data(data, converter=converter, sep=sep, strip=strip)
+    assert arr == expected

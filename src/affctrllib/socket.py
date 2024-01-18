@@ -9,10 +9,14 @@ from __future__ import annotations
 
 import socket
 from socket import AF_INET, SOCK_DGRAM, SOCK_NONBLOCK, SOCK_STREAM
+from typing import Callable, TypeVar
 
 # The default maximum amount of data when receiving or sending used in this
 # module.
 DEFAULT_BUFSIZE = 4096
+
+# Define a generic type.
+T = TypeVar("T")
 
 
 class IPv4Socket(object):
@@ -168,3 +172,46 @@ class IPv4Socket(object):
         object will fail.
         """
         return self.socket.close()
+
+
+def split_data(
+    data: bytes | str,
+    converter: Callable[[str], T] = int,
+    sep: str | None = None,
+    strip: bool | str = True,
+) -> list[T]:
+    """Split received data from a remote socket into a list of numbers.
+
+    Parameters
+    ----------
+    data : bytes | str
+        Received data object from a remote socket.
+    converter : Callable[[str], T], default=int
+        Callable function to convert a string to a desired value.
+    sep : str, optional
+        If `sep` is given, split `data` with that. It can be multiple characters.
+    strip : bool | str, default=True
+        If `strip` is True, strip whitespaces from the both sides of `data`
+    before processing. If `strip` is a series of characters, strip those.
+
+    Returns
+    -------
+    list[T]
+        A list of converted values.
+
+    Raises
+    ------
+    TypeError
+        If `data` is neither a bytes object nor a string, `TypeError` is raised.
+    """
+    if isinstance(data, bytes):
+        decoded_data = data.decode()
+    elif isinstance(data, str):
+        decoded_data = data
+    else:
+        raise TypeError(f"Unsupported type: {type(data)}")
+    if strip is True:
+        decoded_data = decoded_data.strip()
+    elif strip:
+        decoded_data = decoded_data.strip(strip)
+    return list(map(converter, decoded_data.split(sep)))
