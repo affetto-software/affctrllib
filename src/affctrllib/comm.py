@@ -180,14 +180,14 @@ def split_data(
     sep: str | None = None,
     strip: bool | str = True,
 ) -> list[T]:
-    """Split received data from a remote socket into a list of numbers.
+    """Split received data from a remote socket into a list of items.
 
     Parameters
     ----------
     data : bytes | str
         Received data object from a remote socket.
     converter : Callable[[str], T], default=int
-        Callable function to convert a string to a desired value.
+        Callable function to convert a string to a desired item.
     sep : str, optional
         If `sep` is given, split `data` with that. It can be multiple characters.
     strip : bool | str, default=True
@@ -197,12 +197,12 @@ def split_data(
     Returns
     -------
     list[T]
-        A list of converted values.
+        A list of items converted by `converter`.
 
     Raises
     ------
     TypeError
-        If `data` is neither a bytes object nor a string, `TypeError` is raised.
+        If `data` is neither a bytes object nor a string.
     """
     if isinstance(data, bytes):
         decoded_data = data.decode()
