@@ -5,9 +5,11 @@ from __future__ import annotations
 import socket
 from socket import AF_INET, SOCK_DGRAM, SOCK_STREAM
 
+import numpy as np
 import pytest
+from numpy.testing import assert_array_equal
 
-from affctrllib.comm import IPv4Socket, split_data
+from affctrllib.comm import IPv4Socket, split_data, unzip_items, unzip_items_as_array
 
 
 def default_address() -> tuple[str, int]:
@@ -143,3 +145,44 @@ def test_complicated_cases_when_split_data(
     """Test complicated cases to split data."""
     arr = split_data(data, converter=converter, sep=sep, strip=strip)
     assert arr == expected
+
+
+@pytest.mark.parametrize(
+    "items,n,expected",
+    [
+        ([1, 2, 3, 4, 5, 6], 2, [[1, 3, 5], [2, 4, 6]]),
+        ([1, 2, 3, 4, 5, 6, 7, 8, 9], 3, [[1, 4, 7], [2, 5, 8], [3, 6, 9]]),
+        ([1, 2, 3, 4, 5, 6, 7, 8, 9], 1, [[1, 2, 3, 4, 5, 6, 7, 8, 9]]),
+    ],
+)
+def test_unzip_items_as_array_typical_usage(items: list[int], n: int, expected: list[list[int]]) -> None:
+    """Test typical usages of `unzip_items_as_array`."""
+    arr = unzip_items_as_array(items, n)
+    assert_array_equal(arr, expected)
+
+
+def test_unzip_items_as_array_fails_if_num_of_items_is_not_factor_of_n() -> None:
+    """Test if an exception is raised when the number of items is not a factor of n."""
+    with pytest.raises(ValueError) as e:
+        unzip_items_as_array([1, 2, 3, 4, 5], 2)
+    assert "cannot unzip data with specified number of lines (n=2)" in str(e)
+
+
+@pytest.mark.parametrize(
+    "items,n,expected",
+    [
+        ([1, 2, 3, 4, 5, 6], 2, [[1, 3, 5], [2, 4, 6]]),
+        ([1, 2, 3, 4, 5, 6, 7, 8, 9], 3, [[1, 4, 7], [2, 5, 8], [3, 6, 9]]),
+    ],
+)
+def test_unzip_items_typical_usage(items: list[int], n: int, expected: list[list[int]]) -> None:
+    """Test typical usages of `unzip_items`."""
+    arr = unzip_items(items, n)
+    assert arr == expected
+
+
+def test_unzip_items_fails_if_num_of_items_is_not_factor_of_n() -> None:
+    """Test if an exception is raised when the number of items is not a factor of n."""
+    with pytest.raises(ValueError) as e:
+        unzip_items([1, 2, 3, 4, 5], 2)
+    assert "cannot unzip data with specified number of lines (n=2)" in str(e)
