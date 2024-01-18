@@ -7,7 +7,7 @@ from socket import AF_INET, SOCK_DGRAM, SOCK_STREAM
 
 import pytest
 
-from affctrllib.socket import IPv4Socket, split_data
+from affctrllib.comm import IPv4Socket, split_data
 
 
 def default_address() -> tuple[str, int]:
