@@ -1,4 +1,4 @@
-"""This module encompasses utilities to handle the BSD socket interface.
+"""This module encompasses utilities to handle the socket interface and process data.
 
 Currently, it is structured to facilitate communication with NEDO Affetto through a UDP
 connection over the Internet. To facilitate the communication, this module is equipped
