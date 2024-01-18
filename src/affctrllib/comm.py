@@ -219,7 +219,7 @@ def split_data(
     return list(map(converter, decoded_data.split(sep)))
 
 
-def unzip_items_as_array(items: Sequence, n: int) -> np.ndarray:
+def unzip_items_as_array(items: Sequence | np.ndarray, n: int) -> np.ndarray:
     """Return a numpy array where each row selects every `n`-th item in `items`.
 
     This function returns a two-dimensional numpy array where each row consists
@@ -260,7 +260,7 @@ def unzip_items_as_array(items: Sequence, n: int) -> np.ndarray:
     return arr.T
 
 
-def unzip_items(items: Sequence[T], n: int) -> list[list[T]]:
+def unzip_items(items: Sequence[T] | np.ndarray, n: int) -> list[list[T]]:
     """Return a list of lists where an inner list selects every `n`-th item in `items`.
 
     This function is designed to discompose a one-dimentional list (array) into

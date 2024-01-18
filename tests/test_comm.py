@@ -153,9 +153,10 @@ def test_complicated_cases_when_split_data(
         ([1, 2, 3, 4, 5, 6], 2, [[1, 3, 5], [2, 4, 6]]),
         ([1, 2, 3, 4, 5, 6, 7, 8, 9], 3, [[1, 4, 7], [2, 5, 8], [3, 6, 9]]),
         ([1, 2, 3, 4, 5, 6, 7, 8, 9], 1, [[1, 2, 3, 4, 5, 6, 7, 8, 9]]),
+        (np.array([2, 3, 4, 5, 6, 7]), 2, [[2, 4, 6], [3, 5, 7]]),
     ],
 )
-def test_unzip_items_as_array_typical_usage(items: list[int], n: int, expected: list[list[int]]) -> None:
+def test_unzip_items_as_array_typical_usage(items: list[int] | np.ndarray, n: int, expected: list[list[int]]) -> None:
     """Test typical usages of `unzip_items_as_array`."""
     arr = unzip_items_as_array(items, n)
     assert_array_equal(arr, expected)
@@ -173,9 +174,11 @@ def test_unzip_items_as_array_fails_if_num_of_items_is_not_factor_of_n() -> None
     [
         ([1, 2, 3, 4, 5, 6], 2, [[1, 3, 5], [2, 4, 6]]),
         ([1, 2, 3, 4, 5, 6, 7, 8, 9], 3, [[1, 4, 7], [2, 5, 8], [3, 6, 9]]),
+        ([1, 2, 3, 4, 5, 6, 7, 8, 9], 1, [[1, 2, 3, 4, 5, 6, 7, 8, 9]]),
+        (np.array([2, 3, 4, 5, 6, 7]), 2, [[2, 4, 6], [3, 5, 7]]),
     ],
 )
-def test_unzip_items_typical_usage(items: list[int], n: int, expected: list[list[int]]) -> None:
+def test_unzip_items_typical_usage(items: list[int] | np.ndarray, n: int, expected: list[list[int]]) -> None:
     """Test typical usages of `unzip_items`."""
     arr = unzip_items(items, n)
     assert arr == expected
