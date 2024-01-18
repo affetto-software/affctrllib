@@ -9,7 +9,14 @@ import numpy as np
 import pytest
 from numpy.testing import assert_array_equal
 
-from affctrllib.comm import IPv4Socket, split_data, unzip_items, unzip_items_as_array
+from affctrllib.comm import (
+    IPv4Socket,
+    split_data,
+    unzip_items,
+    unzip_items_as_array,
+    zip_items,
+    zip_items_as_array,
+)
 
 
 def default_address() -> tuple[str, int]:
@@ -159,6 +166,7 @@ def test_complicated_cases_when_split_data(
 def test_unzip_items_as_array_typical_usage(items: list[int] | np.ndarray, n: int, expected: list[list[int]]) -> None:
     """Test typical usages of `unzip_items_as_array`."""
     arr = unzip_items_as_array(items, n)
+    assert type(arr) == np.ndarray
     assert_array_equal(arr, expected)
 
 
@@ -188,4 +196,82 @@ def test_unzip_items_fails_if_num_of_items_is_not_factor_of_n() -> None:
     """Test if an exception is raised when the number of items is not a factor of n."""
     with pytest.raises(ValueError) as e:
         unzip_items([1, 2, 3, 4, 5], 2)
-    assert "cannot unzip data with specified number of lines (n=2)" in str(e)
+    assert "cannot unzip data with specified number of lines (n=2)" in str(e.value)
+
+
+@pytest.mark.parametrize(
+    "line1,line2,expected",
+    [
+        ([1, 2, 3], [4, 5, 6], [1, 4, 2, 5, 3, 6]),
+        ([7, 8, 9], np.array([1, 2, 3]), [7, 1, 8, 2, 9, 3]),
+        (np.array([4, 5, 6]), np.array([7, 8, 9]), [4, 7, 5, 8, 6, 9]),
+    ],
+)
+def test_zip_two_lines_as_array(
+    line1: list[int] | np.ndarray, line2: list[int] | np.ndarray, expected: list[int]
+) -> None:
+    """Test that given two lists are zipped correctly and return as a numpy array."""
+    arr = zip_items_as_array(line1, line2)
+    assert type(arr) == np.ndarray
+    assert_array_equal(arr, expected)
+
+
+@pytest.mark.parametrize(
+    "line1,line2,line3,expected",
+    [
+        ([1, 2, 3], [4, 5, 6], [7, 8, 9], [1, 4, 7, 2, 5, 8, 3, 6, 9]),
+        ([4, 5, 6], [7, 8, 9], np.array([1, 2, 3]), [4, 7, 1, 5, 8, 2, 6, 9, 3]),
+        (np.array([7, 8, 9]), [1, 2, 3], np.array([4, 5, 6]), [7, 1, 4, 8, 2, 5, 9, 3, 6]),
+    ],
+)
+def test_zip_three_lines_as_array(
+    line1: list[int] | np.ndarray, line2: list[int] | np.ndarray, line3: list[int] | np.ndarray, expected: list[int]
+) -> None:
+    """Test that given three lists are zipped correctly and return as a numpy array."""
+    arr = zip_items_as_array(line1, line2, line3)
+    assert type(arr) == np.ndarray
+    assert_array_equal(arr, expected)
+
+
+def test_zip_items_as_array_fails_if_sizes_of_lines_not_match() -> None:
+    """Test if an exception is raised when sizes of lines do not match."""
+    with pytest.raises(ValueError) as e:
+        zip_items_as_array([1, 2, 3], [4, 5, 6, 7])
+    assert "all input items must have the same size" in str(e.value)
+
+
+@pytest.mark.parametrize(
+    "line1,line2,expected",
+    [
+        ([1, 2, 3], [4, 5, 6], [1, 4, 2, 5, 3, 6]),
+        ([7, 8, 9], np.array([1, 2, 3]), [7, 1, 8, 2, 9, 3]),
+        (np.array([4, 5, 6]), np.array([7, 8, 9]), [4, 7, 5, 8, 6, 9]),
+    ],
+)
+def test_zip_two_lines(line1: list[int] | np.ndarray, line2: list[int] | np.ndarray, expected: list[int]) -> None:
+    """Test that given two lists are zipped correctly and return as a list."""
+    arr = zip_items(line1, line2)
+    assert arr == expected
+
+
+@pytest.mark.parametrize(
+    "line1,line2,line3,expected",
+    [
+        ([1, 2, 3], [4, 5, 6], [7, 8, 9], [1, 4, 7, 2, 5, 8, 3, 6, 9]),
+        ([4, 5, 6], [7, 8, 9], np.array([1, 2, 3]), [4, 7, 1, 5, 8, 2, 6, 9, 3]),
+        (np.array([7, 8, 9]), [1, 2, 3], np.array([4, 5, 6]), [7, 1, 4, 8, 2, 5, 9, 3, 6]),
+    ],
+)
+def test_zip_three_lines(
+    line1: list[int] | np.ndarray, line2: list[int] | np.ndarray, line3: list[int] | np.ndarray, expected: list[int]
+) -> None:
+    """Test that given three lists are zipped correctly and return as a list."""
+    arr = zip_items(line1, line2, line3)
+    assert arr == expected
+
+
+def test_zip_items_fails_if_sizes_of_lines_not_match() -> None:
+    """Test if an exception is raised when sizes of lines do not match."""
+    with pytest.raises(ValueError) as e:
+        zip_items([1, 2, 3], [4, 5, 6, 7])
+    assert "all input items must have the same size" in str(e.value)
