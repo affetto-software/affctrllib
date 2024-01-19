@@ -14,10 +14,10 @@ from affctrllib.comm import (
     encode_data,
     join_data,
     split_data,
-    unzip_items,
-    unzip_items_as_array,
-    zip_items,
-    zip_items_as_array,
+    unzip_sequence,
+    unzip_sequence_as_array,
+    zip_sequences,
+    zip_sequences_as_array,
 )
 
 
@@ -183,7 +183,7 @@ def test_encode_data(arr: list[int] | list[float], expected: bytes) -> None:
 
 
 @pytest.mark.parametrize(
-    "items,n,expected",
+    "sequence,n,expected",
     [
         ([1, 2, 3, 4, 5, 6], 2, [[1, 3, 5], [2, 4, 6]]),
         ([1, 2, 3, 4, 5, 6, 7, 8, 9], 3, [[1, 4, 7], [2, 5, 8], [3, 6, 9]]),
@@ -191,22 +191,24 @@ def test_encode_data(arr: list[int] | list[float], expected: bytes) -> None:
         (np.array([2, 3, 4, 5, 6, 7]), 2, [[2, 4, 6], [3, 5, 7]]),
     ],
 )
-def test_unzip_items_as_array_typical_usage(items: list[int] | np.ndarray, n: int, expected: list[list[int]]) -> None:
-    """Test typical usages of `unzip_items_as_array`."""
-    arr = unzip_items_as_array(items, n)
+def test_unzip_sequence_as_array_typical_usage(
+    sequence: list[int] | np.ndarray, n: int, expected: list[list[int]]
+) -> None:
+    """Test typical usages of `unzip_sequence_as_array`."""
+    arr = unzip_sequence_as_array(sequence, n)
     assert type(arr) == np.ndarray
     assert_array_equal(arr, expected)
 
 
-def test_unzip_items_as_array_fails_if_num_of_items_is_not_factor_of_n() -> None:
-    """Test if an exception is raised when the number of items is not a factor of n."""
+def test_unzip_sequence_as_array_fails_if_size_of_sequence_is_not_factor_of_n() -> None:
+    """Test if an exception is raised when the size of sequence is not a factor of n."""
     with pytest.raises(ValueError) as e:
-        unzip_items_as_array([1, 2, 3, 4, 5], 2)
+        unzip_sequence_as_array([1, 2, 3, 4, 5], 2)
     assert "cannot unzip data with specified number of lines (n=2)" in str(e)
 
 
 @pytest.mark.parametrize(
-    "items,n,expected",
+    "sequence,n,expected",
     [
         ([1, 2, 3, 4, 5, 6], 2, [[1, 3, 5], [2, 4, 6]]),
         ([1, 2, 3, 4, 5, 6, 7, 8, 9], 3, [[1, 4, 7], [2, 5, 8], [3, 6, 9]]),
@@ -214,95 +216,105 @@ def test_unzip_items_as_array_fails_if_num_of_items_is_not_factor_of_n() -> None
         (np.array([2, 3, 4, 5, 6, 7]), 2, [[2, 4, 6], [3, 5, 7]]),
     ],
 )
-def test_unzip_items_typical_usage(items: list[int] | np.ndarray, n: int, expected: list[list[int]]) -> None:
-    """Test typical usages of `unzip_items`."""
-    arr = unzip_items(items, n)
+def test_unzip_sequence_typical_usage(sequence: list[int] | np.ndarray, n: int, expected: list[list[int]]) -> None:
+    """Test typical usages of `unzip_sequence`."""
+    arr = unzip_sequence(sequence, n)
     assert arr == expected
 
 
-def test_unzip_items_fails_if_num_of_items_is_not_factor_of_n() -> None:
-    """Test if an exception is raised when the number of items is not a factor of n."""
+def test_unzip_sequence_fails_if_size_of_sequence_is_not_factor_of_n() -> None:
+    """Test if an exception is raised when the size of sequence is not a factor of n."""
     with pytest.raises(ValueError) as e:
-        unzip_items([1, 2, 3, 4, 5], 2)
+        unzip_sequence([1, 2, 3, 4, 5], 2)
     assert "cannot unzip data with specified number of lines (n=2)" in str(e.value)
 
 
 @pytest.mark.parametrize(
-    "line1,line2,expected",
+    "sequence1,sequence2,expected",
     [
         ([1, 2, 3], [4, 5, 6], [1, 4, 2, 5, 3, 6]),
         ([7, 8, 9], np.array([1, 2, 3]), [7, 1, 8, 2, 9, 3]),
         (np.array([4, 5, 6]), np.array([7, 8, 9]), [4, 7, 5, 8, 6, 9]),
     ],
 )
-def test_zip_two_lines_as_array(
-    line1: list[int] | np.ndarray, line2: list[int] | np.ndarray, expected: list[int]
+def test_zip_two_sequences_as_array(
+    sequence1: list[int] | np.ndarray, sequence2: list[int] | np.ndarray, expected: list[int]
 ) -> None:
-    """Test that given two lists are zipped correctly and return as a numpy array."""
-    arr = zip_items_as_array(line1, line2)
+    """Test that given two sequences are zipped correctly and return as a numpy
+    array."""
+    arr = zip_sequences_as_array(sequence1, sequence2)
     assert type(arr) == np.ndarray
     assert_array_equal(arr, expected)
 
 
 @pytest.mark.parametrize(
-    "line1,line2,line3,expected",
+    "sequence1,sequence2,sequence3,expected",
     [
         ([1, 2, 3], [4, 5, 6], [7, 8, 9], [1, 4, 7, 2, 5, 8, 3, 6, 9]),
         ([4, 5, 6], [7, 8, 9], np.array([1, 2, 3]), [4, 7, 1, 5, 8, 2, 6, 9, 3]),
         (np.array([7, 8, 9]), [1, 2, 3], np.array([4, 5, 6]), [7, 1, 4, 8, 2, 5, 9, 3, 6]),
     ],
 )
-def test_zip_three_lines_as_array(
-    line1: list[int] | np.ndarray, line2: list[int] | np.ndarray, line3: list[int] | np.ndarray, expected: list[int]
+def test_zip_three_sequences_as_array(
+    sequence1: list[int] | np.ndarray,
+    sequence2: list[int] | np.ndarray,
+    sequence3: list[int] | np.ndarray,
+    expected: list[int],
 ) -> None:
-    """Test that given three lists are zipped correctly and return as a numpy array."""
-    arr = zip_items_as_array(line1, line2, line3)
+    """Test that given three sequences are zipped correctly and return as a numpy
+    array."""
+    arr = zip_sequences_as_array(sequence1, sequence2, sequence3)
     assert type(arr) == np.ndarray
     assert_array_equal(arr, expected)
 
 
-def test_zip_items_as_array_fails_if_sizes_of_lines_not_match() -> None:
-    """Test if an exception is raised when sizes of lines do not match."""
+def test_zip_sequences_as_array_fails_if_sizes_of_sequences_not_match() -> None:
+    """Test if an exception is raised when sizes of sequences do not match."""
     with pytest.raises(ValueError) as e:
-        zip_items_as_array([1, 2, 3], [4, 5, 6, 7])
-    assert "all input items must have the same size" in str(e.value)
+        zip_sequences_as_array([1, 2, 3], [4, 5, 6, 7])
+    assert "all input sequences must have the same size" in str(e.value)
 
 
 @pytest.mark.parametrize(
-    "line1,line2,expected",
+    "sequence1,sequence2,expected",
     [
         ([1, 2, 3], [4, 5, 6], [1, 4, 2, 5, 3, 6]),
         ([7, 8, 9], np.array([1, 2, 3]), [7, 1, 8, 2, 9, 3]),
         (np.array([4, 5, 6]), np.array([7, 8, 9]), [4, 7, 5, 8, 6, 9]),
     ],
 )
-def test_zip_two_lines(line1: list[int] | np.ndarray, line2: list[int] | np.ndarray, expected: list[int]) -> None:
-    """Test that given two lists are zipped correctly and return as a list."""
-    arr = zip_items(line1, line2)
+def test_zip_two_sequences(
+    sequence1: list[int] | np.ndarray, sequence2: list[int] | np.ndarray, expected: list[int]
+) -> None:
+    """Test that the given two sequences are zipped correctly and return as a list."""
+    arr = zip_sequences(sequence1, sequence2)
     assert arr == expected
 
 
 @pytest.mark.parametrize(
-    "line1,line2,line3,expected",
+    "sequence1,sequence2,sequence3,expected",
     [
         ([1, 2, 3], [4, 5, 6], [7, 8, 9], [1, 4, 7, 2, 5, 8, 3, 6, 9]),
         ([4, 5, 6], [7, 8, 9], np.array([1, 2, 3]), [4, 7, 1, 5, 8, 2, 6, 9, 3]),
         (np.array([7, 8, 9]), [1, 2, 3], np.array([4, 5, 6]), [7, 1, 4, 8, 2, 5, 9, 3, 6]),
     ],
 )
-def test_zip_three_lines(
-    line1: list[int] | np.ndarray, line2: list[int] | np.ndarray, line3: list[int] | np.ndarray, expected: list[int]
+def test_zip_three_sequences(
+    sequence1: list[int] | np.ndarray,
+    sequence2: list[int] | np.ndarray,
+    sequence3: list[int] | np.ndarray,
+    expected: list[int],
 ) -> None:
-    """Test that given three lists are zipped correctly and return as a list."""
-    arr = zip_items(line1, line2, line3)
+    """Test that the given three sequences are zipped correctly and return as a list."""
+    arr = zip_sequences(sequence1, sequence2, sequence3)
     assert arr == expected
 
 
-def test_zip_items_fails_if_sizes_of_lines_not_match() -> None:
-    """Test if an exception is raised when sizes of lines do not match."""
+def test_zip_sequences_fails_if_sizes_of_sequences_not_match() -> None:
+    """Test if an exception is raised when sizes of sequences do not match."""
     with pytest.raises(ValueError) as e:
-        zip_items([1, 2, 3], [4, 5, 6, 7])
-    assert "all input items must have the same size" in str(e.value)
+        zip_sequences([1, 2, 3], [4, 5, 6, 7])
+    assert "all input sequences must have the same size" in str(e.value)
 
 
 def test_check_repr(default_socket: IPv4Socket) -> None:

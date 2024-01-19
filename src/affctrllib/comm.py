@@ -27,14 +27,14 @@ def split_data(
     sep: str | None = None,
     strip: bool | str = True,
 ) -> list[T]:
-    """Split received data from a remote socket into a list of items.
+    """Split received data from a remote socket into a list of values.
 
     Parameters
     ----------
     data : bytes | str
         Received data object from a remote socket.
     converter : Callable[[str], T], default=int
-        Callable function to convert a string to a desired item.
+        Callable function to convert a string to a desired value.
     sep : str, optional
         If `sep` is given, split `data` with that. It can be multiple characters.
     strip : bool | str, default=True
@@ -44,7 +44,7 @@ def split_data(
     Returns
     -------
     list[T]
-        A list of items converted by `converter`.
+        A list of values converted by `converter`.
 
     Raises
     ------
@@ -70,28 +70,28 @@ def join_data(
     specifier: str = ".0f",
     precision: int | None = None,
 ) -> str:
-    """Given a list of values, return a string joined items in the list.
+    """Given a sequence data, return a string of joined elements.
 
-    The `data` can be an iterable object as well as a list. Delimiter to join items can
-    be specified with `sep`. Format specifier, as known as 'f-string', to format each
-    element in the `data` can be specified with `specifier`. When elements in the data
-    are floats, their precision can be specified with `precision`.
+    The `data` can be an iterable object as well as a list. Delimiter to join elements
+    can be specified with `sep`. Format specifier, as known as 'f-string', to format
+    each element in the `data` can be specified with `specifier`. When elements in the
+    data are floats, their precision can be specified with `precision`.
 
     Parameters
     ----------
     data : Iterable
-        A list of values to be joined. Any iterable object can be given as well.
+        A sequence of values to be joined.
     sep : str, default=\" \"
-        Delimiter to join items. Default value is a single space.
+        Delimiter to join elements. Default value is a single space.
     specifier : str, default=\".0f\"
-        Format specifier to format items as string.
+        Format specifier to format elements as string.
     precision : int, optional
-        Precision to be formatted when items are float.
+        Precision to be formatted when elements are floats.
 
     Returns
     -------
     str
-        A string where given data is joined with format specifier.
+        A string where elements in the given data are joined with format specifier.
 
     Examples
     --------
@@ -114,29 +114,29 @@ def encode_data(
     specifier: str = ".0f",
     precision: int | None = None,
 ) -> bytes:
-    """Given a list of values, return a bytes object encoded a joined string.
+    """Given a sequence data, return a bytes object encoded a joined string.
 
-    The `data` can be an iterable object as well as a list. Delimiter to join items can
-    be specified with `sep`. Format specifier, as known as 'f-string', to format each
-    element in the `data` can be specified with `specifier`. When elements in the data
-    are floats, their precision can be specified with `precision`.
+    The `data` can be an iterable object as well as a list. Delimiter to join elements
+    can be specified with `sep`. Format specifier, as known as 'f-string', to format
+    each element in the `data` can be specified with `specifier`. When elements in the
+    data are floats, their precision can be specified with `precision`.
 
     Parameters
     ----------
     data : Iterable
-        A list of values to be joined. Any iterable object can be given as well.
+        A list of values to be joined.
     sep : str, default=\" \"
-        Delimiter to join items. Default value is a single space.
+        Delimiter to join elements. Default value is a single space.
     specifier : str, default=\".0f\"
-        Format specifier to format items as string.
+        Format specifier to format elements as string.
     precision : int, optional
-        Precision to be formatted when items are float.
+        Precision to be formatted when elements are float.
 
     Returns
     -------
     bytes
-        A bytes object encoded a string where given data is joined with format
-    specifier.
+        A bytes object encoded a string where elements in the given data are joined with
+    format specifier.
 
     Examples
     --------
@@ -150,19 +150,20 @@ def encode_data(
     return join_data(data, sep, specifier, precision).encode()
 
 
-def unzip_items_as_array(items: Sequence | np.ndarray, n: int) -> np.ndarray:
-    """Return a numpy array where each row selects every `n`-th item in `items`.
+def unzip_sequence_as_array(sequence: Sequence | np.ndarray, n: int) -> np.ndarray:
+    """Return a numpy array where each row consisting of every `n`th value in
+    `sequence`.
 
-    This function returns a two-dimensional numpy array where each row consists
-    of items picked up every `n`-th value in the given list, `items`. If the
-    length of the list is not exactly divisible by `n`, raises `ValueError`.
+    This function returns a two-dimensional numpy array where each row consists of
+    values picked up every `n`th value in the given `sequence`. If the length of the
+    sequence is not exactly divisible by `n`, raises `ValueError`.
 
     Parameters
     ----------
-    items : Sequence
-        A list of items. It should be a one-dimentional list.
+    sequence : Sequence
+        A sequence of values. It should be a one-dimentional list.
     n : int
-        Pick up every `n`-th item in the list.
+        Pick up every `n`th value in the sequence.
 
     Returns
     -------
@@ -172,132 +173,131 @@ def unzip_items_as_array(items: Sequence | np.ndarray, n: int) -> np.ndarray:
     Raises
     ------
     ValueError
-        If the length of `items` is not exactly divisible by `n`.
+        If the length of `sequence` is not exactly divisible by `n`.
 
     See Also
     --------
-    unzip_items : Return a list of lists instead of a numpy array.
+    unzip_sequence : Return a list of lists instead of a numpy array.
     """
     try:
-        # Convert a list of items into a two-dimentional array with `n` columns.
-        arr = np.asarray(items).reshape((int(len(items) / n), n))
+        # Convert a sequence into a two-dimentional array with `n` columns.
+        arr = np.asarray(sequence).reshape((int(len(sequence) / n), n))
     except ValueError as e:
-        if len(items) % n != 0:
+        if len(sequence) % n != 0:
             raise ValueError(f"cannot unzip data with specified number of lines (n={n})")
         else:
             # Raise unexpected error as it is.
             raise ValueError(str(e))
-    # Transpose it to get each sequence as a row.
+    # Transpose it to get each unzipped sequence as a row.
     return arr.T
 
 
-def unzip_items(items: Sequence[T] | np.ndarray, n: int) -> list[list[T]]:
-    """Return a list of lists where an inner list selects every `n`-th item in `items`.
+def unzip_sequence(sequence: Sequence[T] | np.ndarray, n: int) -> list[list[T]]:
+    """Return a list of lists where an inner list consisting of every `n`th value in
+    `sequence`.
 
-    This function is designed to discompose a one-dimentional list (array) into
-    `n` lines, where each line consists of every `n`-th item is selected from
-    the given list.
+    This function is designed to discompose a one-dimentional sequence into `n` lines,
+    where each line consists of every `n`th value selected from the given sequence.
 
     Parameters
     ----------
-    items : Sequence
-        A list of items. It should be a one-dimentional list.
+    sequence : Sequence
+        A sequence of values. It should be a one-dimentional list.
     n : int
-        Pick up every `n`-th item in the list.
+        Pick up every `n`th value in the list.
 
     Returns
     -------
     list[list[T]]
-        A list of `n` lists where each inner list consists of every `n`-th item
-    in the given `items`.
+        A list of `n` lists where each inner list consists of every `n`th value in the
+    given `sequence`.
 
     Raises
     ------
     ValueError
-        If the length of `items` is not exactly divisible by `n`.
+        If the length of `sequence` is not exactly divisible by `n`.
 
     See Also
     --------
-    unzip_items_as_array : Return a numpy array composed of unzipped lines.
+    unzip_sequence_as_array : Return a numpy array composed of unzipped sequences.
 
     Examples
     --------
-    >>> unzip_items([1, 2, 3, 4, 5, 6, 7, 8, 9], 3)
+    >>> unzip_sequence([1, 2, 3, 4, 5, 6, 7, 8, 9], 3)
     [[1, 4, 7], [2, 5, 8], [3, 6, 9]]
 
-    Let's say we have a list of ints, [1, 2, 3, 4, 5, 6, 7, 8, 9]. This function
-    unzips the list into 3, passed as `n`, lines shown as above:
+    Let's say we have a list of ints, [1, 2, 3, 4, 5, 6, 7, 8, 9]. This function unzips
+    the list into 3 lists shown as above:
     """
-    return unzip_items_as_array(items, n).tolist()
+    return unzip_sequence_as_array(sequence, n).tolist()
 
 
-def zip_items_as_array(*items: Sequence | np.ndarray) -> np.ndarray:
-    """Return a one-dimensional numpy array that zipped given items.
+def zip_sequences_as_array(*sequences: Sequence | np.ndarray) -> np.ndarray:
+    """Return a one-dimensional numpy array obtained by zipping the given `sequences`.
 
-    This function returns a one-dimensional numpy array consisting of items which
-    picked up alternately from given sequences. If the size of each sequence do
-    not match, raises an error.
+    This function returns a one-dimensional numpy array in which elements are picked up
+    alternately from the given sequences. If the size of each sequence do not match,
+    raises an error.
 
     Parameters
     ----------
-    *items : Sequence | np.ndarray
-        Lists of items to be zipped into one.
+    *sequences : Sequence | np.ndarray
+        List of sequences to be zipped into one.
 
     Returns
     -------
     np.ndarray
-        A numpy array obtained by being zipped given items.
+        A numpy array obtained by zipping the given sequences.
 
     Raises
     ------
     ValueError
-        If not all the sizes of given items are same.
+        If not all the sizes of the given sequences are same.
 
     See Also
     --------
-    zip_items : Return a list composed of zipped items.
+    zip_sequences : Return a list of zipped sequences.
     """
     try:
-        arr = np.stack(items, axis=1)
+        arr = np.stack(sequences, axis=1)
     except ValueError as e:
-        sizes = list(map(len, items))
+        sizes = list(map(len, sequences))
         if not all(sizes[0] == x for x in sizes):
-            raise ValueError("all input items must have the same size")
+            raise ValueError("all input sequences must have the same size")
         else:
             raise ValueError(str(e))
     return arr.flatten()
 
 
-def zip_items(*items: Sequence[T] | np.ndarray) -> list[T]:
-    """Return a list that zipped given items.
+def zip_sequences(*sequences: Sequence[T] | np.ndarray) -> list[T]:
+    """Return a list obtained by zipping the given `sequences`.
 
-    This function returns a list of values consisting of items which picked up
-    alternately from given sequences. If the size of each sequence do not match,
-    raises an error.
+    This function returns a list in which elements are picked up alternately from the
+    given sequences. If the size of each sequence do not match, raises an error.
 
     Parameters
     ----------
-    *items : Sequence[T] | np.ndarray
-        Lists of items to be zipped into one.
+    *sequences : Sequence[T] | np.ndarray
+        Lists of sequences to be zipped into one.
 
     Returns
     -------
     list[T]
-        A list obtained by being zipped given items.
+        A list obtained by zipping the given sequences.
 
     See Also
     --------
-    zip_items_as_array : Return a numpy array composed of zipped items.
+    zip_sequences_as_array : Return a numpy array of zipped sequences.
 
     Examples
     --------
-    >>> zip_items([1, 2, 3], [4, 5, 6])
+    >>> zip_sequences([1, 2, 3], [4, 5, 6])
     [1, 4, 2, 5, 3, 6]
 
     Given two lists of values, it returns a list where each element is picked up
     alternately from the given lists.
     """
-    return list(zip_items_as_array(*items))
+    return list(zip_sequences_as_array(*sequences))
 
 
 class IPv4Socket(object):
