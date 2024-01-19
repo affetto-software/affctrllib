@@ -38,8 +38,8 @@ def split_data(
     sep : str, optional
         If `sep` is given, split `data` with that. It can be multiple characters.
     strip : bool | str, default=True
-        If `strip` is True, strip whitespaces from the both sides of `data`
-    before processing. If `strip` is a series of characters, strip those.
+        If `strip` is True, strip whitespaces from the both sides of `data` before
+        processing. If `strip` is a series of characters, strip those.
 
     Returns
     -------
@@ -210,7 +210,7 @@ def unzip_sequence(sequence: Sequence[T] | np.ndarray, n: int) -> list[list[T]]:
     -------
     list[list[T]]
         A list of `n` lists where each inner list consists of every `n`th value in the
-    given `sequence`.
+        given `sequence`.
 
     Raises
     ------
