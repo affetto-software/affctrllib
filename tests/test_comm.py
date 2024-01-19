@@ -11,6 +11,8 @@ from numpy.testing import assert_array_equal
 
 from affctrllib.comm import (
     IPv4Socket,
+    encode_data,
+    join_data,
     split_data,
     unzip_items,
     unzip_items_as_array,
@@ -152,6 +154,91 @@ def test_complicated_cases_when_split_data(
     """Test complicated cases to split data."""
     arr = split_data(data, converter=converter, sep=sep, strip=strip)
     assert arr == expected
+
+
+@pytest.mark.parametrize(
+    "arr,expected",
+    [
+        ([0, 1, 2], "0 1 2"),
+        ([0, 1, 2, 3, 4], "0 1 2 3 4"),
+        ([1.2, 3.2, 0.4, 8.7, 5.5], "1 3 0 9 6"),
+        ([0.5, 1.5, 2.5, 3.5, 4.5], "0 2 2 4 4"),
+    ],
+)
+def test_join_data(arr: list[int] | list[float], expected: str) -> None:
+    """Test typical usages of `joint_data`."""
+    s = join_data(arr)
+    assert s == expected
+
+
+@pytest.mark.parametrize(
+    "arr,sep,expected",
+    [
+        ([0, 1, 2], ",", "0,1,2"),
+        ([0, 1, 2], "|", "0|1|2"),
+        ([0, 1, 2], "  ", "0  1  2"),
+    ],
+)
+def test_join_data_with_specific_sep(arr: list[int] | list[float], sep: str, expected: str) -> None:
+    """Test to join data with specific separator."""
+    s = join_data(arr, sep=sep)
+    assert s == expected
+
+
+@pytest.mark.parametrize(
+    "arr,specifier,expected",
+    [
+        ([0, 1, 2], "2d", " 0  1  2"),
+        ([0, 1, 2], ".3f", "0.000 1.000 2.000"),
+        ([1.333, 3.28, 5.5, 10.215], "05.2f", "01.33 03.28 05.50 10.21"),
+    ],
+)
+def test_join_data_with_specifier(arr: list[int] | list[float], specifier: str, expected: str) -> None:
+    """Test to join data in which each element is formated with given specifier."""
+    s = join_data(arr, specifier=specifier)
+    assert s == expected
+
+
+@pytest.mark.parametrize(
+    "arr,precision,expected",
+    [
+        ([0.54892, 1.289285, 2.889013], 1, "0.5 1.3 2.9"),
+        ([0.54892, 1.289285, 2.889013], 3, "0.549 1.289 2.889"),
+        ([0.54892, 1.289285, 2.889013], 5, "0.54892 1.28929 2.88901"),
+    ],
+)
+def test_join_data_with_specific_precision(arr: list[int] | list[float], precision: int, expected: str) -> None:
+    """Test to join data with specific precision."""
+    s = join_data(arr, precision=precision)
+    assert s == expected
+
+
+@pytest.mark.parametrize(
+    "arr,sep,specifier,expected",
+    [
+        (np.array([0, 1, 2]), " ", ".0f", "0 1 2"),
+        (np.array([0, 1, 2]), ",", ".2f", "0.00,1.00,2.00"),
+    ],
+)
+def test_join_data_ndarray(arr: list[int] | list[float], sep: str, specifier: str, expected: str) -> None:
+    """Test to join when data is given as a numpy array."""
+    s = join_data(arr, sep=sep, specifier=specifier)
+    assert s == expected
+
+
+@pytest.mark.parametrize(
+    "arr,expected",
+    [
+        ([0, 1, 2], b"0 1 2"),
+        ([0, 1, 2, 3, 4], b"0 1 2 3 4"),
+        ([1.2, 3.2, 0.4, 8.7, 5.5], b"1 3 0 9 6"),
+        ([0.5, 1.5, 2.5, 3.5, 4.5], b"0 2 2 4 4"),
+    ],
+)
+def test_encode_data(arr: list[int] | list[float], expected: bytes) -> None:
+    """Test if the joined data is encoded as a bytes object."""
+    b = encode_data(arr)
+    assert b == expected
 
 
 @pytest.mark.parametrize(

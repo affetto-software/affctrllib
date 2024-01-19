@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import socket
 from socket import AF_INET, SOCK_DGRAM, SOCK_NONBLOCK, SOCK_STREAM
-from typing import Callable, Sequence, TypeVar
+from typing import Callable, Iterable, Sequence, TypeVar
 
 import numpy as np
 
@@ -217,6 +217,92 @@ def split_data(
     elif strip:
         decoded_data = decoded_data.strip(strip)
     return list(map(converter, decoded_data.split(sep)))
+
+
+def join_data(
+    data: Iterable,
+    sep: str = " ",
+    specifier: str = ".0f",
+    precision: int | None = None,
+) -> str:
+    """Given a list of values, return a string joined items in the list.
+
+    The `data` can be an iterable object as well as a list. Delimiter to join items can
+    be specified with `sep`. Format specifier, as known as 'f-string', to format each
+    element in the `data` can be specified with `specifier`. When elements in the data
+    are floats, their precision can be specified with `precision`.
+
+    Parameters
+    ----------
+    data : Iterable
+        A list of values to be joined. Any iterable object can be given as well.
+    sep : str, default=\" \"
+        Delimiter to join items. Default value is a single space.
+    specifier : str, default=\".0f\"
+        Format specifier to format items as string.
+    precision : int, optional
+        Precision to be formatted when items are float.
+
+    Returns
+    -------
+    str
+        A string where given data is joined with format specifier.
+
+    Examples
+    --------
+    >>> join_data([1, 2, 3])
+    \"1 2 3\"
+
+    See Also
+    --------
+    eoncode_data : Returns a bytes object.
+    """
+    if precision is None:
+        return sep.join([f"{x:{specifier}}" for x in data])
+    else:
+        return sep.join([f"{x:.{precision}f}" for x in data])
+
+
+def encode_data(
+    data: Iterable,
+    sep: str = " ",
+    specifier: str = ".0f",
+    precision: int | None = None,
+) -> bytes:
+    """Given a list of values, return a bytes object encoded a joined string.
+
+    The `data` can be an iterable object as well as a list. Delimiter to join items can
+    be specified with `sep`. Format specifier, as known as 'f-string', to format each
+    element in the `data` can be specified with `specifier`. When elements in the data
+    are floats, their precision can be specified with `precision`.
+
+    Parameters
+    ----------
+    data : Iterable
+        A list of values to be joined. Any iterable object can be given as well.
+    sep : str, default=\" \"
+        Delimiter to join items. Default value is a single space.
+    specifier : str, default=\".0f\"
+        Format specifier to format items as string.
+    precision : int, optional
+        Precision to be formatted when items are float.
+
+    Returns
+    -------
+    bytes
+        A bytes object encoded a string where given data is joined with format
+    specifier.
+
+    Examples
+    --------
+    >>> encode_data([1, 2, 3])
+    b\"1 2 3\"
+
+    See Also
+    --------
+    join_data : Returns a string.
+    """
+    return join_data(data, sep, specifier, precision).encode()
 
 
 def unzip_items_as_array(items: Sequence | np.ndarray, n: int) -> np.ndarray:
