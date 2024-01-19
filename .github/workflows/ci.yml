@@ -2,6 +2,9 @@ name: ci
 
 on:
   push:
+    branches-ignore:
+    - newdesign
+    - 'wip/**'
   pull_request:
     branches:
     - main
