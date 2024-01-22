@@ -340,6 +340,7 @@ class IPv4Socket(object):
             self._socket = socket.socket(AF_INET, socket_type | SOCK_NONBLOCK)
         else:
             self._socket = socket.socket(AF_INET, socket_type)
+        self._socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
     def __repr__(self) -> str:
         type_name = self._TYPE_NAMES[f"{self.type}"]
@@ -396,15 +397,17 @@ class IPv4Socket(object):
         """Bind the socket to the associated address."""
         self.socket.bind(self.address)
 
-    def connect(self, address: tuple[str, int]) -> None:
+    def connect(self, address: tuple[str, int] | None = None) -> None:
         """Conncet to a remote socket at `address`.
 
         ...
         Parameters
         ----------
-        address : tuple[str, int]
+        address : tuple[str, int], optional
             A remote address to connect.
         """
+        if address is None:
+            address = self.address
         return self.socket.connect(address)
 
     def recv(self, bufsize: int = DEFAULT_BUFSIZE) -> bytes:
