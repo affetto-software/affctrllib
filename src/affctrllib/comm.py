@@ -15,7 +15,7 @@ import numpy as np
 
 # The default maximum amount of data when receiving or sending used in this
 # module.
-DEFAULT_BUFSIZE = 4096
+DEFAULT_BUFSIZE = 1024
 
 # Define a generic type.
 T = TypeVar("T")
