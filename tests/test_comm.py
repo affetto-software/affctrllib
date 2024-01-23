@@ -22,7 +22,7 @@ from affctrllib.comm import (
 
 
 def default_address() -> tuple[str, int]:
-    return ("localhost", 123456)
+    return ("localhost", 50000)
 
 
 @pytest.fixture
