@@ -136,7 +136,7 @@ def encode_data(
     -------
     bytes
         A bytes object encoded a string where elements in the given data are joined with
-    format specifier.
+        format specifier.
 
     Examples
     --------
