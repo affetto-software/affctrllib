@@ -430,6 +430,106 @@ class IPv4Socket(object):
         # recv_bytes = self.socket.recv(bufsize)
         return recv_bytes
 
+    def recv_as_list(
+        self,
+        converter: Callable[[str], T] = int,
+        sep: str | None = None,
+        strip: bool | str = True,
+        unzip: int = 3,
+        bufsize: int = DEFAULT_BUFSIZE,
+    ) -> list[T] | list[list[T]]:
+        """Receive data from a socket and return unzipped sequences as a list.
+
+        This function performs the following actions: receive data from the remote
+        socket, split it into values with `converter` being applied, unzip the sequence
+        into specified number of lists, and return them as a list.
+
+        Parameters
+        ----------
+        converter : Callable[[str], T], default=int
+            Callable function to convert a string to a desired value.
+        sep : str, optional
+            If `sep` is given, split `data` with that. It can be multiple characters.
+        strip : bool | str, default=True
+            If `strip` is True, strip whitespaces from the both sides of `data` before
+            processing. If `strip` is a series of characters, strip those.
+        unzip : int, default=3
+            Number of sequences to be unzipped.
+        bufsize : int, optional
+            The maximum amount of data to be received at once.
+
+        Returns
+        -------
+        list[T] | list[list[T]]
+            A list of lists where each list consists of converted values. If `unzip` is
+            0, returns just a list of converted values.
+
+        See Also
+        --------
+        recv : Return received data as a bytes object.
+        recv_as_array : Return received data as a numpy array.
+
+        Examples
+        --------
+        >>> s = IPv4Socket((\"localhost\", 50000))
+        >>> s.bind()
+        >>> s.recv_as_list(unzip=3)
+        [[0, 3, 6], [1, 4, 7], [2, 5, 8]]
+        """
+        sequence = split_data(self.recv(bufsize), converter, sep, strip)
+        return unzip_sequence(sequence, n=unzip)
+
+    def recv_as_array(
+        self,
+        converter: Callable[[str], T] = int,
+        sep: str | None = None,
+        strip: bool | str = True,
+        unzip: int = 3,
+        bufsize: int = DEFAULT_BUFSIZE,
+    ) -> np.ndarray:
+        """Receive data from a socket and return unzipped sequences as a numpy array.
+
+        This function performs the following actions: receive data from the remote
+        socket, split it into values with `converter` being applied, unzip the sequence
+        into specified number of lists, and return them as a numpy array.
+
+        Parameters
+        ----------
+        converter : Callable[[str], T], default=int
+            Callable function to convert a string to a desired value.
+        sep : str, optional
+            If `sep` is given, split `data` with that. It can be multiple characters.
+        strip : bool | str, default=True
+            If `strip` is True, strip whitespaces from the both sides of `data` before
+            processing. If `strip` is a series of characters, strip those.
+        unzip : int, default=3
+            Number of sequences to be unzipped.
+        bufsize : int, optional
+            The maximum amount of data to be received at once.
+
+        Returns
+        -------
+        np.ndarray
+            A numpy array where each row consists of converted values. If `unzip` is 0,
+            returns a one-dimensional array.
+
+        See Also
+        --------
+        recv : Return received data as a bytes object.
+        recv_as_list : Return received data as a list.
+
+        Examples
+        --------
+        >>> s = IPv4Socket((\"localhost\", 50000))
+        >>> s.bind()
+        >>> s.recv_as_array(unzip=3)
+        array([[0, 3, 6],
+               [1, 4, 7],
+               [2, 5, 8]])
+        """
+        sequence = split_data(self.recv(bufsize), converter, sep, strip)
+        return unzip_sequence_as_array(sequence, n=unzip)
+
     def send(self, send_bytes: bytes) -> int:
         """Send data to the socket.
 
@@ -447,6 +547,46 @@ class IPv4Socket(object):
             The number of bytes sent to the socket.
         """
         return self.socket.sendto(send_bytes, self.address)
+
+    def send_sequences(
+        self,
+        *sequences: Sequence | np.ndarray,
+        sep: str = " ",
+        specifier: str = ".0f",
+        precision: int | None = None,
+    ) -> int:
+        """Send sequences to the socket.
+
+        The socket must be connected to a remote socket. Given sequences are zipped and
+        sent to the remote socket. Returns the number of bytes sent.
+
+        Parameters
+        ----------
+        *sequences : Sequence | np.ndarray
+            A arbitrary number of sequences to be sent to the remote socket.
+        sep : str, default=\" \"
+            Delimiter to join elements. Default value is a single space.
+        specifier : str, default=\".0f\"
+            Format specifier to format elements as string.
+        precision : int, optional
+            Precision to be formatted when elements are float.
+
+        Returns
+        -------
+        int
+            The number of bytes sent to the socket.
+
+        See Also
+        --------
+        send : Send a bytes object to the remote socket.
+
+        Examples
+        --------
+        >>> s = IPv4Socket((\"localhost\", 50000))
+        >>> s.send_sequences([0, 1, 2], [3, 4, 5])
+        """
+        data = zip_sequences(*sequences)
+        return self.send(encode_data(data, sep, specifier, precision))
 
     def close(self) -> None:
         """Close the socket.
