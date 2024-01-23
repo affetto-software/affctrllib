@@ -3,7 +3,11 @@
 from __future__ import annotations
 
 import socket
+import threading
+import time
+from itertools import count
 from socket import AF_INET, SOCK_DGRAM, SOCK_STREAM
+from typing import NoReturn, Sequence
 
 import numpy as np
 import pytest
@@ -374,3 +378,153 @@ def test_check_nonblocking_mode(nonblock: bool) -> None:
     """Check if `is_nonblocking` returns False in blocking mode."""
     s = IPv4Socket(("localhost", 123456), nonblock=nonblock)
     assert s.is_nonblocking() == nonblock
+
+
+HOST = "localhost"
+PORT = 50000
+
+
+class EchoServer:
+    """Mock an echo server.
+
+    This is intended to be used in fixtures for pytest and the method `serve` should be
+    run in a thread.
+    """
+
+    canned_response: bytes | None
+    _counter = count(0)
+
+    def __init__(self, canned_response: str | bytes | None = None):
+        """Initialize an echo server.
+
+        Parameters
+        ----------
+        canned_response : str | bytes, optional
+            If `canned_response` is given, the serever responses the given bytes object or
+            encoded string.
+        """
+        self.canned_response = None
+        if canned_response is not None:
+            self.set_canned_response(canned_response)
+        self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self._socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self._cnt = next(self._counter)
+        self.port = PORT + self._cnt
+
+    def __enter__(self) -> EchoServer:
+        self._socket.bind((HOST, self.port))
+        return self
+
+    def __exit__(self, exception_type, exception_value, traceback) -> None:
+        _ = exception_type, exception_value, traceback
+        time.sleep(0.1)
+        self._socket.close()
+
+    @property
+    def address(self) -> tuple[str, int]:
+        return (HOST, self.port)
+
+    def set_canned_response(self, canned_response: str | bytes) -> bytes:
+        if isinstance(canned_response, str):
+            canned_response = canned_response.encode()
+        self.canned_response = canned_response
+        return canned_response
+
+    def serve(self) -> NoReturn:
+        while True:
+            self._socket.listen(5)
+            conn, _ = self._socket.accept()
+            if self.canned_response is None:
+                msg = conn.recv(1024)
+                response = msg
+            else:
+                response = self.canned_response
+            conn.sendall(response)
+            conn.close()
+
+
+@pytest.fixture(scope="function")
+def echo_server():
+    """Create an echo server that just returns a received message."""
+    server = EchoServer()
+    with server as s:
+        thread = threading.Thread(target=s.serve)
+        thread.daemon = True
+        thread.start()
+        yield s
+
+
+@pytest.fixture(scope="function")
+def fixed_response_server(msg: str):
+    """Create an echo server that just returns a fixed message."""
+    server = EchoServer(canned_response=msg)
+    with server as s:
+        thread = threading.Thread(target=s.serve)
+        thread.daemon = True
+        thread.start()
+        yield s
+
+
+@pytest.mark.parametrize("msg", ["hello", "world"])
+def test_send_and_recv(echo_server, msg: str) -> None:
+    """Test that an echo server works."""
+    s = IPv4Socket(echo_server.address, SOCK_STREAM)
+    s.connect()
+    s.send(msg.encode())
+    data = s.recv()
+    s.close()
+    assert data.decode() == msg
+
+
+@pytest.mark.parametrize(
+    "msg,expected",
+    [
+        ("0 1 2 3 4 5", [[0, 3], [1, 4], [2, 5]]),
+        ("1 2 3 4 5 6 7 8 9", [[1, 4, 7], [2, 5, 8], [3, 6, 9]]),
+    ],
+)
+def test_recv_as_list(fixed_response_server, msg: str, expected: list[list[int]]) -> None:
+    """Test the returned value from `recv_as_list`."""
+    fixed_response_server.set_canned_response(msg)
+    s = IPv4Socket(fixed_response_server.address, SOCK_STREAM)
+    s.connect()
+    s.send(b"request")
+    data = s.recv_as_list()
+    s.close()
+    assert data == expected
+
+
+@pytest.mark.parametrize(
+    "msg,expected",
+    [
+        ("0 1 2 3 4 5", [[0, 3], [1, 4], [2, 5]]),
+        ("1 2 3 4 5 6 7 8 9", [[1, 4, 7], [2, 5, 8], [3, 6, 9]]),
+    ],
+)
+def test_recv_as_array(fixed_response_server, msg: str, expected: np.ndarray) -> None:
+    """Test the returned value from `recv_as_array`."""
+    fixed_response_server.set_canned_response(msg)
+    s = IPv4Socket(fixed_response_server.address, SOCK_STREAM)
+    s.connect()
+    s.send(b"request")
+    data = s.recv_as_array()
+    s.close()
+    assert type(data) is np.ndarray
+    assert_array_equal(data, expected)
+
+
+@pytest.mark.parametrize(
+    "sequences,expected",
+    [
+        (([1, 2, 3], [4, 5, 6]), "1 4 2 5 3 6"),
+        ((np.array([0, 1, 2, 3]), np.array([4, 5, 6, 7])), "0 4 1 5 2 6 3 7"),
+    ],
+)
+def test_send_sequences(echo_server, sequences: tuple[Sequence | np.ndarray], expected: str) -> None:
+    """Test that an echo server works."""
+    s = IPv4Socket(echo_server.address, SOCK_STREAM)
+    s.connect()
+    s.send_sequences(*sequences)
+    data = s.recv()
+    s.close()
+    assert data.decode() == expected
