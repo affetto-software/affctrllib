@@ -322,18 +322,18 @@ def test_zip_sequences_fails_if_sizes_of_sequences_not_match() -> None:
 
 
 def test_check_repr(default_socket: IPv4Socket) -> None:
-    assert repr(default_socket) == "IPv4Socket(('localhost', 123456), SOCK_DGRAM, nonblock=False)"
+    assert repr(default_socket) == "IPv4Socket(('localhost', 50000), SOCK_DGRAM, nonblock=False)"
 
 
 def test_check_str(default_socket: IPv4Socket) -> None:
-    assert str(default_socket) == "IPv4Socket<localhost:123456> (UDP)"
+    assert str(default_socket) == "IPv4Socket<localhost:50000> (UDP)"
     s = IPv4Socket(default_address(), SOCK_STREAM)
-    assert str(s) == "IPv4Socket<localhost:123456> (TCP)"
+    assert str(s) == "IPv4Socket<localhost:50000> (TCP)"
     s = IPv4Socket(default_address(), nonblock=True)
-    assert str(s) == "IPv4Socket<localhost:123456> (UDP,nonblock)"
+    assert str(s) == "IPv4Socket<localhost:50000> (UDP,nonblock)"
 
 
-@pytest.mark.parametrize("host,port", [("localhost", 123456), ("192.168.5.11", 222222)])
+@pytest.mark.parametrize("host,port", [("localhost", 12345), ("192.168.5.11", 22222)])
 def test_check_socket_attributes(host: str, port: int) -> None:
     """Check if a IPv4 socket object is created based on the given address.
 
@@ -364,7 +364,7 @@ def test_specify_socket_type(socket_type: int) -> None:
     socket_type : int
         The socket type.
     """
-    s = IPv4Socket(("localhost", 123456), socket_type=socket_type)
+    s = IPv4Socket(("localhost", 12345), socket_type=socket_type)
     assert s.type == socket_type
 
 
@@ -376,7 +376,7 @@ def test_enable_blocking_mode_by_default(default_socket: IPv4Socket) -> None:
 @pytest.mark.parametrize("nonblock", [False, True])
 def test_check_nonblocking_mode(nonblock: bool) -> None:
     """Check if `is_nonblocking` returns False in blocking mode."""
-    s = IPv4Socket(("localhost", 123456), nonblock=nonblock)
+    s = IPv4Socket(("localhost", 12345), nonblock=nonblock)
     assert s.is_nonblocking() == nonblock
 
 
