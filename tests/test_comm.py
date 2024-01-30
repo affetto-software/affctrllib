@@ -7,7 +7,7 @@ import threading
 import time
 from itertools import count
 from socket import AF_INET, SOCK_DGRAM, SOCK_STREAM
-from typing import NoReturn, Sequence
+from typing import Any, NoReturn, Sequence
 
 import numpy as np
 import pytest
@@ -319,6 +319,46 @@ def test_zip_sequences_fails_if_sizes_of_sequences_not_match() -> None:
     with pytest.raises(ValueError) as e:
         zip_sequences([1, 2, 3], [4, 5, 6, 7])
     assert "all input sequences must have the same size" in str(e.value)
+
+
+@pytest.mark.parametrize(
+    "address,socket_type,nonblock",
+    [
+        (("localhost", 20202), SOCK_DGRAM, False),
+        (("192.158.5.101", 50000), SOCK_STREAM, True),
+    ],
+)
+def test_init_from_config(address: tuple[str, int], socket_type: int, nonblock: bool) -> None:
+    config = {"host": address[0], "port": address[1], "type": socket_type, "nonblock": nonblock}
+    s = IPv4Socket(config)
+    assert s.address == address
+    assert s.type == socket_type
+    assert s.is_nonblocking() == nonblock
+
+
+@pytest.mark.parametrize(
+    "config,expected",
+    [
+        ({"host": "localhost", "port": 50000}, IPv4Socket(("localhost", 50000))),
+        ({"host": "127.0.0.1", "port": 50001, "type": SOCK_STREAM}, IPv4Socket(("127.0.0.1", 50001), SOCK_STREAM)),
+        ({"host": "192.168.5.11", "port": 50002, "nonblock": True}, IPv4Socket(("192.168.5.11", 50002), nonblock=True)),
+    ],
+)
+def test_init_from_incomplete_config(config: dict[str, Any], expected: IPv4Socket) -> None:
+    s = IPv4Socket(config)
+    assert s.address == expected.address
+    assert s.type == expected.type
+    assert s.is_nonblocking() == expected.is_nonblocking()
+
+
+@pytest.mark.parametrize(
+    "config,required_key",
+    [({"port": 50000}, "host"), ({"host": "localhost"}, "port")],
+)
+def test_error_when_required_key_missing(config: dict[str, Any], required_key: str) -> None:
+    with pytest.raises(KeyError) as e:
+        _ = IPv4Socket(config)
+    assert f"IPv4Socket: '{required_key}' is required in config." in str(e.value)
 
 
 def test_check_repr(default_socket: IPv4Socket) -> None:

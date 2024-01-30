@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import socket
 from socket import AF_INET, SOCK_DGRAM, SOCK_NONBLOCK, SOCK_STREAM
-from typing import Callable, Iterable, Sequence, TypeVar
+from typing import Any, Callable, Iterable, Sequence, TypeVar
 
 import numpy as np
 
@@ -321,7 +321,44 @@ class IPv4Socket(object):
     _address: tuple[str, int]
     _TYPE_NAMES = {f"{SOCK_DGRAM}": "SOCK_DGRAM", f"{SOCK_STREAM}": "SOCK_STREAM"}
 
-    def __init__(self, address: tuple[str, int], socket_type: int = SOCK_DGRAM, nonblock: bool = False) -> None:
+    def __init__(
+        self,
+        address: tuple[str, int] | dict[str, Any],
+        socket_type: int = SOCK_DGRAM,
+        nonblock: bool = False,
+    ) -> None:
+        """Initialize the IPv4 socket.
+
+        Parameters
+        ----------
+        address : tuple[str, int] | dict[str, Any]
+            The internet address consisting of a 2-tuple (host, port), or config
+            dictionary.
+
+        socket_type : {SOCK_DGRAM, SOCK_STREAM}, optional
+            The socket type. Choose between SOCK_STREAM and SOCK_DGRAM.
+
+        nonblock : bool, optional
+            If True, apply SOCK_NONBLOCK bit flag when creating the socket object.
+        """
+        if isinstance(address, dict):
+            self.initialize_from_config(address)
+        else:
+            self.initialize(address, socket_type, nonblock)
+
+    def __repr__(self) -> str:
+        type_name = self._TYPE_NAMES[f"{self.type}"]
+        nonblock = "True" if self.is_nonblocking() else "False"
+        return f"{self.__class__.__qualname__}({self.address}, {type_name}, nonblock={nonblock})"
+
+    def __str__(self) -> str:
+        type_name = self._TYPE_NAMES[f"{self.type}"]
+        attr = {"SOCK_DGRAM": "UDP", "SOCK_STREAM": "TCP"}[type_name]
+        if self.is_nonblocking():
+            attr += ",nonblock"
+        return f"{self.__class__.__qualname__}<{self.host}:{self.port}> ({attr})"
+
+    def initialize(self, address: tuple[str, int], socket_type: int, nonblock: bool) -> IPv4Socket:
         """Initialize the IPv4 socket.
 
         Parameters
@@ -341,18 +378,33 @@ class IPv4Socket(object):
         else:
             self._socket = socket.socket(AF_INET, socket_type)
         self._socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        return self
 
-    def __repr__(self) -> str:
-        type_name = self._TYPE_NAMES[f"{self.type}"]
-        nonblock = "True" if self.is_nonblocking() else "False"
-        return f"{self.__class__.__qualname__}({self.address}, {type_name}, nonblock={nonblock})"
+    def initialize_from_config(self, config: dict[str, Any]) -> IPv4Socket:
+        """Initialize the IPv4 socket from config dictionary.
 
-    def __str__(self) -> str:
-        type_name = self._TYPE_NAMES[f"{self.type}"]
-        attr = {"SOCK_DGRAM": "UDP", "SOCK_STREAM": "TCP"}[type_name]
-        if self.is_nonblocking():
-            attr += ",nonblock"
-        return f"{self.__class__.__qualname__}<{self.host}:{self.port}> ({attr})"
+        Parameters
+        ----------
+        config : dict[str, Any]
+            Config dictionary.
+
+        Returns
+        -------
+        IPv4Socket
+            Initialized IPv4Socket object.
+
+        Raises
+        ------
+        KeyError
+            If `host` or `port` is not included in config dictionary.
+        """
+        try:
+            address = (config["host"], config["port"])
+        except KeyError as e:
+            raise KeyError(f"IPv4Socket: {str(e)} is required in config.")
+        socket_type = config.get("type", SOCK_DGRAM)
+        nonblock = config.get("nonblock", False)
+        return self.initialize(address, socket_type, nonblock)
 
     @property
     def socket(self) -> socket.socket:
