@@ -1,4 +1,4 @@
-"""Tests for `socket` module."""
+"""Tests for `comm` module."""
 
 from __future__ import annotations
 
