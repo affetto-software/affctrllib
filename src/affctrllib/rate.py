@@ -41,6 +41,50 @@ class Rate(object):
         self._actual_cycle_time = 0.0
         self.start()
 
+    @staticmethod
+    def from_secs(duration: float | int) -> Rate:
+        """Create the Rate object from duration in seconds.
+
+        Parameters
+        ----------
+        duration : float | int
+            The cycling duration in seconds.
+
+        Returns
+        -------
+        Rate
+            An initialized Rate object.
+
+        Examples
+        --------
+        >>> rate = Rate.from_secs(0.1)
+        >>> rate.frequency
+        10
+        """
+        return Rate(1.0 / duration)
+
+    @staticmethod
+    def from_msecs(duration: float | int) -> Rate:
+        """Create the Rate object from duration in milliseconds.
+
+        Parameters
+        ----------
+        duration : float | int
+            The cycling duration in milliseconds.
+
+        Returns
+        -------
+        Rate
+            An initialized Rate object.
+
+        Examples
+        --------
+        >>> rate = Rate.from_msecs(10)
+        >>> rate.frequency
+        100
+        """
+        return Rate(1000.0 / duration)
+
     def _set_frequency(self, frequency: float | int) -> float:
         """Set a frequency.
 
