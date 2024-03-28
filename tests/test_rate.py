@@ -27,6 +27,16 @@ class TestRate:
         with pytest.raises(ValueError):
             _ = Rate(invalid_freq)
 
+    @pytest.mark.parametrize("duration,expected", [(1, 1), (0.1, 10), (0.01, 100)])
+    def test_create_from_secs(self, duration: float, expected: float) -> None:
+        rate = Rate.from_secs(duration)
+        assert rate.frequency == expected
+
+    @pytest.mark.parametrize("duration,expected", [(1, 1000), (10, 100), (100, 10)])
+    def test_create_from_msecs(self, duration: int, expected: float) -> None:
+        rate = Rate.from_msecs(duration)
+        assert rate.frequency == expected
+
     @pytest.mark.parametrize("freq,expected", [(1, 1), (10, 0.1), (25, 0.04)])
     def test_expected_cycle_time(self, freq: float, expected: float) -> None:
         rate = Rate(freq)
