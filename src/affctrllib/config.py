@@ -7,10 +7,9 @@ TOML, store the configuration file path, get values from specified keys, and so 
 from __future__ import annotations
 
 import sys
-from abc import ABC, abstractmethod
 from pathlib import Path
 from traceback import format_tb
-from typing import Any, Generic, TypeVar, overload
+from typing import Any, TypeVar, overload
 
 if sys.version_info < (3, 11):
     import tomli as tomllib
@@ -25,10 +24,9 @@ class CONFIG_GET_VALUE_NO_DEFAULT_T(int):
 
 
 CONFIG_GET_VALUE_NO_DEFAULT = CONFIG_GET_VALUE_NO_DEFAULT_T(-1)
-ConfigBaseT = TypeVar("ConfigBaseT", bound="ConfigBase")
 
 
-class ConfigBase(ABC, Generic[ConfigBaseT]):
+class ConfigBase(object):
     """The configuration class.
 
     This class is implemented as an abstract class.
@@ -55,7 +53,6 @@ class ConfigBase(ABC, Generic[ConfigBaseT]):
             return
 
         self.load_mapping(path)
-        self.load()
 
     @property
     def path(self) -> Path:
@@ -126,8 +123,31 @@ class ConfigBase(ABC, Generic[ConfigBaseT]):
         return hasattr(self, "_path")
 
     @staticmethod
-    @abstractmethod
-    def load_from_mapping(mapping: dict[str, Any]) -> ConfigBaseT: ...
+    def load_from_mapping(mapping: dict[str, Any]) -> ConfigBase:
+        """Initialize the ConfigBase class from given mapping.
+
+        Parameters
+        ----------
+        mapping : dict[str, Any]
+            A mapping to be set in initialized object.
+
+        Returns
+        -------
+        ConfigBase
+            Initialized object that the given mapping is set.
+
+        Examples
+        --------
+        >>> c = ConfigBase.load_from_mapping({"robot": {"name": "sample"}})
+        >>> c.get_value("robot", "name")
+        "sample"
+        >>> c.is_loaded_from_file()
+        False
+        """
+
+        c = ConfigBase()
+        c.set_mapping(mapping)
+        return c
 
     def load_mapping(self, path: str | Path) -> dict[str, Any]:
         """Read a TOML file.
@@ -250,6 +270,3 @@ class ConfigBase(ABC, Generic[ConfigBaseT]):
         else:
             value = self._get_value_default(self.mapping, *keys, default=default)
         return value
-
-    @abstractmethod
-    def load(self) -> bool: ...
