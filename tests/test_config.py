@@ -6,11 +6,11 @@ from typing import Any
 
 import pytest
 
-from affctrllib.config import Configuration
+from affctrllib.config import ConfigBase
 from tests import ALTERNATIVE_CONFIG_FILE, SAMPLE_CONFIG_FILE
 
 
-class SampleConfig(Configuration):
+class SampleConfig(ConfigBase):
     @staticmethod
     def load_from_mapping(mapping: dict[str, Any], ignore_load_error: bool = False) -> SampleConfig:
         c = SampleConfig()

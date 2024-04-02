@@ -10,7 +10,7 @@ import sys
 from abc import ABC, abstractmethod
 from pathlib import Path
 from traceback import format_tb
-from typing import Any, TypeVar, overload
+from typing import Any, Generic, TypeVar, overload
 
 if sys.version_info < (3, 11):
     import tomli as tomllib
@@ -25,9 +25,10 @@ class CONFIG_GET_VALUE_NO_DEFAULT_T(int):
 
 
 CONFIG_GET_VALUE_NO_DEFAULT = CONFIG_GET_VALUE_NO_DEFAULT_T(-1)
+ConfigBaseT = TypeVar("ConfigBaseT", bound="ConfigBase")
 
 
-class Configuration(ABC):
+class ConfigBase(ABC, Generic[ConfigBaseT]):
     """The configuration class.
 
     This class is implemented as an abstract class.
@@ -37,7 +38,7 @@ class Configuration(ABC):
     _mapping: dict[str, Any]
 
     def __init__(self, path: str | Path | None = None, ignore_load_error: bool = False) -> None:
-        """Initialize the Configuration object.
+        """Initialize the ConfigBase object.
 
         Parameters
         ----------
@@ -64,26 +65,26 @@ class Configuration(ABC):
     def path(self) -> Path:
         """Return `Path` if the object is loaded from a file.
 
-        Return a `Path` object if the `Configuration` object has been
+        Return a `Path` object if the `ConfigBase` object has been
         loaded from a configuration file. Otherwise, it raises an
         exception.
 
         Returns
         -------
         Path
-            Path object that the Configuration has been loaded from.
+            Path object that the ConfigBase has been loaded from.
 
         Raises
         ------
         AttributeError
-            If the Configuration object is not created from a file.
+            If the ConfigBase object is not created from a file.
         """
 
         try:
             return self._path
         except AttributeError as err:
             msg = (
-                "'Configuration' object is not loaded from configuration file.\n"
+                "'ConfigBase' object is not loaded from configuration file.\n"
                 + format_tb(err.__traceback__)[0]
                 + err.args[0]
             )
@@ -94,7 +95,7 @@ class Configuration(ABC):
         """Return a dict loaded from TOML file or string.
 
         Return a dict object loaded from TOML file or string. If the
-        Configuration object has not been initialized yet, raises an
+        ConfigBase object has not been initialized yet, raises an
         exception.
 
         Returns
@@ -105,13 +106,13 @@ class Configuration(ABC):
         Raises
         ------
         AttributeError
-            If the Configuration object has not been initialized yet.
+            If the ConfigBase object has not been initialized yet.
         """
 
         try:
             return self._mapping
         except AttributeError as err:
-            msg = "'Configuration' object has not initialized yet.\n" + format_tb(err.__traceback__)[0] + err.args[0]
+            msg = "'ConfigBase' object has not initialized yet.\n" + format_tb(err.__traceback__)[0] + err.args[0]
             raise AttributeError(msg) from None
 
     def is_loaded_from_file(self) -> bool:
@@ -130,7 +131,7 @@ class Configuration(ABC):
 
     @staticmethod
     @abstractmethod
-    def load_from_mapping(mapping: dict[str, Any], ignore_load_error: bool = False) -> Configuration: ...
+    def load_from_mapping(mapping: dict[str, Any], ignore_load_error: bool = False) -> ConfigBaseT: ...
 
     def load_mapping(self, path: str | Path) -> dict[str, Any]:
         """Read a TOML file.
@@ -150,7 +151,7 @@ class Configuration(ABC):
 
         Examples
         --------
-        >>> c = Configuration()
+        >>> c = ConfigBase()
         >>> c.load_mapping("config.toml")
         >>> c.load()
         """
@@ -186,7 +187,7 @@ class Configuration(ABC):
 
         Examples
         --------
-        >>> c = Configuration()
+        >>> c = ConfigBase()
         >>> c.set_mapping({"robot": {"name": "hoge"}})
         >>> c.load()
         """
@@ -201,7 +202,7 @@ class Configuration(ABC):
         if len(keys) == 1:
             return mapping[keys[0]]
         else:
-            return Configuration._get_value(mapping[keys[0]], *keys[1:])
+            return ConfigBase._get_value(mapping[keys[0]], *keys[1:])
 
     @staticmethod
     def _get_value_default(
@@ -210,7 +211,7 @@ class Configuration(ABC):
         if len(keys) == 1:
             return mapping.get(keys[0], default)
         else:
-            return Configuration._get_value_default(mapping[keys[0]], *keys[1:], default=default)
+            return ConfigBase._get_value_default(mapping[keys[0]], *keys[1:], default=default)
 
     @overload
     def get_value(self) -> dict[str, Any]: ...
@@ -238,7 +239,7 @@ class Configuration(ABC):
 
         Examples
         --------
-        >>> c = Configuration.load_from_mapping({"robot": {"name": "sample"}})
+        >>> c = ConfigBase.load_from_mapping({"robot": {"name": "sample"}})
         >>> c.get_value("robot", "name")
         "sample"
         >>> c.get_value("robot", "dof", default=13)
