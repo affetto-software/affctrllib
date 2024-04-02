@@ -15,7 +15,6 @@ class SampleConfig(ConfigBase):
     def load_from_mapping(mapping: dict[str, Any]) -> SampleConfig:
         c = SampleConfig()
         c.set_mapping(mapping)
-        c.load()
         return c
 
     def load(self) -> bool:
@@ -55,6 +54,11 @@ class TestConfig:
 
     def test_init_with_file(self, sample_config):
         assert sample_config.path == SAMPLE_CONFIG_FILE
+
+    def test_load_from_mapping(self):
+        c = SampleConfig.load_from_mapping({"robot": {"name": "sample"}})
+        assert c.mapping["robot"]["name"] == "sample"
+        assert c.is_loaded_from_file() is False
 
     def test_load_mapping(self):
         c = SampleConfig()
