@@ -24,6 +24,8 @@ def timestamp() -> float:
 
 
 class Rate(object):
+    """The class manages timings of running tasks with a fixed rate."""
+
     _frequency: float
     _actual_cycle_time: float
     _start_timer: float
