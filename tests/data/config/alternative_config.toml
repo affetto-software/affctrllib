@@ -1,0 +1,27 @@
+[robot]
+name = "alternative"
+
+[robot.chain]
+[[robot.chain.link]]
+  name = "joint#000"
+  jointtype = "fixed"
+
+[[robot.chain.link]]
+  name = "joint#001"
+  jointtype = "revolute"
+  parent = "joint#000"
+
+[[robot.chain.link]]
+  name = "joint#002"
+  jointtype = "revolute"
+  parent = "joint#001"
+
+[[robot.chain.link]]
+  name = "joint#003"
+  jointtype = "revolute"
+  parent = "joint#002"
+
+[[robot.chain.link]]
+  name = "joint#004"
+  jointtype = "revolute"
+  parent = "joint#003"
