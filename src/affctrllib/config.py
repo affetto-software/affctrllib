@@ -37,16 +37,13 @@ class ConfigBase(ABC, Generic[ConfigBaseT]):
     _path: Path
     _mapping: dict[str, Any]
 
-    def __init__(self, path: str | Path | None = None, ignore_load_error: bool = False) -> None:
+    def __init__(self, path: str | Path | None = None) -> None:
         """Initialize the ConfigBase object.
 
         Parameters
         ----------
         path : str | Path, optional
             A string or a Path object containing a TOML filename.
-        ignore_load_error : bool, default=False
-            If `ignore_load_error` is True, ignores errors occurred
-        while loading.
 
         Raises
         ------
@@ -58,8 +55,7 @@ class ConfigBase(ABC, Generic[ConfigBaseT]):
             return
 
         self.load_mapping(path)
-        if not self.load() and not ignore_load_error:
-            raise RuntimeError
+        self.load()
 
     @property
     def path(self) -> Path:
@@ -131,7 +127,7 @@ class ConfigBase(ABC, Generic[ConfigBaseT]):
 
     @staticmethod
     @abstractmethod
-    def load_from_mapping(mapping: dict[str, Any], ignore_load_error: bool = False) -> ConfigBaseT: ...
+    def load_from_mapping(mapping: dict[str, Any]) -> ConfigBaseT: ...
 
     def load_mapping(self, path: str | Path) -> dict[str, Any]:
         """Read a TOML file.
