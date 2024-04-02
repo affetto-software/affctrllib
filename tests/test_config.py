@@ -12,10 +12,9 @@ from tests import ALTERNATIVE_CONFIG_FILE, SAMPLE_CONFIG_FILE
 
 class SampleConfig(ConfigBase):
     @staticmethod
-    def load_from_mapping(mapping: dict[str, Any], ignore_load_error: bool = False) -> SampleConfig:
+    def load_from_mapping(mapping: dict[str, Any]) -> SampleConfig:
         c = SampleConfig()
         c.set_mapping(mapping)
-        _ = ignore_load_error
         c.load()
         return c
 
