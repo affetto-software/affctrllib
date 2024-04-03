@@ -171,3 +171,7 @@ def test_load_affetto_config() -> None:
     config = Configuration(AFFETTO_CONFIG_FILE)
     assert config["robot"]["name"] == "affetto"
     assert config.get_value("robot", "name") == "affetto"
+
+    subconfig = config.copy("robot")
+    assert "name" in subconfig
+    assert "link" in subconfig
