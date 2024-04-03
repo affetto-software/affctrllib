@@ -128,8 +128,8 @@ class Configuration(object):
 
         return hasattr(self, "_path")
 
-    @staticmethod
-    def load_from_mapping(mapping: dict[str, Any]) -> Configuration:
+    @classmethod
+    def load_from_mapping(cls, mapping: dict[str, Any]) -> Configuration:
         """Initialize the Configuration class from given mapping.
 
         Parameters
