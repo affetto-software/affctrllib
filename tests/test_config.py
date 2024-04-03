@@ -101,6 +101,11 @@ class TestConfig:
         assert c.is_loaded_from_file() is True
         assert c.path == SAMPLE_CONFIG_FILE
 
+    def test_set_mapping_error_when_mapping_is_not_dict(self):
+        c = Configuration()
+        with pytest.raises(ValueError):
+            c.set_mapping([{"name": "hoge"}, {"name": "fuga"}])  # type: ignore
+
     def test_get_value(self, sample_config: Configuration):
         c = sample_config
         assert c.get_value("robot", "name") == "sample"

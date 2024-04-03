@@ -224,12 +224,21 @@ class Configuration(object):
         dict[str, Any]
             A dict object copied from the provided.
 
+        Raises
+        ------
+        ValueError
+            If the provided mapping is not a dictionary.
+
         Examples
         --------
         >>> c = Configuration()
         >>> c.set_mapping({"robot": {"name": "hoge"}})
         >>> c.load()
         """
+
+        if not isinstance(mapping, dict):
+            msg = f"Unable to create Configuration object: provided object is not a mapping."
+            raise ValueError(msg)
 
         self._set_mapping(mapping)
         if hasattr(self, "_path") and delete_path:
