@@ -89,6 +89,23 @@ class Configuration(object):
             )
             raise AttributeError(msg) from None
 
+    def set_path(self, path: str | Path) -> Path:
+        """Set a file path.
+
+        Parameters
+        ----------
+        path : str | Path
+            A string or Path object.
+
+        Returns
+        -------
+        Path
+            Return the given path.
+        """
+
+        self._path = Path(path)
+        return self._path
+
     @property
     def mapping(self) -> dict[str, Any]:
         """Return a dict loaded from TOML file or string.
@@ -178,7 +195,7 @@ class Configuration(object):
         >>> c.load()
         """
 
-        self._path = Path(path)
+        self.set_path(path)
         with open(path, "rb") as f:
             self._set_mapping(tomllib.load(f))
         return self._mapping
