@@ -58,6 +58,22 @@ class Link(object):
         frame: list[list[float]] | None = None,
         parent: Link | None = None,
     ) -> None:
+        """Initialize the Link class.
+
+        Parameters
+        ----------
+        name : str
+            Name of the link. Required.
+        jointtype : JointType | str
+            Joint type of the link. Required.
+        motion_range : tuple[float, float], optional
+            Motion range of the link. Optional.
+        frame : list[list[float]], optional
+            Adjacent transformation matrix. Optional.
+        parent : Link, optional
+            Parent link of the link. Optional.
+        """
+
         self.name = name
         self.jointtype = jointtype
         self.motion_range = motion_range
