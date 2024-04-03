@@ -54,6 +54,12 @@ class Configuration(object):
 
         self.load_mapping(path)
 
+    def __getitem__(self, key: str) -> Any:
+        return self.mapping[key]
+
+    def __contains__(self, key: str) -> bool:
+        return key in self.mapping
+
     @property
     def path(self) -> Path:
         """Return `Path` if the object is loaded from a file.
