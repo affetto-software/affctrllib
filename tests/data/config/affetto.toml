@@ -1,0 +1,116 @@
+[robot]
+name = "affetto"
+
+[[robot.link]]
+name = "torso"
+jointtype = "fixed"
+frame = [
+  [ 1, 0, 0, 0 ],
+  [ 0, 1, 0, 0 ],
+  [ 0, 0, 1, 0 ],
+]
+
+[[robot.link]]
+name = "waist"
+jointtype = "revolute"
+range = []
+frame = []
+parent =  "torso"
+
+[[robot.link]]
+name = "left shoulder elevation"
+jointtype = "revolute"
+range = []
+frame = []
+parent = "waist"
+
+[[robot.link]]
+name = "left shoulder abduction"
+jointtype = "revolute"
+range = []
+frame = []
+parent = "left shoulder elevation"
+
+[[robot.link]]
+name = "left shoulder flextion"
+jointtype = "revolute"
+range = []
+frame = []
+parent = "left shoulder abduction"
+
+[[robot.link]]
+name = "left elbow rotation"
+jointtype = "revolute"
+range = []
+frame = []
+parent = "left shoulder flextion"
+
+[[robot.link]]
+name = "left elbow flextion"
+jointtype = "revolute"
+range = []
+frame = []
+parent = "left elbow rotation"
+
+[[robot.link]]
+name = "left wrist supination"
+jointtype = "revolute"
+range = []
+frame = []
+parent = "left elbow flextion"
+
+[[robot.link]]
+name = "left hand"
+jointtype = "fixed"
+range = []
+frame = []
+parent = "left wrist supination"
+
+[[robot.link]]
+name = "right shoulder elevation"
+jointtype = "revolute"
+range = []
+frame = []
+parent = "waist"
+
+[[robot.link]]
+name = "right shoulder abduction"
+jointtype = "revolute"
+range = []
+frame = []
+parent = "right shoulder elevation"
+
+[[robot.link]]
+name = "right shoulder flextion"
+jointtype = "revolute"
+range = []
+frame = []
+parent = "right shoulder abduction"
+
+[[robot.link]]
+name = "right elbow rotation"
+jointtype = "revolute"
+range = []
+frame = []
+parent = "right shoulder flextion"
+
+[[robot.link]]
+name = "right elbow flextion"
+jointtype = "revolute"
+range = []
+frame = []
+parent = "right elbow rotation"
+
+[[robot.link]]
+name = "right wrist supination"
+jointtype = "revolute"
+range = []
+frame = []
+parent = "right elbow flextion"
+
+[[robot.link]]
+name = "right hand"
+jointtype = "fixed"
+range = []
+frame = []
+parent = "right wrist supination"

@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 
 from affctrllib.config import Configuration
-from tests import ALTERNATIVE_CONFIG_FILE, SAMPLE_CONFIG_FILE
+from tests import AFFETTO_CONFIG_FILE, ALTERNATIVE_CONFIG_FILE, SAMPLE_CONFIG_FILE
 
 
 @pytest.fixture
@@ -129,3 +129,9 @@ class TestConfig:
         """Test if literal '-1' is not treated as CONFIG_GET_VALUE_NO_DEFAULT."""
         c = sample_config
         assert c.get_value("robot", "invalidkey", default=-1) == -1
+
+
+def test_load_affetto_config() -> None:
+    config = Configuration(AFFETTO_CONFIG_FILE)
+    assert config["robot"]["name"] == "affetto"
+    assert config.get_value("robot", "name") == "affetto"
