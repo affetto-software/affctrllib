@@ -302,3 +302,38 @@ class Configuration(object):
         else:
             value = self._get_value_default(self.mapping, *keys, default=default)
         return value
+
+    def copy(self, *keys: str) -> Configuration:
+        """Create a copied Configuration object.
+
+        When no arguments is provided and the original Configuration
+        is loaded from a file, the copied object also keeps the
+        original file path.
+
+        Parameters
+        ----------
+        *keys : str
+            A sequence of keys.
+
+        Returns
+        -------
+        Configuration
+            Copied Configuration object.
+
+        Examples
+        --------
+        >>> c1 = Configuration("config.toml")
+        >>> c2 = c1.copy()
+        >>> c1.path == c2.path
+        True
+        >>> c1.mapping
+        {"robot": {"name": "Robot", "link": [{"name": "link1"}, {"name": "link2"}]}}
+        >>> c3 = c1.copy("robot")
+        >>> c3.mapping
+        {"name": "Robot", "link": [{"name": "link1"}, {"name": "link2"}]}
+        """
+
+        new_config = Configuration.load_from_mapping(self.get_value(*keys))
+        if len(keys) == 0 and self.is_loaded_from_file():
+            new_config.set_path(self.path)
+        return new_config

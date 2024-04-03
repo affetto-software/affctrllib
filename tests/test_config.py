@@ -5,7 +5,12 @@ from __future__ import annotations
 import pytest
 
 from affctrllib.config import Configuration
-from tests import AFFETTO_CONFIG_FILE, ALTERNATIVE_CONFIG_FILE, SAMPLE_CONFIG_FILE
+from tests import (
+    AFFETTO_CONFIG_FILE,
+    ALTERNATIVE_CONFIG_FILE,
+    SAMPLE_CONFIG_FILE,
+    SIMPLE_CONFIG_FILE,
+)
 
 
 @pytest.fixture
@@ -17,6 +22,12 @@ def sample_config() -> Configuration:
 @pytest.fixture
 def alternative_config() -> Configuration:
     config = Configuration(ALTERNATIVE_CONFIG_FILE)
+    return config
+
+
+@pytest.fixture
+def simple_config() -> Configuration:
+    config = Configuration(SIMPLE_CONFIG_FILE)
     return config
 
 
@@ -55,6 +66,26 @@ class TestConfig:
         c = Configuration.load_from_mapping({"robot": {"name": "sample"}})
         assert c.mapping["robot"]["name"] == "sample"
         assert c.is_loaded_from_file() is False
+
+    def test_copy(self, simple_config):
+        c = simple_config.copy()
+        assert c.mapping is not simple_config.mapping
+        assert c.mapping == simple_config.mapping
+        assert c.is_loaded_from_file()
+
+    def test_copy_subconfig(self, simple_config):
+        c = simple_config.copy("robot")
+        assert c.mapping is not simple_config["robot"]
+        assert c.mapping == simple_config["robot"]
+        assert not c.is_loaded_from_file()
+
+    def test_copy_subconfig_error_given_value_is_not_dict(self, simple_config):
+        with pytest.raises(ValueError):
+            _ = simple_config.copy("robot", "chain", "link")
+
+    def test_copy_subconfig_error_given_key_is_not_found(self, simple_config):
+        with pytest.raises(KeyError):
+            _ = simple_config.copy("invalid_key")
 
     def test_load_mapping(self):
         c = Configuration()
