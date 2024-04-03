@@ -86,6 +86,20 @@ class Link(object):
 
     @classmethod
     def from_config(cls, config: dict[str, Any]) -> Link:
+        """Create a Link object from a configuration.
+
+        Parameters
+        ----------
+        config : dict[str, Any]
+            Dictionary that contains information to create Link
+        object.
+
+        Returns
+        -------
+        Link
+            Initialized Link object.
+        """
+
         name = config["name"]
         jointtype = JointType.from_str(config["jointtype"])
         motion_range = config.get("range", None)
