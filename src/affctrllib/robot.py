@@ -100,45 +100,40 @@ class Link(object):
         return self._name
 
     @name.setter
-    def name(self, newname: str) -> str:
+    def name(self, newname: str) -> None:
         self._name = newname
-        return self._name
 
     @property
     def jointtype(self) -> JointType:
         return self._jointtype
 
     @jointtype.setter
-    def jointtype(self, jointtype: str | JointType) -> JointType:
+    def jointtype(self, jointtype: str | JointType) -> None:
         if isinstance(jointtype, str):
             self._jointtype = JointType.from_str(jointtype)
         else:
             self._jointtype = jointtype
-        return self._jointtype
 
     @property
     def motion_range(self) -> tuple[float, float] | None:
         return self._motion_range
 
     @motion_range.setter
-    def motion_range(self, motion_range: tuple[float, float] | None) -> tuple[float, float] | None:
+    def motion_range(self, motion_range: tuple[float, float] | None) -> None:
         self._motion_range = motion_range
-        return self._motion_range
 
     @property
     def frame(self) -> list[list[float]] | None:
         return self._frame
 
     @frame.setter
-    def frame(self, frame: list[list[float]] | None) -> list[list[float]] | None:
+    def frame(self, frame: list[list[float]] | None) -> None:
         self._frame = frame
-        return self._frame
 
     @property
     def parent(self) -> str | None:
         return self._parent
 
     @parent.setter
-    def parent(self, link: str | None) -> str | None:
+    def parent(self, link: str | None) -> None:
         self._parent = link
-        return self._parent
