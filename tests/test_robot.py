@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from affctrllib.robot import JointType, Link
+from affctrllib.robot import Chain, JointType, Link
 
 
 @pytest.mark.parametrize(
@@ -119,3 +119,144 @@ class TestLink:
     def test_frame(self, link: Link, frame: list[list[float]] | None) -> None:
         link.frame = frame
         assert link.frame == frame
+
+
+CHAIN_EXAMPLE_01 = (
+    # chain configuration
+    {
+        "name": "chain#01",
+        "link": [
+            {"name": "link#00", "jointtype": "fixed"},
+            {"name": "link#01", "jointtype": "revolute", "parent": "link#00"},
+            {"name": "link#02", "jointtype": "revolute", "parent": "link#01"},
+            {"name": "link#03", "jointtype": "revolute", "parent": "link#02"},
+        ],
+    },
+    # dof
+    3,
+)
+CHAIN_EXAMPLE_02 = (
+    # chain configuration
+    {
+        "name": "chain#02",
+        "link": [
+            {"name": "link#00", "jointtype": "fixed"},
+            {"name": "link#01", "jointtype": "prismatic", "parent": "link#00"},
+        ],
+    },
+    # dof
+    1,
+)
+CHAIN_EXAMPLE_03 = (
+    # chain configuration
+    {
+        "name": "chain#03",
+        "link": [
+            {"name": "link#00", "jointtype": "fixed"},
+            {"name": "link#01", "jointtype": "revolute", "parent": "link#00"},
+            {"name": "link#02", "jointtype": "revolute", "parent": "link#01"},
+            {"name": "link#03", "jointtype": "revolute", "parent": "link#02"},
+            {"name": "link#04", "jointtype": "revolute", "parent": "link#02"},
+            {"name": "link#05", "jointtype": "revolute", "parent": "link#03"},
+            {"name": "link#06", "jointtype": "revolute", "parent": "link#04"},
+        ],
+    },
+    # dof
+    6,
+)
+
+
+@pytest.fixture
+def chain01() -> Chain:
+    config = CHAIN_EXAMPLE_01[0]
+    return Chain.from_config(config)
+
+
+@pytest.fixture
+def chain02() -> Chain:
+    config = CHAIN_EXAMPLE_02[0]
+    return Chain.from_config(config)
+
+
+@pytest.fixture
+def chain03() -> Chain:
+    config = CHAIN_EXAMPLE_03[0]
+    return Chain.from_config(config)
+
+
+class TestChain:
+    def test_init(self) -> None:
+        chain = Chain([])
+        assert chain.dof == 0
+        assert len(chain) == 0
+        assert chain.name == ""
+
+    @pytest.mark.parametrize(
+        "chain_config",
+        [
+            CHAIN_EXAMPLE_01,
+            CHAIN_EXAMPLE_02,
+            CHAIN_EXAMPLE_03,
+        ],
+    )
+    def test_from_config(self, chain_config: tuple[dict, int]) -> None:
+        chain = Chain.from_config(chain_config[0])
+        assert chain.name == chain_config[0]["name"]
+        assert chain.dof == chain_config[1]
+
+    @pytest.mark.parametrize("name", ["robot01", "robot02", "robot03"])
+    def test_name(self, chain01: Chain, name: str) -> None:
+        chain01.name = name
+        assert chain01.name == name
+
+    def test_iterator(self, chain01: Chain) -> None:
+        chain = chain01
+        for link, expected in zip(chain, chain.links):
+            assert link is expected
+
+    @pytest.mark.parametrize(
+        "chain_config,expected",
+        [
+            (CHAIN_EXAMPLE_01[0], ["link#00", "link#01", "link#02", "link#03"]),
+            (CHAIN_EXAMPLE_02[0], ["link#00", "link#01"]),
+            (CHAIN_EXAMPLE_03[0], ["link#00", "link#01", "link#02", "link#03", "link#04", "link#05", "link#06"]),
+        ],
+    )
+    def test_get_link_names(self, chain_config: dict, expected: list[str]) -> None:
+        chain = Chain.from_config(chain_config)
+        assert chain.get_link_names() == expected
+
+    @pytest.mark.parametrize("name", ["link#00", "link#01", "link#02"])
+    def test_get_link(self, chain01: Chain, name: str) -> None:
+        chain = chain01
+        link = chain.get_link(name)
+        assert link.name == name
+
+    def test_get_link_error_when_not_found(self, chain01: Chain) -> None:
+        chain = chain01
+        with pytest.raises(KeyError) as err:
+            _ = chain.get_link("invalid_link_name")
+        assert "Link was not found in chain: invalid_link_name" in str(err.value)
+
+    @pytest.mark.parametrize(
+        "name,expected",
+        [
+            ("link#00", ["link#01"]),
+            ("link#01", ["link#02"]),
+            ("link#02", ["link#03", "link#04"]),
+            ("link#03", ["link#05"]),
+            ("link#04", ["link#06"]),
+        ],
+    )
+    def test_get_children(self, chain03: Chain, name: str, expected: list[str]) -> None:
+        chain = chain03
+        children = chain.get_children(name)
+        assert len(children) == len(expected)
+        for c, e in zip(children, expected):
+            assert c.name == e
+
+    def test_get_children_error_when_not_found(self, chain03: Chain) -> None:
+        chain = chain03
+        with pytest.raises(KeyError) as err:
+            _ = chain.get_children("invalid_link_name")
+        assert "Link was not found in chain: invalid_link_name" in str(err.value)

@@ -6,7 +6,9 @@ It provides functionalities to handle the fundamental kinematic model of a robot
 from __future__ import annotations
 
 from enum import Enum, auto
-from typing import Any
+from functools import cache, cached_property
+from traceback import format_tb
+from typing import Any, Iterator
 
 
 class JointType(Enum):
@@ -151,3 +153,205 @@ class Link(object):
     @parent.setter
     def parent(self, link: str | None) -> None:
         self._parent = link
+
+
+class Chain(object):
+    """Kinematic chain of a robot."""
+
+    _name: str
+    _links: list[Link]
+    _link_table: dict[str, Link]
+    _chain: dict[str, list[Link]]
+
+    def __init__(self, links: list[Link], name: str = "") -> None:
+        """Initialize the Chain class.
+
+        Parameters
+        ----------
+        links : list[Link]
+            A list of link objects to construct a kinematic chain.
+        name : str
+            Name of the chain.
+        """
+
+        self.name = name
+        self._links = links
+        self._construct_link_table()
+        self._construct_chain()
+
+    @classmethod
+    def from_config(cls, config: dict[str, Any]) -> Chain:
+        """Create a Chain object from a configuration.
+
+        Parameters
+        ----------
+        config : dict[str, Any]
+            A dictionary that contains a configuration of the chain.
+
+        Returns
+        -------
+        Chain
+            Initialized Chain object.
+        """
+
+        name = config.get("name", "")
+        link_config = config.get("link", [])
+        links: list[Link] = []
+        for c in link_config:
+            links.append(Link.from_config(c))
+        return Chain(links, name)
+
+    def __len__(self) -> int:
+        """Return the number of links the chain has.
+
+        Returns
+        -------
+        int
+            The number of links.
+        """
+
+        return len(self._links)
+
+    def __iter__(self) -> Iterator[Link]:
+        """Return an iterator that iterates links in the chain.
+
+        Returns
+        -------
+        Iterator[Link]
+            An iterator of links.
+        """
+
+        return iter(self._links)
+
+    @cached_property
+    def dof(self) -> int:
+        """Return the total degree of freedom of the chain.
+
+        Returns
+        -------
+        int
+            The degree of freedom.
+        """
+
+        dof = 0
+        for link in self._links:
+            if link.jointtype in (JointType.REVOLUTE, JointType.PRISMATIC):
+                dof += 1
+        return dof
+
+    @property
+    def name(self) -> str:
+        """Return the name of the chain.
+
+        Returns
+        -------
+        str
+            Name of the chain.
+        """
+
+        return self._name
+
+    @name.setter
+    def name(self, newname: str) -> None:
+        """Set a new name for the chain.
+
+        Parameters
+        ----------
+        newname : str
+            A string to name the chain.
+        """
+
+        self._name = newname
+
+    @property
+    def links(self) -> list[Link]:
+        """Return a list of links in the chain.
+
+        Returns
+        -------
+        list[Link]
+            List of links in the chain.
+        """
+
+        return self._links
+
+    @cache
+    def get_link_names(self) -> list[str]:
+        """Return a list of names of links.
+
+        Returns
+        -------
+        list[str]
+            Return a list of strings
+        """
+
+        return [link.name for link in self._links]
+
+    def _construct_link_table(self) -> None:
+        # Generate a link table that maps a link name to the
+        # corresponding link object. It is utilized to make finding a
+        # link object by its name faster.
+        self._link_table = {}
+        for link in self._links:
+            self._link_table[link.name] = link
+
+    def _construct_chain(self) -> None:
+        # Generate a kinematic chain structure from provided link
+        # objects. It maps a parent link name to a list of link
+        # objects that connect to the parent link.
+        self._chain = {}
+        for link in self._links:
+            if link.parent:
+                children = self._chain.get(link.parent, [])
+                children.append(link)
+                self._chain[link.parent] = children
+
+    def get_link(self, link_name: str) -> Link:
+        """Get a link object by its name.
+
+        Parameters
+        ----------
+        link_name : str
+            Name of the link.
+
+        Returns
+        -------
+        Link
+            Link object.
+
+        Raises
+        ------
+        KeyError
+            If the given name is not found in the chain.
+        """
+
+        try:
+            return self._link_table[link_name]
+        except KeyError as err:
+            msg = f"Link was not found in chain: {link_name}\n" + format_tb(err.__traceback__)[0] + err.args[0]
+            raise KeyError(msg) from None
+
+    def get_children(self, link_name: str) -> list[Link]:
+        """Get a list of links from their parent name.
+
+        Parameters
+        ----------
+        link_name : str
+            Name of a parent link name.
+
+        Returns
+        -------
+        list[Link]
+            List of child links of a parent link.
+
+        Raises
+        ------
+        KeyError
+            If the give name is not found in the chain.
+        """
+
+        try:
+            return self._chain[link_name]
+        except KeyError as err:
+            msg = f"Link was not found in chain: {link_name}\n" + format_tb(err.__traceback__)[0] + err.args[0]
+            raise KeyError(msg) from None
