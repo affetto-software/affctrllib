@@ -6,6 +6,7 @@ It provides functionalities to handle the fundamental kinematic model of a robot
 from __future__ import annotations
 
 from enum import Enum, auto
+from typing import Any
 
 
 class JointType(Enum):
@@ -51,7 +52,7 @@ class Link(object):
     _jointtype: JointType
     _motion_range: tuple[float, float] | None
     _frame: list[list[float]] | None
-    _parent: Link | None
+    _parent: str | None
 
     def __init__(
         self,
@@ -59,7 +60,7 @@ class Link(object):
         jointtype: JointType | str,
         motion_range: tuple[float, float] | None = None,
         frame: list[list[float]] | None = None,
-        parent: Link | None = None,
+        parent: str | None = None,
     ) -> None:
         """Initialize the Link class.
 
@@ -73,8 +74,8 @@ class Link(object):
             Motion range of the link. Optional.
         frame : list[list[float]], optional
             Adjacent transformation matrix. Optional.
-        parent : Link, optional
-            Parent link of the link. Optional.
+        parent : str, optional
+            Parent link name. Optional.
         """
 
         self.name = name
@@ -82,6 +83,17 @@ class Link(object):
         self.motion_range = motion_range
         self.frame = frame
         self.parent = parent
+
+    @classmethod
+    def from_config(cls, config: dict[str, Any]) -> Link:
+        name = config["name"]
+        jointtype = JointType.from_str(config["jointtype"])
+        motion_range = config.get("range", None)
+        if motion_range is not None:
+            motion_range = tuple(motion_range)
+        frame = config.get("frame", None)
+        parent = config.get("parent", None)
+        return cls(name, jointtype, motion_range, frame, parent)
 
     @property
     def name(self) -> str:
@@ -123,10 +135,10 @@ class Link(object):
         return self._frame
 
     @property
-    def parent(self) -> Link | None:
+    def parent(self) -> str | None:
         return self._parent
 
     @parent.setter
-    def parent(self, link: Link | None) -> Link | None:
+    def parent(self, link: str | None) -> str | None:
         self._parent = link
         return self._parent

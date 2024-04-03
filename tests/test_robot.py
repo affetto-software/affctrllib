@@ -45,6 +45,27 @@ class TestLink:
         assert link.frame is None
         assert link.parent is None
 
+    @pytest.mark.parametrize(
+        "config",
+        [
+            {"name": "link0", "jointtype": "fixed"},
+            {"name": "link1", "jointtype": "revolute", "range": [0, 90], "parent": "torso"},
+            {"name": "link2", "jointtype": "prismatic", "range": [0, 0.01], "parent": "waist"},
+        ],
+    )
+    def test_from_config(self, config: dict) -> None:
+        link = Link.from_config(config)
+        assert link.name == config["name"]
+        assert str(link.jointtype) == config["jointtype"]
+        if "range" in config:
+            assert link.motion_range == tuple(config["range"])
+        else:
+            assert link.motion_range is None
+        if "parent" in config:
+            assert link.parent == config["parent"]
+        else:
+            assert link.parent is None
+
     @pytest.mark.parametrize("name", ["link0", "link1", "link2"])
     def test_name(self, link: Link, name: str) -> None:
         link.name = name
