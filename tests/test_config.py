@@ -27,6 +27,15 @@ class TestConfig:
         assert hasattr(config, "_mapping") is False
         assert config.is_loaded_from_file() is False
 
+    def test_getitem(self, sample_config: Configuration):
+        c = sample_config
+        assert isinstance(c["robot"], dict)
+        assert c["robot"]["name"] == "sample"
+
+    def test_contains(self, sample_config: Configuration):
+        c = sample_config
+        assert "robot" in c
+
     def test_path_raise_exception(self):
         config = Configuration()
         with pytest.raises(AttributeError) as excinfo:
