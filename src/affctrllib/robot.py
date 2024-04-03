@@ -40,6 +40,9 @@ class JointType(Enum):
                 return e
         raise ValueError(f"unrecognized joint type: {name}")
 
+    def __str__(self) -> str:
+        return self.name.lower()
+
 
 class Link(object):
     """Link model."""

@@ -24,6 +24,12 @@ def test_jointtype_from_str_raise_error() -> None:
         _ = JointType.from_str("hoge")
 
 
+@pytest.mark.parametrize("jointtype", ["fixed", "revolute", "prismatic"])
+def test_jointtype_convert_to_str(jointtype: str) -> None:
+    j = JointType.from_str(jointtype)
+    assert str(j) == jointtype
+
+
 @pytest.fixture
 def link() -> Link:
     return Link("link", "fixed")
