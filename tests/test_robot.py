@@ -4,7 +4,9 @@ from __future__ import annotations
 
 import pytest
 
+from affctrllib.config import Configuration
 from affctrllib.robot import Chain, JointType, Link
+from tests import AFFETTO_CONFIG_FILE
 
 
 @pytest.mark.parametrize(
@@ -260,3 +262,10 @@ class TestChain:
         with pytest.raises(KeyError) as err:
             _ = chain.get_children("invalid_link_name")
         assert "Link was not found in chain: invalid_link_name" in str(err.value)
+
+
+def test_affeto_chain() -> None:
+    config = Configuration(AFFETTO_CONFIG_FILE)
+    chain = Chain.from_config(config["robot"])
+    assert chain.name == "affetto"
+    assert chain.dof == 13
