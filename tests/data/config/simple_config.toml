@@ -1,0 +1,7 @@
+[robot]
+name = "simple"
+
+[robot.chain]
+[[robot.chain.link]]
+  name = "joint#000"
+  jointtype = "fixed"
