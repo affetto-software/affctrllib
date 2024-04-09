@@ -49,6 +49,10 @@ class Chain(object):
         # Only movable links are findable.
         return self._link_normalized_names.index(self.translate_name(name))
 
+    def name(self, index: int) -> str:
+        # Only movable links are findable.
+        return self._link_names[index]
+
 
 class Affetto(object):
     _config_path: Path
@@ -113,3 +117,6 @@ class Affetto(object):
 
     def joint_index(self, name: str) -> int:
         return self._chain.find(name)
+
+    def joint_name(self, index: int) -> str:
+        return self._chain.name(index)
