@@ -37,13 +37,16 @@ class Chain(object):
         links: list[dict[str, Any]] = config["link"]
         for i, link in enumerate(links):
             name = link.get("name", f"link{i:02}")
-            self._link_names.append(name)
-            self._link_normalized_names.append(self.translate_name(name))
             if link["jointtype"] in ["revolute", "prismatic"]:
+                # Only movable links are stored.
+                self._link_names.append(name)
+                self._link_normalized_names.append(self.translate_name(name))
                 dof += 1
         self._dof = dof
+        assert self._dof == len(self._link_names)
 
     def find(self, name: str) -> int:
+        # Only movable links are findable.
         return self._link_normalized_names.index(self.translate_name(name))
 
 
