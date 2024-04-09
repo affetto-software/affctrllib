@@ -12,8 +12,11 @@ else:
 
 class Chain(object):
     _dof: int
+    _link_names: list[str]
+    _link_normalized_names: list[str]
 
     def __init__(self, config: dict[str, Any] | None = None) -> None:
+        self._translation_table = str.maketrans({" ": "", "-": "", "_": ""})
         if config is not None:
             self.load(config)
 
@@ -24,13 +27,24 @@ class Chain(object):
     def set_dof(self, dof: int) -> None:
         self._dof = dof
 
+    def translate_name(self, name: str) -> str:
+        return name.translate(self._translation_table)
+
     def load(self, config: dict[str, Any]) -> None:
         dof = 0
+        self._link_names = []
+        self._link_normalized_names = []
         links: list[dict[str, Any]] = config["link"]
-        for link in links:
+        for i, link in enumerate(links):
+            name = link.get("name", f"link{i:02}")
+            self._link_names.append(name)
+            self._link_normalized_names.append(self.translate_name(name))
             if link["jointtype"] in ["revolute", "prismatic"]:
                 dof += 1
         self._dof = dof
+
+    def find(self, name: str) -> int:
+        return self._link_normalized_names.index(self.translate_name(name))
 
 
 class Affetto(object):
@@ -93,3 +107,6 @@ class Affetto(object):
             return self._chain.dof
         except AttributeError:
             return 13
+
+    def joint_index(self, name: str) -> int:
+        return self._chain.find(name)
