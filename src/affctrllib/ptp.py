@@ -58,6 +58,21 @@ class Profile(ABC, Generic[JointT]):
         return (self._qF - self._q0) * self.dds(t)
 
 
+class ConstVelocityProfile(Profile, Generic[JointT]):
+    def __init__(self, q0: JointT, qF: JointT, T: float, t0: float):
+        Profile.__init__(self, q0, qF, T, t0)
+
+    def s(self, t: float) -> float:
+        t_rel = t - self._t0
+        return t_rel / self._T
+
+    def ds(self, _: float) -> float:
+        return 1.0 / self._T
+
+    def dds(self, _: float) -> float:
+        return 0
+
+
 class TriangularVelocityProfile(Profile, Generic[JointT]):
     def __init__(self, q0: JointT, qF: JointT, T: float, t0: float):
         Profile.__init__(self, q0, qF, T, t0)
@@ -321,6 +336,9 @@ class FifthDegreePolynomialProfile(Profile, Generic[JointT]):
 
 
 PTP_ACCEPTABLE_PROFILE_NAMES = {
+    "const velocity": ConstVelocityProfile,
+    "const": ConstVelocityProfile,
+    "con": ConstVelocityProfile,
     "triangular velocity": TriangularVelocityProfile,
     "triangular": TriangularVelocityProfile,
     "tri": TriangularVelocityProfile,

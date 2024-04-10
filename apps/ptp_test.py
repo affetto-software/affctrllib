@@ -10,10 +10,10 @@ vmax = np.array([16, 32, 16])
 tb = np.array([2, 3, 4])
 T = 10
 t0 = 0
-profile = "trapez"  # or "5th" or "tri" or "sin"
+profile = "trapez"  # or "5th" or "tri" or "sin" or "con"
 N = 1000
 
-if profile in ["tri", "5th", "sin"]:
+if profile in ["tri", "5th", "sin", "con"]:
     ptp = PTP(q0, qF, T, t0, profile_name=profile)
 else:
     ptp = PTP(q0, qF, T, t0, vmax=vmax, profile_name=profile)
@@ -26,7 +26,8 @@ for i in range(N):
     t = i * dt
     q = ptp.q(t)
     dq = ptp.dq(t)
-    ddq = (ptp.dq(t) - dq_prev) / dt
+    # ddq = (ptp.dq(t) - dq_prev) / dt
+    ddq = ptp.ddq(t)
     dq_prev = dq
     logger.store_data(np.concatenate(([t], q, dq, ddq)))
 logger.dump()
