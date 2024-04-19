@@ -10,14 +10,14 @@ import numpy as np
 from ._periodic_runner import PeriodicRunner
 from .affcomm import AffComm, unzip_array_as_ndarray
 from .affetto import Affetto
-from .filter import Filter
+from .filter import Butterworth, Filter
 from .logger import Logger
 from .timer import Timer
 
 
 class AffState(Affetto, PeriodicRunner):
     state_config: dict[str, Any]
-    _filter_list: list[Filter | None]
+    _filter_list: list[Filter | Butterworth | None]
     _raw_data: list[float] | list[int] | np.ndarray
     _data_ndarray: np.ndarray
     _filtered_data: list[np.ndarray]
@@ -36,7 +36,14 @@ class AffState(Affetto, PeriodicRunner):
         PeriodicRunner.__init__(self)
 
         self.set_frequency(dt=dt, freq=freq)
-        self._filter_list = [Filter(), Filter(), Filter()]
+        # self._filter_list = [Filter(), Filter(), Filter()]
+        cutoff = 10
+        order = 5
+        self._filter_list = [
+            Butterworth(cutoff, self.freq, order),
+            Butterworth(cutoff, self.freq, order),
+            Butterworth(cutoff, self.freq, order),
+        ]
         self._idled = False
 
         if not hasattr(self, "_freq"):
