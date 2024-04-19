@@ -31,24 +31,27 @@ class AffState(Affetto, PeriodicRunner):
         config: str | Path | None = None,
         dt: float | None = None,
         freq: float | None = None,
+        butterworth: bool = False,
     ) -> None:
         super().__init__(config)
         PeriodicRunner.__init__(self)
 
         self.set_frequency(dt=dt, freq=freq)
-        # self._filter_list = [Filter(), Filter(), Filter()]
-        cutoff = 10
-        order = 5
-        self._filter_list = [
-            Butterworth(cutoff, self.freq, order),
-            Butterworth(cutoff, self.freq, order),
-            Butterworth(cutoff, self.freq, order),
-        ]
+        self._filter_list = [Filter(), Filter(), Filter()]
         self._idled = False
 
         if not hasattr(self, "_freq"):
             self.set_freq(self.DEFAULT_FREQ)
             warnings.warn(f"Sensor frequency is not provided, set to default: {self._freq}")
+
+        if butterworth:
+            cutoff = 10
+            order = 5
+            self._filter_list = [
+                Butterworth(cutoff, self.freq, order),
+                Butterworth(cutoff, self.freq, order),
+                Butterworth(cutoff, self.freq, order),
+            ]
 
     def load_config(self, config: dict[str, Any]) -> None:
         super().load_config(config)
@@ -172,9 +175,10 @@ class AffStateThread(Thread):
         freq: float | None = None,
         logging: bool = True,
         output: str | Path | None = None,
+        butterworth: bool = False,
     ) -> None:
         self._acom = AffComm(config)
-        self._astate = AffState(config, dt, freq)
+        self._astate = AffState(config, dt=dt, freq=freq, butterworth=butterworth)
         self._lock = Lock()
         self._stopped = Event()
         self._idled = Event()
