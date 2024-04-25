@@ -39,7 +39,7 @@ frame = []
 parent = "left shoulder elevation"
 
 [[affetto.chain.link]]
-name = "left shoulder flextion"
+name = "left shoulder flexion"
 jointtype = "revolute"
 range = []
 frame = []
@@ -50,10 +50,10 @@ name = "left elbow rotation"
 jointtype = "revolute"
 range = []
 frame = []
-parent = "left shoulder flextion"
+parent = "left shoulder flexion"
 
 [[affetto.chain.link]]
-name = "left elbow flextion"
+name = "left elbow flexion"
 jointtype = "revolute"
 range = []
 frame = []
@@ -64,7 +64,7 @@ name = "left wrist supination"
 jointtype = "revolute"
 range = []
 frame = []
-parent = "left elbow flextion"
+parent = "left elbow flexion"
 
 [[affetto.chain.link]]
 name = "left hand"
@@ -88,7 +88,7 @@ frame = []
 parent = "right shoulder elevation"
 
 [[affetto.chain.link]]
-name = "right shoulder flextion"
+name = "right shoulder flexion"
 jointtype = "revolute"
 range = []
 frame = []
@@ -99,10 +99,10 @@ name = "right elbow rotation"
 jointtype = "revolute"
 range = []
 frame = []
-parent = "right shoulder flextion"
+parent = "right shoulder flexion"
 
 [[affetto.chain.link]]
-name = "right elbow flextion"
+name = "right elbow flexion"
 jointtype = "revolute"
 range = []
 frame = []
@@ -113,7 +113,7 @@ name = "right wrist supination"
 jointtype = "revolute"
 range = []
 frame = []
-parent = "right elbow flextion"
+parent = "right elbow flexion"
 
 [[affetto.chain.link]]
 name = "right hand"
