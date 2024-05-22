@@ -261,6 +261,7 @@ class AffCtrlThread(Thread):
         output: str | Path | None = None,
         sensor_dt: float | None = None,
         sensor_freq: float | None = None,
+        butterworth: bool = False,
     ):
         self._acom = AffComm(config)
         self._acom.create_command_socket()
@@ -268,7 +269,7 @@ class AffCtrlThread(Thread):
         if astate is not None:
             self._astate = astate
         else:
-            self._astate = self._create_state_estimator(config, dt=sensor_dt, freq=sensor_freq)
+            self._astate = self._create_state_estimator(config, dt=sensor_dt, freq=sensor_freq, butterworth=butterworth)
             self._astate_created_inside = True
         self._actrl = AffCtrl(config, dt, freq)
         self._lock = Lock()
@@ -288,8 +289,9 @@ class AffCtrlThread(Thread):
         config: str | Path | None = None,
         dt: float | None = None,
         freq: float | None = None,
+        butterworth: bool = False,
     ) -> AffStateThread:
-        return AffStateThread(config, dt=dt, freq=freq, logging=False, output=None)
+        return AffStateThread(config, dt=dt, freq=freq, logging=False, output=None, butterworth=butterworth)
 
     def _create_logger(self, output: str | Path | None) -> Logger:
         self._logger = Logger(output)

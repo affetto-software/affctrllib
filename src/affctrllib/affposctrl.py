@@ -256,8 +256,9 @@ class AffPosCtrlThread(AffCtrlThread):
         output: str | Path | None = None,
         sensor_dt: float | None = None,
         sensor_freq: float | None = None,
+        butterworth: bool = False,
     ):
-        super().__init__(astate, config, dt, freq, logging, output, sensor_dt, sensor_freq)
+        super().__init__(astate, config, dt, freq, logging, output, sensor_dt, sensor_freq, butterworth)
         del self._actrl
         self._actrl = AffPosCtrl(config, dt, freq)
         self.reset_trajectory()
@@ -267,8 +268,9 @@ class AffPosCtrlThread(AffCtrlThread):
         config: str | Path | None = None,
         dt: float | None = None,
         freq: float | None = None,
+        butterworth: bool = False,
     ) -> AffStateThread:
-        return AffStateThread(config, dt=dt, freq=freq)
+        return AffStateThread(config, dt=dt, freq=freq, logging=False, output=None, butterworth=butterworth)
 
     def _create_logger(self, output: str | Path) -> Logger:
         super()._create_logger(output)
