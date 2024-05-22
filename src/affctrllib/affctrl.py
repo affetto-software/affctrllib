@@ -100,7 +100,7 @@ class AffCtrl(Affetto, PeriodicRunner, Generic[JointT]):
             return (
                 self._scale_gain * (c1 - self._input_range[0]),
                 self._scale_gain * (c2 - self._input_range[0]),
-            )
+            )  # type: ignore
         except AttributeError:
             return (u1, u2)
 
