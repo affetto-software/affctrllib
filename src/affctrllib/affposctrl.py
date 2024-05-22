@@ -92,8 +92,7 @@ class Feedback(ABC, Generic[JointT]):
         pb: JointT,
         qdes: JointT,
         dqdes: JointT,
-    ) -> tuple[JointT, JointT]:
-        ...
+    ) -> tuple[JointT, JointT]: ...
 
 
 class FeedbackPID(Feedback[JointT]):
