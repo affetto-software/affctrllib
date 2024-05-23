@@ -5,7 +5,6 @@ import os
 
 import numpy as np
 
-import affctrllib as acl
 from affctrllib import AffComm, AffState, Logger, Timer
 
 DEFAULT_CONFIG_PATH = os.path.join(os.path.dirname(__file__), "config.toml")
@@ -58,7 +57,7 @@ def mainloop(config, output, freq, period):
     if period == 0:
         print(f"To finish process, type Ctrl-C.")
 
-    astate = AffState(config)
+    astate = AffState(config, butterworth=False)
     if freq > 0:
         astate.freq = freq
     logger = Logger(output)
