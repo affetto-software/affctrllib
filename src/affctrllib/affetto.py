@@ -92,7 +92,6 @@ class Affetto:
     def name(self) -> str:
         return self._name
 
-    @abstractmethod
     def load_name(self, config: dict[str, Any]) -> None:
         try:
             self._name = config["name"]
@@ -103,7 +102,6 @@ class Affetto:
     def chain(self) -> Chain:
         return self._chain
 
-    @abstractmethod
     def load_chain(self, config: dict[str, Any]) -> None:
         try:
             self._chain = Chain(config["chain"])
