@@ -1,3 +1,7 @@
+# ruff: noqa: RET505,ANN003
+
+from __future__ import annotations
+
 import warnings
 from abc import ABC, abstractmethod
 from typing import Generic, TypeVar
@@ -5,6 +9,7 @@ from typing import Generic, TypeVar
 import numpy as np
 
 JointT = TypeVar("JointT", int, float, np.ndarray)
+TOL = 1e-12
 
 
 class Profile(ABC, Generic[JointT]):
@@ -13,7 +18,7 @@ class Profile(ABC, Generic[JointT]):
     _T: float
     _t0: float
 
-    def __init__(self, q0: JointT, qF: JointT, T: float, t0: float):
+    def __init__(self, q0: JointT, qF: JointT, T: float, t0: float) -> None:
         self._q0 = q0
         self._qF = qF
         self._T = T
@@ -36,16 +41,13 @@ class Profile(ABC, Generic[JointT]):
         return self._t0
 
     @abstractmethod
-    def s(self, t: float) -> JointT | float:
-        ...
+    def s(self, t: float) -> JointT | float: ...
 
     @abstractmethod
-    def ds(self, t: float) -> JointT | float:
-        ...
+    def ds(self, t: float) -> JointT | float: ...
 
     @abstractmethod
-    def dds(self, t: float) -> JointT | float:
-        ...
+    def dds(self, t: float) -> JointT | float: ...
 
     def q(self, t: float) -> JointT | float:
         s = self.s(t)
@@ -59,7 +61,7 @@ class Profile(ABC, Generic[JointT]):
 
 
 class ConstVelocityProfile(Profile, Generic[JointT]):
-    def __init__(self, q0: JointT, qF: JointT, T: float, t0: float):
+    def __init__(self, q0: JointT, qF: JointT, T: float, t0: float) -> None:
         Profile.__init__(self, q0, qF, T, t0)
 
     def s(self, t: float) -> float:
@@ -74,7 +76,7 @@ class ConstVelocityProfile(Profile, Generic[JointT]):
 
 
 class TriangularVelocityProfile(Profile, Generic[JointT]):
-    def __init__(self, q0: JointT, qF: JointT, T: float, t0: float):
+    def __init__(self, q0: JointT, qF: JointT, T: float, t0: float) -> None:
         Profile.__init__(self, q0, qF, T, t0)
         self._s_coeff = 2.0 / (T * T)
         self._ds_coeff = 4.0 / (T * T)
@@ -114,12 +116,12 @@ class TriangularVelocityProfile(Profile, Generic[JointT]):
 
 
 class TrapezoidalVelocityProfile(Profile, Generic[JointT]):
-    _vmax: JointT
-    _tb: JointT
-    _vM: JointT
-    _a: JointT
-    _zeros: JointT
-    _ones: JointT
+    _vmax: JointT | float | np.ndarray
+    _tb: JointT | float | np.ndarray
+    _vM: JointT | float | np.ndarray
+    _a: JointT | float | np.ndarray
+    _zeros: JointT | float | np.ndarray
+    _ones: JointT | float | np.ndarray
 
     def __init__(
         self,
@@ -129,7 +131,7 @@ class TrapezoidalVelocityProfile(Profile, Generic[JointT]):
         t0: float,
         vmax: JointT | float | None = None,
         tb: JointT | float | None = None,
-    ):
+    ) -> None:
         Profile.__init__(self, q0, qF, T, t0)
         if vmax is not None:
             self.set_vmax(vmax)
@@ -145,22 +147,22 @@ class TrapezoidalVelocityProfile(Profile, Generic[JointT]):
             self._ones = 1
 
     @property
-    def vmax(self) -> JointT:
+    def vmax(self) -> JointT | float | np.ndarray:
         return self._vmax
 
     def set_vmax(self, vmax: JointT | float) -> None:
-        if isinstance(self.q0, np.ndarray) and isinstance(vmax, (int, float)):
+        if isinstance(self.q0, np.ndarray) and isinstance(vmax, int | float):
             _vmax = np.full(self.q0.shape, vmax)
         else:
-            _vmax = vmax
+            _vmax = vmax  # type: ignore[assignment]
         self._vM = np.absolute(_vmax / (self.qF - self.q0))
-        self._vM = np.where(self._vM < 1e-12, 3.0 / (2.0 * self.T), self._vM)
+        self._vM = np.where(self._vM < TOL, 3.0 / (2.0 * self.T), self._vM)
 
         # Raise error when vM is too small.
         if np.any(self._vM <= 1.0 / self.T):
             i = np.flatnonzero(self._vM <= 1.0 / self.T)[0]
             try:
-                v = _vmax[i]  # type: ignore
+                v = _vmax[i]  # type: ignore[reportIndexIssue]
             except (TypeError, IndexError):
                 v = _vmax
             msg = f"Specified Vmax for q[{i}] is too small "
@@ -179,7 +181,7 @@ class TrapezoidalVelocityProfile(Profile, Generic[JointT]):
                 except IndexError:
                     v1, v2 = self._vM, vM
                 msg += f"{v1} -> {v2}"
-                warnings.warn(msg, ResourceWarning)
+                warnings.warn(msg, ResourceWarning, stacklevel=2)
             self._vM = vM
 
         self._vmax = self._vM * (self.qF - self.q0)
@@ -187,15 +189,15 @@ class TrapezoidalVelocityProfile(Profile, Generic[JointT]):
         self._a = self._vM / self.tb
 
     @property
-    def tb(self) -> JointT:
+    def tb(self) -> JointT | float | np.ndarray:
         return self._tb
 
     def set_tb(self, tb: JointT | float) -> None:
-        if isinstance(self.q0, np.ndarray) and isinstance(tb, (int, float)):
+        if isinstance(self.q0, np.ndarray) and isinstance(tb, int | float):
             self._tb = np.full(self.q0.shape, tb)
         else:
             self._tb = tb
-        self._tb = np.where(self._tb < 1e-12, self.T / 3, self._tb)
+        self._tb = np.where(self._tb < TOL, self.T / 3, self._tb)
 
         # Emit warning when tb is too large.
         if np.any(self._tb > 0.5 * self.T):
@@ -209,7 +211,7 @@ class TrapezoidalVelocityProfile(Profile, Generic[JointT]):
                 except IndexError:
                     tb1, tb2 = self._tb, Tb
                 msg += f"{tb1} -> {tb2}"
-                warnings.warn(msg, ResourceWarning)
+                warnings.warn(msg, ResourceWarning, stacklevel=2)
             self._tb = Tb
 
         self._vM = 1.0 / (self.T - self.tb)
@@ -274,8 +276,8 @@ class TrapezoidalVelocityProfile(Profile, Generic[JointT]):
 
 
 class SinusoidalVelocityProfile(Profile[JointT]):
-    def __init__(self, q0: JointT, qF: JointT, T: float, t0: float):
-        super().__init__(q0, qF, T, t0)
+    def __init__(self, q0: JointT, qF: JointT, T: float, t0: float) -> None:
+        super().__init__(q0, qF, T, t0)  # type: ignore[arg-type]
         self._omega = 2.0 * np.pi / T
         self._s_coeff = -1.0 / (2.0 * np.pi)
         self._ds_coeff = 1.0 / T
@@ -303,7 +305,7 @@ class SinusoidalVelocityProfile(Profile[JointT]):
 
 
 class FifthDegreePolynomialProfile(Profile, Generic[JointT]):
-    def __init__(self, q0: JointT, qF: JointT, T: float, t0: float):
+    def __init__(self, q0: JointT, qF: JointT, T: float, t0: float) -> None:
         Profile.__init__(self, q0, qF, T, t0)
         self._ds_coeff = 30.0 / T
         self._dds_coeff = 60.0 / (T * T)
@@ -392,8 +394,9 @@ class PTP(Generic[JointT]):
         return self._profile
 
     def select_profile(self, q0: JointT, qF: JointT, T: float, t0: float, profile_name: str, **kwargs) -> None:
-        if not profile_name in PTP_ACCEPTABLE_PROFILE_NAMES.keys():
-            raise ValueError(f"Invalid profile name: {profile_name}")
+        if profile_name not in PTP_ACCEPTABLE_PROFILE_NAMES:
+            msg = f"Invalid profile name: {profile_name}"
+            raise ValueError(msg)
         self._profile = PTP_ACCEPTABLE_PROFILE_NAMES[profile_name](q0, qF, T, t0, **kwargs)
 
     def q(self, t: float) -> JointT | float:
@@ -404,3 +407,8 @@ class PTP(Generic[JointT]):
 
     def ddq(self, t: float) -> JointT | float:
         return self.profile.ddq(t)
+
+
+# Local Variables:
+# jinx-local-words: "JointT Vmax arg const noqa tra trapez tri vM"
+# End:

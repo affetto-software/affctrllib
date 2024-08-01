@@ -1,11 +1,16 @@
-from pathlib import Path
-from typing import Any
+# ruff: noqa: T201,NPY002
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 
 from ._sockutil import Socket
 from .affetto import Affetto
 from .timer import Timer
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 class Sinusoidal:
@@ -15,7 +20,7 @@ class Sinusoidal:
     _phase: float
     _omega: float
 
-    def __init__(self, amplitude: float, period: float, base: float, phase: float = 0.0):
+    def __init__(self, amplitude: float, period: float, base: float, phase: float = 0.0) -> None:
         self._amplitude = amplitude
         self._period = period
         self._base = base
@@ -45,7 +50,7 @@ def generate_pseudo_sensory_data_string(t: float, dof: int = 13) -> str:
 
 
 class AffMock(Affetto):
-    config_path: Path | None
+    config_path: Path | None  # type: ignore[assignment]
     command_socket: Socket  # local
     sensory_socket: Socket  # remote
     sensor_rate: float
@@ -56,9 +61,9 @@ class AffMock(Affetto):
         super().__init__(config_path)
 
     def __repr__(self) -> str:
-        return "%s.%s()" % (self.__class__.__module__, self.__class__.__qualname__)
+        return f"{self.__class__.__module__}.{self.__class__.__qualname__}()"
 
-    def load_config(self, config: dict[str, Any]):
+    def load_config(self, config: dict[str, Any]) -> None:
         super().load_config(config)
         self.load_mock_config()
 
@@ -72,7 +77,7 @@ class AffMock(Affetto):
         self.sensory_socket.addr = self.mock_config["remote"]
         self.sensor_rate = self.mock_config["sensor"]["rate"]
 
-    def start(self, rate=None, quiet=False) -> None:
+    def start(self, rate: float | None = None, *, quiet: bool = False) -> None:
         self.sensory_socket.create()
         if rate is None:
             rate = self.sensor_rate
@@ -85,3 +90,8 @@ class AffMock(Affetto):
             if not quiet:
                 print(f"t={t:.2f}: sent <{msg}> to {self.sensory_socket.addr} ({sz} bytes)")
             timer.block()
+
+
+# Local Variables:
+# jinx-local-words: "noqa"
+# End:

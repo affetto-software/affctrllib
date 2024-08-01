@@ -1,10 +1,12 @@
+from __future__ import annotations
+
 import os
-import nox
 from pathlib import Path
+
+import nox
 
 nox.needs_version = ">=2024.4.15"
 nox.options.default_venv_backend = "uv|virtualenv"
-# nox.options.sessions = ["fetch", "lint", "tests"]
 nox.options.sessions = ["fetch", "tests"]
 
 PYTHON_VERSIONS = ["3.10", "3.11", "3.12"]
@@ -40,3 +42,8 @@ def lint(session: nox.Session) -> None:
 def tests(session: nox.Session) -> None:
     session.install("-r", "requirements-dev.lock")
     session.run("pytest", *session.posargs)
+
+
+# Local Variables:
+# jinx-local-words: "dev pytest uv virtualenv"
+# End:

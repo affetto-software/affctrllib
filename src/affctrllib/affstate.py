@@ -1,9 +1,12 @@
+# ruff: noqa: SIM105,ERA001
+
+from __future__ import annotations
+
 import itertools
 import sys
 import warnings
-from pathlib import Path
 from threading import Event, Lock, Thread
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 
@@ -13,6 +16,9 @@ from .affetto import Affetto
 from .filter import Butterworth, Filter
 from .logger import Logger
 from .timer import Timer
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 class AffState(Affetto, PeriodicRunner):
@@ -31,6 +37,7 @@ class AffState(Affetto, PeriodicRunner):
         config: str | Path | None = None,
         dt: float | None = None,
         freq: float | None = None,
+        *,
         butterworth: bool = False,
     ) -> None:
         super().__init__(config)
@@ -42,7 +49,8 @@ class AffState(Affetto, PeriodicRunner):
 
         if not hasattr(self, "_freq"):
             self.set_freq(self.DEFAULT_FREQ)
-            warnings.warn(f"Sensor frequency is not provided, set to default: {self._freq}")
+            msg = f"Sensor frequency is not provided, set to default: {self._freq}"
+            warnings.warn(msg, stacklevel=2)
 
         if butterworth:
             cutoff = 10
@@ -103,16 +111,16 @@ class AffState(Affetto, PeriodicRunner):
     def pb(self) -> np.ndarray:
         return self._filtered_data[2]
 
-    def update(self, raw_data: list[float] | list[int] | np.ndarray) -> None:
+    def update(self, raw_data: list[float] | list[int] | np.ndarray) -> None:  # type: ignore[override]
         self._raw_data = raw_data
         self._data_ndarray = unzip_array_as_ndarray(self._raw_data, ncol=3)
         # Process input signal filtering.
         self._filtered_data = [
-            f.update(d) if f is not None else d for f, d in zip(self._filter_list, self._data_ndarray)
+            f.update(d) if f is not None else d for f, d in zip(self._filter_list, self._data_ndarray, strict=False)
         ]
         # Calculate time derivative of q.
         try:
-            self._dq = (self.q - self._q_prev) / self.dt  # type: ignore
+            self._dq = (self.q - self._q_prev) / self.dt
         except AttributeError:
             self._dq = np.zeros(shape=self.q.shape)
         self._q_prev = self.q
@@ -126,6 +134,7 @@ class AffState(Affetto, PeriodicRunner):
         acom: AffComm,
         n_sample: int = 100,
         freq_tol: float = 1,
+        *,
         no_error: bool = False,
         quiet: bool = False,
     ) -> None:
@@ -139,7 +148,7 @@ class AffState(Affetto, PeriodicRunner):
         received_time_series = []
         timer.start()
         for i in range(n_sample):
-            sarr = acom.receive_as_list()
+            sarr = acom.receive_as_list()  # type: ignore[var-annotated]
             received_time_series.append(timer.elapsed_time())
             self.update(sarr)
             if not quiet and i % 10 == 0:
@@ -150,7 +159,7 @@ class AffState(Affetto, PeriodicRunner):
         dt_series = np.subtract(time_series[1:], time_series[:-1])
         estimated_freq = 1.0 / np.mean(dt_series)
         if not no_error and abs(self.freq - estimated_freq) > freq_tol:
-            msg = f"Specified sampling frequency is probably incorrect:\n"
+            msg = "Specified sampling frequency is probably incorrect:\n"
             msg += f"  {estimated_freq:.3f} (estimated) vs {self.freq:.3f} (specified)"
             raise RuntimeError(msg)
         if not quiet:
@@ -173,8 +182,9 @@ class AffStateThread(Thread):
         config: str | Path | None = None,
         dt: float | None = None,
         freq: float | None = None,
-        logging: bool = True,
         output: str | Path | None = None,
+        *,
+        logging: bool = True,
         butterworth: bool = False,
     ) -> None:
         self._acom = AffComm(config)
@@ -212,21 +222,22 @@ class AffStateThread(Thread):
         self,
         n_sample: int = 100,
         freq_tol: float = 1,
+        *,
         no_error: bool = False,
         quiet: bool = False,
     ) -> None:
-        self._astate.idle(self._acom, n_sample, freq_tol, no_error, quiet)
+        self._astate.idle(self._acom, n_sample, freq_tol, no_error=no_error, quiet=quiet)
         self._idled.set()
 
     def prepared(self) -> bool:
         return self._astate.idled() and self._idled.is_set()
 
-    def wait_for_idling(self, timeout=None) -> bool:
+    def wait_for_idling(self, timeout: float | None = None) -> bool:
         return self._idled.wait(timeout)
 
-    def run(self):
+    def run(self) -> None:
         if not self.prepared():
-            warnings.warn("Skipped idling process for sensory module")
+            warnings.warn("Skipped idling process for sensory module", stacklevel=2)
 
         # Start timer.
         with self._lock:
@@ -236,7 +247,7 @@ class AffStateThread(Thread):
         while not self._stopped.is_set():
             with self._lock:
                 t = self._timer.elapsed_time()
-            sarr = self._acom.receive_as_list()
+            sarr = self._acom.receive_as_list()  # type: ignore[var-annotated]
             with self._lock:
                 self._current_time = t
                 self._astate.update(sarr)
@@ -253,7 +264,7 @@ class AffStateThread(Thread):
         # Close socket after having left the loop.
         self._acom.close_sensory_socket()
 
-    def join(self, timeout=None):
+    def join(self, timeout: float | None = None) -> None:
         self.stop()
         Thread.join(self, timeout)
 
@@ -367,3 +378,8 @@ class AffStateThread(Thread):
     def pb(self) -> np.ndarray:
         with self._lock:
             return np.copy(self._astate.pb)
+
+
+# Local Variables:
+# jinx-local-words: "dt noqa"
+# End:

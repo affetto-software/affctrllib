@@ -1,28 +1,36 @@
-import socket
-from pathlib import Path
-from typing import Any, Callable, TypeVar, overload
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any, TypeVar, overload
 
 import numpy as np
 
 from ._sockutil import Socket
 from .affetto import Affetto
 
+if TYPE_CHECKING:
+    import socket
+    from collections.abc import Callable
+    from pathlib import Path
+
+
 R = TypeVar("R")
 
 
 def split_received_msg(
     data: bytes | str,
-    function: Callable[[str], R] = float,
+    function: Callable[[str], R] = float,  # type: ignore[assignment]
     sep: str | None = None,
+    *,
     strip: bool = True,
 ) -> list[R]:
-    """Returns a list of values converted from received bytes."""
+    """Return a list of values converted from received bytes."""
     if isinstance(data, bytes):
         decoded_data = data.decode()
     elif isinstance(data, str):
         decoded_data = data
     else:
-        raise TypeError(f"unsupported type: {type(data)}")
+        msg = f"unsupported type: {type(data)}"
+        raise TypeError(msg)
     if strip:
         decoded_data = decoded_data.strip(sep)
     return list(map(function, decoded_data.split(sep)))
@@ -34,7 +42,7 @@ def convert_array_to_string(
     f_spec: str = ".0f",
     precision: int | None = None,
 ) -> str:
-    """Returns a string of array joined with specific format."""
+    """Return a string of array joined with specific format."""
     if precision is None:
         formatted_array = [f"{x:{f_spec}}" for x in array]
     else:
@@ -48,7 +56,7 @@ def convert_array_to_bytes(
     f_spec: str = ".0f",
     precision: int | None = None,
 ) -> bytes:
-    """Returns bytes encoded array joined with specific format."""
+    """Return bytes encoded array joined with specific format."""
     return convert_array_to_string(array, sep, f_spec, precision).encode()
 
 
@@ -70,18 +78,15 @@ def zip_arrays_as_ndarray(
 
 
 @overload
-def zip_arrays(*arrays: list[float]) -> list[float]:
-    ...
+def zip_arrays(*arrays: list[float]) -> list[float]: ...
 
 
 @overload
-def zip_arrays(*arrays: list[int]) -> list[int]:
-    ...
+def zip_arrays(*arrays: list[int]) -> list[int]: ...
 
 
 @overload
-def zip_arrays(*arrays: np.ndarray) -> list[float]:
-    ...
+def zip_arrays(*arrays: np.ndarray) -> list[float]: ...
 
 
 def zip_arrays(
@@ -101,7 +106,7 @@ class AffComm(Affetto):
         super().__init__(config_path)
 
     def __repr__(self) -> str:
-        return "%s.%s()" % (self.__class__.__module__, self.__class__.__qualname__)
+        return f"{self.__class__.__module__}.{self.__class__.__qualname__}()"
 
     def __str__(self) -> str:
         try:
@@ -110,9 +115,9 @@ class AffComm(Affetto):
             cpath = None
         return f"""\
 AffComm configuration:
-  Config file: {str(cpath)}
-   Receive at: {str(self.sensory_socket)}
-      Send to: {str(self.command_socket)}
+  Config file: {cpath!s}
+   Receive at: {self.sensory_socket!s}
+      Send to: {self.command_socket!s}
 """
 
     def load_config(self, config: dict[str, Any]) -> None:
@@ -151,19 +156,19 @@ AffComm configuration:
         self.close_sensory_socket()
         self.close_command_socket()
 
-    def receive(self, bufsize=1024) -> bytes:
+    def receive(self, bufsize: int = 1024) -> bytes:
         return self.sensory_socket.recvfrom(bufsize)
 
     def receive_as_list(
         self,
-        bufsize=1024,
-        function: Callable[[str], R] = float,
+        bufsize: int = 1024,
+        function: Callable[[str], R] = float,  # type: ignore[assignment]
     ) -> list[R]:
         return split_received_msg(self.sensory_socket.recvfrom(bufsize), function=function)
 
     def receive_as_2darray(
         self,
-        bufsize=1024,
+        bufsize: int = 1024,
     ) -> np.ndarray:
         sarr = split_received_msg(self.sensory_socket.recvfrom(bufsize), function=float)
         return unzip_array_as_ndarray(sarr, ncol=3)

@@ -1,9 +1,14 @@
+from __future__ import annotations
+
 import time
 import warnings
-from typing import Callable
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 
-class Timer(object):
+class Timer:
     _rate: float | None
     _period: float | None
     _period_ns: int
@@ -22,31 +27,33 @@ class Timer(object):
         self._time_started_ns = 0
         self._time_ns_func = time.time_ns
 
-    @property
-    def rate(self) -> float:
-        if self._rate is None:
-            raise ValueError("Timer: rate is not set")
-        return self._rate
-
     def set_rate(self, rate: float) -> None:
         self._rate = rate
         self._period = 1.0 / rate
         self._period_ns = int(self._period * 1e9)
 
+    @property
+    def rate(self) -> float:
+        if self._rate is None:
+            msg = "Timer: rate is not set"
+            raise ValueError(msg)
+        return self._rate
+
     @rate.setter
     def rate(self, rate: float) -> None:
         self.set_rate(rate)
-
-    @property
-    def period(self) -> float:
-        if self._period is None:
-            raise ValueError("Timer: period is not set")
-        return self._period
 
     def set_period(self, period: float) -> None:
         self._period = period
         self._period_ns = int(self._period * 1e9)
         self._rate = 1.0 / period
+
+    @property
+    def period(self) -> float:
+        if self._period is None:
+            msg = "Timer: period is not set"
+            raise ValueError(msg)
+        return self._period
 
     @period.setter
     def period(self, period: float) -> None:
@@ -76,12 +83,13 @@ class Timer(object):
         try:
             elapsed_since_last_blocked = self._time_ns_func() - self._time_last_blocked_ns
         except AttributeError:
-            raise RuntimeError("Timer.start() must be called before Timer.block()")
+            msg = "Timer.start() must be called before Timer.block()"
+            raise RuntimeError(msg) from None
 
         time_to_sleep = self._period_ns - elapsed_since_last_blocked
         if time_to_sleep > 0:
             time.sleep(time_to_sleep * 1e-9)
         else:
             msg = f"It took longer than specified period at t={self.elapsed_time()}"
-            warnings.warn(msg, RuntimeWarning)
+            warnings.warn(msg, RuntimeWarning, stacklevel=2)
         self._time_last_blocked_ns = self._time_ns_func()

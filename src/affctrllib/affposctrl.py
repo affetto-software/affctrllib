@@ -1,12 +1,20 @@
+# ruff: noqa: SIM105
+
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
-from pathlib import Path
-from typing import Any, Callable, Generic, TypeVar
+from typing import TYPE_CHECKING, Any, Generic, TypeVar
 
 import numpy as np
 
 from .affctrl import AffCtrl, AffCtrlThread
 from .affstate import AffStateThread
-from .logger import Logger
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+    from pathlib import Path
+
+    from .logger import Logger
 
 JointT = TypeVar("JointT", int, float, np.ndarray)
 
@@ -15,10 +23,11 @@ class Feedback(ABC, Generic[JointT]):
     _kP: JointT
     _kD: JointT
     _kI: JointT
+    _stiff: JointT
     _accum_qerr: JointT
     _scheme_name: str
 
-    def __init__(self, **kwargs) -> None:
+    def __init__(self, **kwargs: JointT) -> None:
         if "kP" in kwargs:
             self.kP = kwargs["kP"]
         if "kD" in kwargs:
@@ -60,7 +69,7 @@ class Feedback(ABC, Generic[JointT]):
         return self._stiff
 
     @stiff.setter
-    def stiff(self, stiff) -> None:
+    def stiff(self, stiff: JointT) -> None:
         self._stiff = stiff
 
     def positional_feedback(
@@ -98,8 +107,8 @@ class Feedback(ABC, Generic[JointT]):
 class FeedbackPID(Feedback[JointT]):
     _stiff: JointT
 
-    def __init__(self, **kwargs) -> None:
-        super().__init__(**kwargs)
+    def __init__(self, **kwargs: JointT) -> None:
+        super().__init__(**kwargs)  # type: ignore[arg-type]
         if "stiff" in kwargs:
             self.stiff = kwargs["stiff"]
         self._scheme_name = "pid"
@@ -108,9 +117,9 @@ class FeedbackPID(Feedback[JointT]):
         self,
         t: float,
         q: JointT,
+        dq: JointT,
         pa: JointT,
         pb: JointT,
-        dq: JointT,
         qdes: JointT,
         dqdes: JointT,
     ) -> tuple[JointT, JointT]:
@@ -123,8 +132,8 @@ class FeedbackPIDF(Feedback[JointT]):
     _stiff: JointT
     _press_gain: JointT
 
-    def __init__(self, **kwargs) -> None:
-        super().__init__(**kwargs)
+    def __init__(self, **kwargs: JointT) -> None:
+        super().__init__(**kwargs)  # type: ignore[arg-type]
         if "stiff" in kwargs:
             self.stiff = kwargs["stiff"]
         if "press_gain" in kwargs:
@@ -136,16 +145,16 @@ class FeedbackPIDF(Feedback[JointT]):
         return self._press_gain
 
     @press_gain.setter
-    def press_gain(self, press_gain) -> None:
+    def press_gain(self, press_gain: JointT) -> None:
         self._press_gain = press_gain
 
     def update(
         self,
         t: float,
         q: JointT,
+        dq: JointT,
         pa: JointT,
         pb: JointT,
-        dq: JointT,
         qdes: JointT,
         dqdes: JointT,
     ) -> tuple[JointT, JointT]:
@@ -219,15 +228,15 @@ class AffPosCtrl(AffCtrl[JointT]):
             ctrl_config = self.ctrl_config
         scheme_class = AFFPOSCTRL_ACCEPTABLE_FEEDBACK_SCHEME_NAMES[scheme]
         scheme_key = AFFPOSCTRL_FEEDBACK_SCHEME_TO_CONFIG_KEY[scheme_class.__name__]
-        kwargs = {}
+        kwargs: dict[str, Any] = {}
         self._load_feedback_scheme_find_array(ctrl_config, scheme_key, "kP", kwargs)
         self._load_feedback_scheme_find_array(ctrl_config, scheme_key, "kD", kwargs)
         self._load_feedback_scheme_find_array(ctrl_config, scheme_key, "kI", kwargs)
         self._load_feedback_scheme_find_array(ctrl_config, scheme_key, "stiff", kwargs)
         self._load_feedback_scheme_find_array(ctrl_config, scheme_key, "press_gain", kwargs)
-        self._feedback_scheme = scheme_class(**kwargs)
+        self._feedback_scheme = scheme_class(**kwargs)  # type: ignore[abstract]
 
-    def update(
+    def update(  # type: ignore[override]
         self,
         t: float,
         q: JointT,
@@ -238,7 +247,7 @@ class AffPosCtrl(AffCtrl[JointT]):
         dqdes: JointT,
     ) -> tuple[JointT, JointT]:
         u1, u2 = self.feedback_scheme.update(t, q, dq, pa, pb, qdes, dqdes)
-        return super().update(t, u1, u2)
+        return super().update(t, u1, u2)  # type: ignore[return-value]
 
 
 class AffPosCtrlThread(AffCtrlThread):
@@ -252,13 +261,24 @@ class AffPosCtrlThread(AffCtrlThread):
         config: str | Path | None = None,
         dt: float | None = None,
         freq: float | None = None,
-        logging: bool = True,
         output: str | Path | None = None,
         sensor_dt: float | None = None,
         sensor_freq: float | None = None,
+        *,
+        logging: bool = True,
         butterworth: bool = False,
-    ):
-        super().__init__(astate, config, dt, freq, logging, output, sensor_dt, sensor_freq, butterworth)
+    ) -> None:
+        super().__init__(
+            astate,
+            config,
+            dt,
+            freq,
+            output,
+            sensor_dt,
+            sensor_freq,
+            logging=logging,
+            butterworth=butterworth,
+        )
         del self._actrl
         self._actrl = AffPosCtrl(config, dt, freq)
         self.reset_trajectory()
@@ -268,11 +288,12 @@ class AffPosCtrlThread(AffCtrlThread):
         config: str | Path | None = None,
         dt: float | None = None,
         freq: float | None = None,
+        *,
         butterworth: bool = False,
     ) -> AffStateThread:
         return AffStateThread(config, dt=dt, freq=freq, logging=False, output=None, butterworth=butterworth)
 
-    def _create_logger(self, output: str | Path) -> Logger:
+    def _create_logger(self, output: str | Path) -> Logger:  # type: ignore[override]
         super()._create_logger(output)
         self._logger.extend_labels(
             [f"qdes{i}" for i in range(self._actrl.dof)],
@@ -280,7 +301,7 @@ class AffPosCtrlThread(AffCtrlThread):
         )
         return self._logger
 
-    def run(self):
+    def run(self) -> None:
         # Since idling process may take several seconds to finish,
         # interaction with control thread should be started after
         # idling process has finished by using
@@ -350,3 +371,8 @@ class AffPosCtrlThread(AffCtrlThread):
             lambda _: np.full((dof,), q0),
             lambda _: np.zeros((dof,)),
         )
+
+
+# Local Variables:
+# jinx-local-words: "Ctrl FeedbackPID FeedbackPIDF JointT Pos arg dqdes kD kI kP noqa np pid pidf qdes"
+# End:

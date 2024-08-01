@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import socket as sock
 
 
-class Socket(object):
+class Socket:
     _family: str
     _host: str
     _port: int
@@ -9,7 +11,7 @@ class Socket(object):
 
     def __init__(
         self,
-        addr: tuple[str, int] | dict[str, str | int] | None = None,
+        addr: tuple[str, int] | None = None,
         host: str | None = None,
         port: int | None = None,
     ) -> None:
@@ -23,9 +25,9 @@ class Socket(object):
 
     def __repr__(self) -> str:
         try:
-            return f"Socket(({self.host}, {str(self.port)}))"
+            return f"Socket(({self.host}, {self.port!s}))"
         except AttributeError:
-            return f"Socket()"
+            return "Socket()"
 
     def __str__(self) -> str:
         try:
@@ -40,9 +42,9 @@ class Socket(object):
         elif isinstance(socket_type, sock.SocketKind):
             socket_type_append = f' ({str(socket_type).split(".")[1]})'
         try:
-            return f"{self.host}:{str(self.port)}" + socket_type_append
+            return f"{self.host}:{self.port!s}" + socket_type_append
         except AttributeError:
-            return f"No address is provided" + socket_type_append
+            return "No address is provided" + socket_type_append
 
     @property
     def family(self) -> str:
@@ -77,34 +79,34 @@ class Socket(object):
             self.host = str(addr["host"])
             self.port = int(addr["port"])
         else:
-            raise TypeError(f"unsupported type for addr: {type(addr)}")
+            msg = f"unsupported type for addr: {type(addr)}"
+            raise TypeError(msg)
 
     @property
     def socket(self) -> sock.socket:
         try:
             return self._socket
-        except AttributeError:
-            raise RuntimeError("No socket is created yet")
+        except AttributeError as exc:
+            msg = "No socket is created yet"
+            raise RuntimeError(msg) from exc
 
-    def create(self, socket_type=sock.SOCK_DGRAM) -> sock.socket:
+    def create(self, socket_type: sock.SocketKind = sock.SOCK_DGRAM) -> sock.socket:
         self._socket = sock.socket(getattr(sock, self.family), socket_type)
         return self._socket
 
     def is_created(self) -> bool:
-        if hasattr(self, "_socket"):
-            return True
-        else:
-            return False
+        return bool(hasattr(self, "_socket"))
 
     def bind(self, addr: tuple[str, int] | None = None) -> None:
         if addr is None:
             try:
                 addr = self.addr
-            except AttributeError:
-                raise RuntimeError("No address is provided to bind socket")
+            except AttributeError as exc:
+                msg = "No address is provided to bind socket"
+                raise RuntimeError(msg) from exc
         self.socket.bind(addr)
 
-    def recvfrom(self, bufsize=1024) -> bytes:
+    def recvfrom(self, bufsize: int = 1024) -> bytes:
         recv_bytes, _ = self.socket.recvfrom(bufsize)
         return recv_bytes
 
@@ -112,9 +114,15 @@ class Socket(object):
         if addr is None:
             try:
                 addr = self.addr
-            except AttributeError:
-                raise RuntimeError("No address is provided to send to")
+            except AttributeError as exc:
+                msg = "No address is provided to send to"
+                raise RuntimeError(msg) from exc
         return self.socket.sendto(send_bytes, addr)
 
     def close(self) -> None:
         self.socket.close()
+
+
+# Local Variables:
+# jinx-local-words: "addr"
+# End:

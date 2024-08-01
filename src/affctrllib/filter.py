@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections import deque
 from typing import Generic, TypeVar
 
@@ -22,15 +24,15 @@ class Filter(Generic[T]):
             self._x_buffer.append(0.0)
         self._y_prev = 0.0
 
+    def set_n_points(self, n_points: int) -> None:
+        self._n_points = n_points
+
     @property
     def n_points(self) -> int:
         return self._n_points
 
-    def set_n_points(self, n_points: int) -> None:
-        self._n_points = n_points
-
     @n_points.setter
-    def n_points(self, n_points) -> None:
+    def n_points(self, n_points: int) -> None:
         self.set_n_points(n_points)
 
     def update(self, x: T) -> T:
@@ -40,9 +42,8 @@ class Filter(Generic[T]):
 
 
 class LiveFilter(Generic[T]):
-
     def process(self, x: T) -> T:
-        # do not process NaNs
+        # do not process NaN
         if np.any(np.isnan(x)):
             return x
 
@@ -51,9 +52,9 @@ class LiveFilter(Generic[T]):
     def __call__(self, x: T) -> T:
         return self.process(x)
 
-    def _process(self, x: T) -> T:
-        _ = x
-        raise NotImplementedError("Derived class must implement _process")
+    def _process(self, _: T) -> T:
+        msg = "Derived class must implement _process"
+        raise NotImplementedError(msg)
 
 
 class LiveLFilter(LiveFilter[T]):
@@ -107,7 +108,7 @@ class LiveLFilter(LiveFilter[T]):
 class Butterworth(Generic[T]):
     N: int  # the order of the filter
     Wn: float  # the critical frequency
-    fs: float  # the sampleing frequency
+    fs: float  # the sampling frequency
 
     def __init__(self, cutoff: float, fs: float, order: int = 5) -> None:
         nyq = 0.5 * fs
@@ -119,4 +120,9 @@ class Butterworth(Generic[T]):
         self.lfilter = LiveLFilter(b, a)
 
     def update(self, x: T) -> T:
-        return self.lfilter.process(x)
+        return self.lfilter.process(x)  # type: ignore[return-value,arg-type]
+
+
+# Local Variables:
+# jinx-local-words: "Args LiveLFilter NaN arg lfilter scipy xs"
+# End:

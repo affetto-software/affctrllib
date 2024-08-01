@@ -1,12 +1,18 @@
+from __future__ import annotations
+
 import copy
 import sys
-from collections.abc import Iterable
 from pathlib import Path
 from threading import Lock
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
+
+    from _typeshed import SupportsWrite
 
 
-class Logger(object):
+class Logger:
     _sep: str
     _eol: str
     _labels: list[str]
@@ -20,7 +26,7 @@ class Logger(object):
         self._labels = []
         self._rawdata = []
         self._lock = Lock()
-        self.fpath = fname
+        self.fpath = fname  # type: ignore[assignment]
 
     def __len__(self) -> int:
         with self._lock:
@@ -58,17 +64,17 @@ class Logger(object):
         return self.fpath
 
     def set_filename(self, fname: str | Path) -> None:
-        self.fpath = fname
+        self.fpath = fname  # type: ignore[assignment]
 
     def set_labels(self, *args: str | Iterable[str]) -> None:
         listed = [[arg] if isinstance(arg, str) else arg for arg in args]
         with self._lock:
-            self._labels = [x for l in listed for x in l]
+            self._labels = [x for s in listed for x in s]
 
     def extend_labels(self, *args: str | Iterable[str]) -> None:
         listed = [[arg] if isinstance(arg, str) else arg for arg in args]
         with self._lock:
-            self._labels.extend([x for l in listed for x in l])
+            self._labels.extend([x for s in listed for x in s])
 
     def get_header(self) -> str:
         with self._lock:
@@ -85,9 +91,9 @@ class Logger(object):
         except IndexError:
             self.store_data(data)
 
-    def store(self, *args: float | int | Iterable[Any]) -> None:
-        listed = [[arg] if isinstance(arg, (float, int)) else arg for arg in args]
-        data = [x for l in listed for x in l]
+    def store(self, *args: float | Iterable[Any]) -> None:
+        listed = [[arg] if isinstance(arg, float | int) else arg for arg in args]
+        data = [x for s in listed for x in s]
         self.store_data(data)
 
     def get_data(self) -> list[list[Any]]:
@@ -102,13 +108,11 @@ class Logger(object):
         def ensure_index(label_or_index: str | int) -> int:
             if isinstance(label_or_index, str):
                 return self._labels.index(label_or_index)
-            else:
-                return label_or_index
+            return label_or_index
 
-        if isinstance(label, (str, int)):
+        if isinstance(label, str | int):
             return [ensure_index(label)]
-        else:
-            return [ensure_index(i) for i in label]
+        return [ensure_index(i) for i in label]
 
     def slice_data(
         self,
@@ -140,7 +144,7 @@ class Logger(object):
                 return cand
             cnt += 1
 
-    def _dump_print(self, output=None) -> None:
+    def _dump_print(self, output: SupportsWrite[str] | None = None) -> None:
         if len(self._labels):
             print(self.get_header(), end=self.eol, file=output)
         with self._lock:
@@ -148,7 +152,7 @@ class Logger(object):
                 print(self.sep.join(f"{x}" for x in line), end=self.eol, file=output)
 
     def _dump_open(self, fpath: Path, mode: str) -> None:
-        with open(fpath, mode=mode) as fobj:
+        with Path(fpath).open(mode=mode) as fobj:
             if len(self._labels):
                 fobj.write(self.get_header() + self.eol)
             with self._lock:
@@ -157,8 +161,9 @@ class Logger(object):
     def dump(
         self,
         fname: str | Path | None = None,
-        overwrite: bool = True,
         mode: str = "w",
+        *,
+        overwrite: bool = True,
         quiet: bool = False,
     ) -> None:
         fpath: Path
@@ -177,4 +182,4 @@ class Logger(object):
             sys.stdout.flush()
         self._dump_open(fpath, mode)
         if not quiet:
-            sys.stdout.write(f"done.\n")
+            sys.stdout.write("done.\n")

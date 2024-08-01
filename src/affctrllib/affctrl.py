@@ -1,9 +1,11 @@
+# ruff: noqa: SIM105
+from __future__ import annotations
+
 import time
 import warnings
-from collections.abc import Sequence
-from pathlib import Path
+from collections.abc import Callable, Sequence
 from threading import Event, Lock, Thread
-from typing import Any, Callable, Generic, TypeVar
+from typing import TYPE_CHECKING, Any, Generic, TypeVar
 
 import numpy as np
 
@@ -13,6 +15,9 @@ from .affetto import Affetto
 from .affstate import AffStateThread
 from .logger import Logger
 from .timer import Timer
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 JointT = TypeVar("JointT", int, float, np.ndarray)
 
@@ -39,7 +44,8 @@ class AffCtrl(Affetto, PeriodicRunner, Generic[JointT]):
 
         if not hasattr(self, "_freq"):
             self.set_freq(self.DEFAULT_FREQ)
-            warnings.warn(f"Control frequency is not provided, set to default: {self._freq}")
+            msg = f"Control frequency is not provided, set to default: {self._freq}"
+            warnings.warn(msg, stacklevel=2)
 
     def __repr__(self) -> str:
         return ""
@@ -61,7 +67,7 @@ class AffCtrl(Affetto, PeriodicRunner, Generic[JointT]):
         freq = self.ctrl_config.get("freq", None)
         self.set_frequency(dt=dt, freq=freq)
         try:
-            self.input_range = tuple(self.ctrl_config["input_range"])
+            self.input_range = (self.ctrl_config["input_range"][0], self.ctrl_config["input_range"][1])
         except KeyError:
             pass
         self.load_inactive_joints()
@@ -77,13 +83,13 @@ class AffCtrl(Affetto, PeriodicRunner, Generic[JointT]):
                 except KeyError:
                     self.add_inactive_joints(index)
 
-    @property
-    def input_range(self) -> tuple[float, float]:
-        return self._input_range
-
     def set_input_range(self, input_range: tuple[float, float]) -> None:
         self._input_range = input_range
         self._scale_gain = 255.0 / (self._input_range[1] - self._input_range[0])
+
+    @property
+    def input_range(self) -> tuple[float, float]:
+        return self._input_range
 
     @input_range.setter
     def input_range(self, input_range: tuple[float, float]) -> None:
@@ -100,7 +106,7 @@ class AffCtrl(Affetto, PeriodicRunner, Generic[JointT]):
             return (
                 self._scale_gain * (c1 - self._input_range[0]),
                 self._scale_gain * (c2 - self._input_range[0]),
-            )  # type: ignore
+            )  # type: ignore[reportReturnType]
         except AttributeError:
             return (u1, u2)
 
@@ -116,7 +122,7 @@ class AffCtrl(Affetto, PeriodicRunner, Generic[JointT]):
         return index
 
     def _expand_as_index_range(self, pattern: str) -> list[int]:
-        indices = []
+        indices: list[int] = []
         _range = pattern.split("-")
         if len(_range) > 1:
             try:
@@ -131,7 +137,7 @@ class AffCtrl(Affetto, PeriodicRunner, Generic[JointT]):
         return indices
 
     def _expand_as_index(self, pattern: str) -> list[int]:
-        index = []
+        index: list[int] = []
         for p in pattern.split(","):
             if "-" in p:
                 index.extend(self._expand_as_index_range(p))
@@ -143,18 +149,21 @@ class AffCtrl(Affetto, PeriodicRunner, Generic[JointT]):
         return index
 
     def _make_index_list(self, pattern: int | Sequence[int] | str | None) -> list[int]:
+        index: list[int]
         if pattern is None:
             index = []
         elif isinstance(pattern, str):
             index = self._expand_as_index(pattern)
         elif isinstance(pattern, Sequence):
-            index = list(pattern)
+            index = list(pattern)  # type: ignore[arg-type]
         else:
             index = [int(pattern)]
         return index
 
     def _make_inactive_joints_array(
-        self, pattern: int | Sequence[int] | str, pressure: float | None = None
+        self,
+        pattern: int | Sequence[int] | str,
+        pressure: float | None = None,
     ) -> np.ndarray:
         if pressure is None:
             pressure = self.DEFAULT_INACTIVE_PRESSURE
@@ -220,15 +229,15 @@ class AffCtrl(Affetto, PeriodicRunner, Generic[JointT]):
     def mask(self, u1: JointT, u2: JointT) -> tuple[JointT, JointT]:
         mask = self.inactive_joints[:, 0].astype(int)
         try:
-            np.put(u1, mask, self.inactive_joints[:, 1])  # type: ignore
-            np.put(u2, mask, self.inactive_joints[:, 2])  # type: ignore
+            np.put(u1, mask, self.inactive_joints[:, 1])  # type: ignore[reportArgumentType,arg-type]
+            np.put(u2, mask, self.inactive_joints[:, 2])  # type: ignore[reportArgumentType,arg-type]
         except TypeError:
             # Pass over TypeError, which will be raised when u1 and u2
             # are not instance of np.ndarray.
             pass
         return (u1, u2)
 
-    def update(
+    def update(  # type: ignore[override]
         self,
         _: float,
         u1: JointT,
@@ -257,12 +266,13 @@ class AffCtrlThread(Thread):
         config: str | Path | None = None,
         dt: float | None = None,
         freq: float | None = None,
-        logging: bool = True,
         output: str | Path | None = None,
         sensor_dt: float | None = None,
         sensor_freq: float | None = None,
+        *,
+        logging: bool = True,
         butterworth: bool = False,
-    ):
+    ) -> None:
         self._acom = AffComm(config)
         self._acom.create_command_socket()
         self._astate_created_inside = False
@@ -289,6 +299,7 @@ class AffCtrlThread(Thread):
         config: str | Path | None = None,
         dt: float | None = None,
         freq: float | None = None,
+        *,
         butterworth: bool = False,
     ) -> AffStateThread:
         return AffStateThread(config, dt=dt, freq=freq, logging=False, output=None, butterworth=butterworth)
@@ -313,7 +324,7 @@ class AffCtrlThread(Thread):
         )
         return self._logger
 
-    def run(self):
+    def run(self) -> None:
         # Since idling process may take several seconds to finish,
         # interaction with control thread should be started after
         # idling process has finished by using
@@ -350,7 +361,7 @@ class AffCtrlThread(Thread):
         # Close socket after having left the loop.
         self._acom.close_command_socket()
 
-    def join(self, timeout=None):
+    def join(self, timeout: float | None = None) -> None:
         self.stop()
         Thread.join(self, timeout)
 
@@ -365,7 +376,7 @@ class AffCtrlThread(Thread):
         if self._astate_created_inside:
             self._astate.join()
 
-    def wait_for_idling(self, timeout=None) -> bool:
+    def wait_for_idling(self, timeout: float | None = None) -> bool:
         return self._astate.wait_for_idling(timeout)
 
     def reset_timer(self) -> None:
@@ -475,3 +486,8 @@ class AffCtrlThread(Thread):
         self.set_ctrl_input(
             lambda _: (np.zeros((dof,)), np.zeros((dof,))),
         )
+
+
+# Local Variables:
+# jinx-local-words: "Ctrl JointT arg ctrl dt ndarray noqa np"
+# End:

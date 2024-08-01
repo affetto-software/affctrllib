@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import sys
 import warnings
 from abc import abstractmethod
@@ -10,7 +12,7 @@ else:
     import tomllib
 
 
-class Chain(object):
+class Chain:
     _dof: int
     _link_names: list[str]
     _link_normalized_names: list[str]
@@ -46,15 +48,15 @@ class Chain(object):
         assert self._dof == len(self._link_names)
 
     def find(self, name: str) -> int:
-        # Only movable links are findable.
+        # Only movable links are accessible.
         return self._link_normalized_names.index(self.translate_name(name))
 
     def name(self, index: int) -> str:
-        # Only movable links are findable.
+        # Only movable links are accessible.
         return self._link_names[index]
 
 
-class Affetto(object):
+class Affetto:
     _config_path: Path
     _config: dict[str, Any]
     _name: str
@@ -69,9 +71,9 @@ class Affetto(object):
         return self._config_path
 
     @final
-    def load_config_path(self, config_path: str | Path):
+    def load_config_path(self, config_path: str | Path) -> None:
         self._config_path = Path(config_path)
-        with open(self._config_path, "rb") as f:
+        with Path(self._config_path).open("rb") as f:
             c = tomllib.load(f)
         self.load_config(c)
 
@@ -102,11 +104,11 @@ class Affetto(object):
         return self._chain
 
     @abstractmethod
-    def load_chain(self, config: dict[str, Any]):
+    def load_chain(self, config: dict[str, Any]) -> None:
         try:
             self._chain = Chain(config["chain"])
         except KeyError:
-            warnings.warn("'chain' field is not defined", UserWarning)
+            warnings.warn("'chain' field is not defined", UserWarning, stacklevel=2)
 
     @property
     def dof(self) -> int:
@@ -120,3 +122,8 @@ class Affetto(object):
 
     def joint_name(self, index: int) -> str:
         return self._chain.name(index)
+
+
+# Local Variables:
+# jinx-local-words: "affetto jointtype rb revolute"
+# End:
