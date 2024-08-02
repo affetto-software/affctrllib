@@ -63,3 +63,7 @@ jobs:
 
       - name: Run the test suite
         run: nox --session tests-${{ matrix.python-version }}
+
+# Local Variables:
+# jinx-local-words: "ci github macos md nox os ubuntu uv"
+# End:
