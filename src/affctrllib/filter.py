@@ -8,6 +8,8 @@ from scipy.signal import butter
 
 T = TypeVar("T", float, np.ndarray)
 
+DEFAULT_FILTER_N_POINTS = 5
+
 
 class Filter(Generic[T]):
     _n_points: int
@@ -15,7 +17,7 @@ class Filter(Generic[T]):
     _y_prev: T | float
 
     def __init__(self, n_points: int | None = None) -> None:
-        self._n_points = 5
+        self._n_points = DEFAULT_FILTER_N_POINTS
         if n_points is not None:
             self.n_points = n_points
 
