@@ -1,11 +1,14 @@
-import os
+# ruff: noqa: PLR2004
+
+from __future__ import annotations
+
+from pathlib import Path
 
 import pytest
+from affctrllib.affstate import AffState, AffStateThread
 from numpy.testing import assert_array_equal
 
-from affctrllib.affstate import AffState, AffStateThread
-
-CONFIG_DIR_PATH = os.path.join(os.path.dirname(__file__), "config")
+CONFIG_DIR_PATH = Path(__file__).parent / "config"
 
 
 @pytest.mark.filterwarnings("ignore:Sensor frequency is not provided")
@@ -16,14 +19,14 @@ class TestAffState:
         assert state.freq == 100
         assert state.n_steps == 0
 
-    @pytest.mark.parametrize("dt,freq", [(0.01, 100), (0.001, 1000), (0.02, 50)])
-    def test_init_specify_dt(self, dt, freq) -> None:
+    @pytest.mark.parametrize(("dt", "freq"), [(0.01, 100), (0.001, 1000), (0.02, 50)])
+    def test_init_specify_dt(self, dt: float, freq: int) -> None:
         state = AffState(dt=dt)
         assert state.dt == dt
         assert state.freq == freq
 
-    @pytest.mark.parametrize("freq,dt", [(100, 0.01), (1000, 0.001), (30, 1.0 / 30)])
-    def test_init_specify_freq(self, freq, dt) -> None:
+    @pytest.mark.parametrize(("freq", "dt"), [(100, 0.01), (1000, 0.001), (30, 1.0 / 30)])
+    def test_init_specify_freq(self, freq: int, dt: float) -> None:
         state = AffState(freq=freq)
         assert state.dt == dt
         assert state.freq == freq
@@ -31,40 +34,41 @@ class TestAffState:
     def test_init_error_both_of_dt_freq_specified(self) -> None:
         dt = 0.01
         freq = 100
-        with pytest.raises(ValueError) as excinfo:
+        msg = "Unable to specify DT and FREQ simultaneously"
+        with pytest.raises(ValueError, match=msg) as excinfo:
             _ = AffState(dt=dt, freq=freq)
-        assert "Unable to specify DT and FREQ simultaneously" in str(excinfo.value)
+        assert msg in str(excinfo.value)
 
-    @pytest.mark.parametrize("dt,freq", [(0.01, 100), (0.001, 1000), (0.02, 50)])
-    def test_dt_setter(self, dt, freq):
+    @pytest.mark.parametrize(("dt", "freq"), [(0.01, 100), (0.001, 1000), (0.02, 50)])
+    def test_dt_setter(self, dt: float, freq: int) -> None:
         state = AffState(dt=0.01)
         state.dt = dt
         assert state.dt == dt
         assert state.freq == freq
 
-    @pytest.mark.parametrize("freq,dt", [(100, 0.01), (1000, 0.001), (30, 1.0 / 30)])
-    def test_freq_setter(self, dt, freq):
+    @pytest.mark.parametrize(("freq", "dt"), [(100, 0.01), (1000, 0.001), (30, 1.0 / 30)])
+    def test_freq_setter(self, dt: float, freq: int) -> None:
         state = AffState(dt=0.01)
         state.freq = freq
         assert state.dt == dt
         assert state.freq == freq
 
     def test_init_config(self) -> None:
-        config = os.path.join(CONFIG_DIR_PATH, "default.toml")
+        config = CONFIG_DIR_PATH / "default.toml"
         state = AffState(config)
-        assert str(state.config_path) == config
+        assert state.config_path == config
         assert state.dof == 13
         assert state.freq == 30
 
     def test_init_config_alternative(self) -> None:
-        config = os.path.join(CONFIG_DIR_PATH, "alternative.toml")
+        config = CONFIG_DIR_PATH / "alternative.toml"
         state = AffState(config)
-        assert str(state.config_path) == config
+        assert state.config_path == config
         assert state.dof == 14
         assert state.freq == 100
 
     def test_init_config_empty(self) -> None:
-        config = os.path.join(CONFIG_DIR_PATH, "empty.toml")
+        config = CONFIG_DIR_PATH / "empty.toml"
         with pytest.warns() as record:
             state = AffState(config)
         assert len(record) == 2
@@ -82,7 +86,7 @@ class TestAffState:
     def test_update_split_data_no_filtering(self) -> None:
         state = AffState(dt=0.01)
         data = list(range(15))
-        state._filter_list = [None, None, None]
+        state._filter_list = [None, None, None]  # noqa: SLF001
         state.update(data)
         assert_array_equal(state.q, [0, 3, 6, 9, 12])
         assert_array_equal(state.pa, [1, 4, 7, 10, 13])
@@ -92,7 +96,7 @@ class TestAffState:
         state = AffState(dt=0.01)
         # update 1
         data = [0] * 6
-        expected = [0, 0]
+        expected: list[float] = [0, 0]
         state.update(data)
         assert_array_equal(state.q, expected)
         assert_array_equal(state.pa, expected)
@@ -129,7 +133,7 @@ class TestAffState:
 
     def test_update_calc_dq(self) -> None:
         state = AffState(dt=0.01)
-        state._filter_list = [None, None, None]
+        state._filter_list = [None, None, None]  # noqa: SLF001
         # update 1
         data = [0, 1] * 3
         expected = [0, 0]
@@ -151,18 +155,23 @@ class TestAffState:
 @pytest.mark.filterwarnings("ignore:Sensor frequency is not provided")
 class TestAffStateThread:
     def test_init_config(self) -> None:
-        config = os.path.join(CONFIG_DIR_PATH, "default.toml")
+        config = CONFIG_DIR_PATH / "default.toml"
         state = AffStateThread(config)
         assert state.freq == 30
 
     def test_init_alternative_freq(self) -> None:
-        config = os.path.join(CONFIG_DIR_PATH, "default.toml")
+        config = CONFIG_DIR_PATH / "default.toml"
         state = AffStateThread(config, freq=50)
         assert state.freq == 50
 
     def test_set_freq(self) -> None:
-        config = os.path.join(CONFIG_DIR_PATH, "default.toml")
+        config = CONFIG_DIR_PATH / "default.toml"
         state = AffStateThread(config)
         assert state.freq == 30
         state.freq = 50
         assert state.freq == 50
+
+
+# Local Variables:
+# jinx-local-words: "dt noqa"
+# End:

@@ -1,5 +1,8 @@
-import pytest
+# ruff: noqa: PLR2004
 
+from __future__ import annotations
+
+import pytest
 from affctrllib._periodic_runner import PeriodicRunner
 
 
@@ -10,14 +13,14 @@ class TestPeriodicRunner:
         assert not hasattr(runner, "freq")
         assert runner.n_steps == 0
 
-    @pytest.mark.parametrize("dt,freq", [(0.01, 100), (0.001, 1000), (0.02, 50)])
-    def test_init_specify_dt(self, dt, freq) -> None:
+    @pytest.mark.parametrize(("dt", "freq"), [(0.01, 100), (0.001, 1000), (0.02, 50)])
+    def test_init_specify_dt(self, dt: float, freq: int) -> None:
         runner = PeriodicRunner(dt=dt)
         assert runner.dt == dt
         assert runner.freq == freq
 
-    @pytest.mark.parametrize("freq,dt", [(100, 0.01), (1000, 0.001), (30, 1.0 / 30)])
-    def test_init_specify_freq(self, freq, dt) -> None:
+    @pytest.mark.parametrize(("freq", "dt"), [(100, 0.01), (1000, 0.001), (30, 1.0 / 30)])
+    def test_init_specify_freq(self, freq: int, dt: float) -> None:
         runner = PeriodicRunner(freq=freq)
         assert runner.dt == dt
         assert runner.freq == freq
@@ -25,19 +28,20 @@ class TestPeriodicRunner:
     def test_init_error_both_of_dt_freq_specified(self) -> None:
         dt = 0.01
         freq = 100
-        with pytest.raises(ValueError) as excinfo:
+        msg = "Unable to specify DT and FREQ simultaneously"
+        with pytest.raises(ValueError, match=msg) as excinfo:
             _ = PeriodicRunner(dt=dt, freq=freq)
-        assert "Unable to specify DT and FREQ simultaneously" in str(excinfo.value)
+        assert msg in str(excinfo.value)
 
-    @pytest.mark.parametrize("dt,freq", [(0.01, 100), (0.001, 1000), (0.02, 50)])
-    def test_dt_setter(self, dt, freq) -> None:
+    @pytest.mark.parametrize(("dt", "freq"), [(0.01, 100), (0.001, 1000), (0.02, 50)])
+    def test_dt_setter(self, dt: float, freq: int) -> None:
         runner = PeriodicRunner(dt=0.01)
         runner.dt = dt
         assert runner.dt == dt
         assert runner.freq == freq
 
-    @pytest.mark.parametrize("freq,dt", [(100, 0.01), (1000, 0.001), (30, 1.0 / 30)])
-    def test_freq_setter(self, dt, freq) -> None:
+    @pytest.mark.parametrize(("freq", "dt"), [(100, 0.01), (1000, 0.001), (30, 1.0 / 30)])
+    def test_freq_setter(self, dt: float, freq: int) -> None:
         runner = PeriodicRunner(dt=0.01)
         runner.freq = freq
         assert runner.dt == dt
@@ -54,3 +58,8 @@ class TestPeriodicRunner:
         runner.update()
         runner.update()
         assert runner.n_steps == 5
+
+
+# Local Variables:
+# jinx-local-words: "dt noqa"
+# End:

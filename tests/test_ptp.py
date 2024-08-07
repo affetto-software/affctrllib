@@ -1,7 +1,11 @@
+# ruff: noqa: PLR2004,PGH003
+
+from __future__ import annotations
+
+import re
+
 import numpy as np
 import pytest
-from numpy.testing import assert_array_almost_equal, assert_array_equal
-
 from affctrllib.ptp import (
     PTP,
     FifthDegreePolynomialProfile,
@@ -9,6 +13,7 @@ from affctrllib.ptp import (
     TrapezoidalVelocityProfile,
     TriangularVelocityProfile,
 )
+from numpy.testing import assert_array_almost_equal, assert_array_equal
 
 PIx2 = 2.0 * np.pi
 
@@ -23,7 +28,7 @@ class TestPTP:
         assert isinstance(ptp.profile, TriangularVelocityProfile)
 
     @pytest.mark.parametrize(
-        "name,expected",
+        ("name", "expected"),
         [
             ("triangular velocity", TriangularVelocityProfile),
             ("triangular", TriangularVelocityProfile),
@@ -38,12 +43,12 @@ class TestPTP:
             ("5th", FifthDegreePolynomialProfile),
         ],
     )
-    def test_select_profile(self, name, expected) -> None:
+    def test_select_profile(self, name: str, expected) -> None:  # noqa: ANN001
         ptp = PTP(0, 1, 5, profile_name=name)
         assert isinstance(ptp.profile, expected)
 
     @pytest.mark.parametrize(
-        "name,expected",
+        ("name", "expected"),
         [
             ("tra", TrapezoidalVelocityProfile),
             ("trapez", TrapezoidalVelocityProfile),
@@ -51,13 +56,13 @@ class TestPTP:
             ("trapezoidal velocity", TrapezoidalVelocityProfile),
         ],
     )
-    def test_select_profile_trapezoidal(self, name, expected) -> None:
+    def test_select_profile_trapezoidal(self, name: str, expected) -> None:  # noqa: ANN001
         ptp = PTP(0, 1, 5, profile_name=name)
         assert isinstance(ptp.profile, expected)
 
     @pytest.mark.parametrize("name", ["hoge", "poly", "tria", "5th ordre"])
-    def test_error_invalid_profile_name(self, name) -> None:
-        with pytest.raises(ValueError) as excinfo:
+    def test_error_invalid_profile_name(self, name: str) -> None:
+        with pytest.raises(ValueError, match=f"Invalid profile name: {name}") as excinfo:
             _ = PTP(0, 1, 5, profile_name=name)
         assert f"Invalid profile name: {name}" in str(excinfo.value)
 
@@ -286,13 +291,16 @@ class TestPTP:
         assert_array_equal(ptp.profile.tb, np.array([2, 2, 2]))  # type: ignore
 
     def test_error_too_small_vmax(self) -> None:
-        with pytest.raises(ValueError) as excinfo:
+        msg = r"Specified Vmax for q.\d. is too small to reach desired position: 0.1"
+        pattern = re.compile(msg)
+        with pytest.raises(ValueError, match=msg) as excinfo:
             _ = PTP(0, 1, 5, profile_name="tra", vmax=0.1)
-        msg = "Specified Vmax for q[0] is too small to reach desired position: 0.1"
-        assert msg in str(excinfo.value)
+        assert pattern.match(str(excinfo.value)) is not None
 
     def test_error_too_small_vmax_ndarray(self) -> None:
-        with pytest.raises(ValueError) as excinfo:
+        msg = r"Specified Vmax for q.\d. is too small to reach desired position: 0.1"
+        pattern = re.compile(msg)
+        with pytest.raises(ValueError, match=msg) as excinfo:
             _ = PTP(
                 np.array([0, 0, 0]),
                 np.array([1, 1, 1]),
@@ -300,8 +308,7 @@ class TestPTP:
                 profile_name="tra",
                 vmax=np.array([0.25, 0.1, 0.25]),
             )
-        msg = "Specified Vmax for q[1] is too small to reach desired position: 0.1"
-        assert msg in str(excinfo.value)
+        assert pattern.match(str(excinfo.value)) is not None
 
     def test_warn_too_large_vmax(self) -> None:
         with pytest.warns(ResourceWarning) as record:
@@ -479,3 +486,8 @@ class TestPTP:
             assert_array_almost_equal(ptp.q(t), [q, q, q])
             assert_array_almost_equal(ptp.dq(t), [dq, dq, dq])
             assert_array_almost_equal(ptp.ddq(t), [ddq, ddq, ddq])
+
+
+# Local Variables:
+# jinx-local-words: "Vmax ddq dq hoge noqa ordre tra trapez tri tria"
+# End:

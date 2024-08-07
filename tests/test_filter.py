@@ -1,29 +1,30 @@
+from __future__ import annotations
+
 import numpy as np
 import pytest
+from affctrllib.filter import DEFAULT_FILTER_N_POINTS, Filter
 from numpy.testing import assert_array_equal
-
-from affctrllib.filter import Filter
 
 
 class TestFilter:
     def test_init(self) -> None:
         filt = Filter()
-        assert filt.n_points == 5
+        assert filt.n_points == DEFAULT_FILTER_N_POINTS
 
     @pytest.mark.parametrize("n", [3, 5, 7, 9])
-    def test_set_n_points(self, n) -> None:
+    def test_set_n_points(self, n: int) -> None:
         filt = Filter()
         filt.set_n_points(n)
         assert filt.n_points == n
 
     @pytest.mark.parametrize("n", [5, 7, 9, 11])
-    def test_n_points_setter(self, n) -> None:
+    def test_n_points_setter(self, n: int) -> None:
         filt = Filter()
         filt.n_points = n
         assert filt.n_points == n
 
     @pytest.mark.parametrize("n", [1, 2, 3, 4])
-    def test_set_n_points_in_init(self, n) -> None:
+    def test_set_n_points_in_init(self, n: int) -> None:
         filt = Filter(n)
         assert filt.n_points == n
 
@@ -61,7 +62,7 @@ class TestFilter:
         filt = Filter(n_points)
         output_signal = []
         for x in input_signal:
-            y = filt.update(x)
+            y = filt.update(x)  # type: ignore[arg-type]
             output_signal.append(y)
         for i in range(7):
             assert_array_equal(output_signal[i], expected[i])

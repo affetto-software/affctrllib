@@ -1,7 +1,8 @@
+from __future__ import annotations
+
 import socket
 
 import pytest
-
 from affctrllib._sockutil import Socket
 
 
@@ -43,7 +44,7 @@ class TestSocket:
         assert s.addr == addr
 
     @pytest.mark.parametrize(
-        "host,port",
+        ("host", "port"),
         [
             ("localhost", 1000),
             ("192.168.1.1", 2000),
@@ -52,14 +53,14 @@ class TestSocket:
     )
     def test_repr(self, host: str, port: int) -> None:
         s = Socket((host, port))
-        assert repr(s) == f"Socket(({host}, {str(port)}))"
+        assert repr(s) == f"Socket(({host}, {port!s}))"
 
     def test_repr_no_address(self) -> None:
         s = Socket()
-        assert repr(s) == f"Socket()"
+        assert repr(s) == "Socket()"
 
     @pytest.mark.parametrize(
-        "host,port",
+        ("host", "port"),
         [
             ("localhost", 1010),
             ("192.168.2.22", 2020),
@@ -68,10 +69,10 @@ class TestSocket:
     )
     def test_str(self, host: str, port: int) -> None:
         s = Socket((host, port))
-        assert str(s) == f"{host}:{str(port)}"
+        assert str(s) == f"{host}:{port!s}"
 
     @pytest.mark.parametrize(
-        "host,port",
+        ("host", "port"),
         [
             ("localhost", 1010),
             ("192.168.2.22", 2020),
@@ -81,16 +82,16 @@ class TestSocket:
     def test_str_after_create(self, host: str, port: int) -> None:
         s = Socket((host, port))
         s.create()
-        assert str(s) == f"{host}:{str(port)} (UDP)"
+        assert str(s) == f"{host}:{port!s} (UDP)"
 
     def test_str_no_address(self) -> None:
         s = Socket()
-        assert str(s) == f"No address is provided"
+        assert str(s) == "No address is provided"
 
     def test_str_no_address_after_create(self) -> None:
         s = Socket()
         s.create()
-        assert str(s) == f"No address is provided (UDP)"
+        assert str(s) == "No address is provided (UDP)"
 
     @pytest.mark.parametrize("host", ["localhost", "192.168.11.4", "192.168.11.5"])
     def test_host_setter(self, host: str) -> None:
@@ -129,7 +130,7 @@ class TestSocket:
     )
     def test_set_addr_dict(self, addr_dict: dict[str, int | str]) -> None:
         s = Socket()
-        s.addr = addr_dict
+        s.addr = addr_dict  # type: ignore[assignment]
         assert s.host == addr_dict["host"]
         assert s.port == addr_dict["port"]
 
@@ -191,3 +192,8 @@ class TestSocket:
         with pytest.raises(RuntimeError) as excinfo:
             s.close()
         assert str(excinfo.value) == "No socket is created yet"
+
+
+# Local Variables:
+# jinx-local-words: "addr localhost"
+# End:

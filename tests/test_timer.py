@@ -1,9 +1,13 @@
+from __future__ import annotations
+
 import time
-from typing import Callable
+from typing import TYPE_CHECKING
 
 import pytest
-
 from affctrllib.timer import Timer
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 TOL = 1e-1
 
@@ -11,100 +15,102 @@ TOL = 1e-1
 class TestTimer:
     def test_init(self) -> None:
         timer = Timer()
-        assert timer._rate is None
-        assert timer._period is None
+        assert timer.period_ns == 0
 
     def test_error_when_rate_is_not_set(self) -> None:
         timer = Timer()
-        with pytest.raises(ValueError) as excinfo:
+        with pytest.raises(ValueError, match=r"rate is not set") as excinfo:
             _ = timer.rate
         assert "rate is not set" in str(excinfo.value)
 
     @pytest.mark.parametrize("rate", [10, 30, 100])
-    def test_set_rate(self, rate) -> None:
+    def test_set_rate(self, rate: int) -> None:
         timer = Timer()
         timer.set_rate(rate)
         assert timer.rate == rate
         assert timer.period == 1.0 / rate
 
     @pytest.mark.parametrize("rate", [20, 50, 100])
-    def test_rate_setter(self, rate) -> None:
+    def test_rate_setter(self, rate: int) -> None:
         timer = Timer()
         timer.rate = rate
         assert timer.rate == rate
         assert timer.period == 1.0 / rate
 
     @pytest.mark.parametrize("rate", [30, 100, 300])
-    def test_set_rate_init(self, rate):
+    def test_set_rate_init(self, rate: int) -> None:
         timer = Timer(rate=rate)
         assert timer.rate == rate
         assert timer.period == 1.0 / rate
 
     def test_error_when_period_is_not_set(self) -> None:
         timer = Timer()
-        with pytest.raises(ValueError) as excinfo:
+        with pytest.raises(ValueError, match="period is not set") as excinfo:
             _ = timer.period
         assert "period is not set" in str(excinfo.value)
 
     @pytest.mark.parametrize("period", [0.1, 0.01, 0.025])
-    def test_set_period(self, period) -> None:
+    def test_set_period(self, period: float) -> None:
         timer = Timer()
         timer.set_period(period)
         assert timer.period == period
         assert timer.rate == 1.0 / period
 
     @pytest.mark.parametrize("period", [0.2, 0.02, 0.005])
-    def test_period_setter(self, period) -> None:
+    def test_period_setter(self, period: float) -> None:
         timer = Timer()
         timer.period = period
         assert timer.period == period
         assert timer.rate == 1.0 / period
 
     @pytest.mark.parametrize("period", [0.3, 0.03, 0.003])
-    def test_set_period_init(self, period):
+    def test_set_period_init(self, period: float) -> None:
         timer = Timer(period=period)
         assert timer.period == period
         assert timer.rate == 1.0 / period
 
     @pytest.mark.parametrize("period", [0.1, 0.01, 0.025])
-    def test_period_ns(self, period) -> None:
+    def test_period_ns(self, period: float) -> None:
         timer = Timer()
         timer.set_period(period)
         assert timer.period_ns == int(period * 1e9)
 
     @pytest.mark.parametrize("rate", [30, 60, 90])
-    def test_period_ns_by_rate(self, rate) -> None:
+    def test_period_ns_by_rate(self, rate: int) -> None:
         timer = Timer()
         timer.set_rate(rate)
         assert timer.period_ns == int(1e9 / rate)
 
     def test_reset(self) -> None:
         timer = Timer()
+        dt = 0.01
         timer.start()
-        time.sleep(0.01)
+        time.sleep(dt)
         t = timer.elapsed_time()
-        assert t > 0.01
+        assert t > dt
         timer.reset()
-        time.sleep(0.01)
+        time.sleep(dt)
         t = timer.elapsed_time()
         assert t == pytest.approx(0.01, rel=TOL)
 
     def test_elapsed_time(self) -> None:
         timer = Timer()
+        dt = 0.01
         timer.start()
-        time.sleep(0.01)
+        time.sleep(dt)
         t = timer.elapsed_time()
-        assert t == pytest.approx(0.01, rel=TOL)
+        assert t == pytest.approx(dt, rel=TOL)
 
     def test_elapsed_time2(self) -> None:
         timer = Timer()
+        dt = 0.01
         timer.start()
-        time.sleep(0.01)
+        time.sleep(dt)
         t = timer.elapsed_time()
-        assert t == pytest.approx(0.01, rel=TOL)
-        time.sleep(0.01)
+        assert t == pytest.approx(dt, rel=TOL)
+        time.sleep(dt)
         t = timer.elapsed_time()
-        assert t == pytest.approx(0.02, rel=TOL)
+        assert t == pytest.approx(2 * dt, rel=TOL)
 
     def test_block(self) -> None:
         timer = Timer(period=0.01)
@@ -154,6 +160,7 @@ class TestTimer:
         ],
     )
     def test_alternative_time_ns_function(self, time_ns_func: Callable[[], int]) -> None:
+        # ruff: noqa: SLF001,ERA001
         timer = Timer(rate=100)
         timer._time_ns_func = time_ns_func
         timer.start()
@@ -165,11 +172,17 @@ class TestTimer:
 
     def test_warn_block_has_no_effect(self) -> None:
         timer = Timer(period=0.01)
+        N = 3
         timer.start()
         with pytest.warns(RuntimeWarning) as record:
-            for _ in range(3):
+            for _ in range(N):
                 time.sleep(0.01)
                 timer.block()
-        assert len(record) == 3
-        for i in range(3):
+        assert len(record) == N
+        for i in range(N):
             assert str(record[i].message).startswith("It took longer than specified period at t=")
+
+
+# Local Variables:
+# jinx-local-words: "func noqa ns pytest"
+# End:

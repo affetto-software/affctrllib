@@ -1,12 +1,19 @@
-import os
+# ruff: noqa: PLR2004
+
+from __future__ import annotations
+
+from pathlib import Path
+from typing import TYPE_CHECKING
 
 import numpy as np
 import pytest
+from affctrllib.affctrl import AffCtrl, AffCtrlThread
 from numpy.testing import assert_array_equal
 
-from affctrllib.affctrl import AffCtrl, AffCtrlThread
+if TYPE_CHECKING:
+    from collections.abc import Sequence
 
-CONFIG_DIR_PATH = os.path.join(os.path.dirname(__file__), "config")
+CONFIG_DIR_PATH = Path(__file__).parent / "config"
 
 
 @pytest.mark.filterwarnings("ignore:Control frequency is not provided")
@@ -19,14 +26,14 @@ class TestAffCtrl:
         assert ctrl.n_steps == 0
         assert ctrl.inactive_joints.shape == (0, 3)
 
-    @pytest.mark.parametrize("dt,freq", [(0.01, 100), (0.001, 1000), (0.02, 50)])
-    def test_init_specify_dt(self, dt, freq) -> None:
+    @pytest.mark.parametrize(("dt", "freq"), [(0.01, 100), (0.001, 1000), (0.02, 50)])
+    def test_init_specify_dt(self, dt: float, freq: int) -> None:
         ctrl = AffCtrl(dt=dt)
         assert ctrl.dt == dt
         assert ctrl.freq == freq
 
-    @pytest.mark.parametrize("freq,dt", [(100, 0.01), (1000, 0.001), (30, 1.0 / 30)])
-    def test_init_specify_freq(self, freq, dt) -> None:
+    @pytest.mark.parametrize(("freq", "dt"), [(100, 0.01), (1000, 0.001), (30, 1.0 / 30)])
+    def test_init_specify_freq(self, freq: int, dt: float) -> None:
         ctrl = AffCtrl(freq=freq)
         assert ctrl.dt == dt
         assert ctrl.freq == freq
@@ -34,28 +41,29 @@ class TestAffCtrl:
     def test_init_error_both_of_dt_freq_specified(self) -> None:
         dt = 0.01
         freq = 100
-        with pytest.raises(ValueError) as excinfo:
+        msg = r"Unable to specify DT and FREQ simultaneously"
+        with pytest.raises(ValueError, match=msg) as excinfo:
             _ = AffCtrl(dt=dt, freq=freq)
-        assert "Unable to specify DT and FREQ simultaneously" in str(excinfo.value)
+        assert msg in str(excinfo.value)
 
-    @pytest.mark.parametrize("dt,freq", [(0.01, 100), (0.001, 1000), (0.02, 50)])
-    def test_dt_setter(self, dt, freq):
+    @pytest.mark.parametrize(("dt", "freq"), [(0.01, 100), (0.001, 1000), (0.02, 50)])
+    def test_dt_setter(self, dt: float, freq: int) -> None:
         ctrl = AffCtrl(dt=0.01)
         ctrl.dt = dt
         assert ctrl.dt == dt
         assert ctrl.freq == freq
 
-    @pytest.mark.parametrize("freq,dt", [(100, 0.01), (1000, 0.001), (30, 1.0 / 30)])
-    def test_freq_setter(self, dt, freq):
+    @pytest.mark.parametrize(("freq", "dt"), [(100, 0.01), (1000, 0.001), (30, 1.0 / 30)])
+    def test_freq_setter(self, dt: float, freq: int) -> None:
         ctrl = AffCtrl(dt=0.01)
         ctrl.freq = freq
         assert ctrl.dt == dt
         assert ctrl.freq == freq
 
     def test_init_config(self) -> None:
-        config = os.path.join(CONFIG_DIR_PATH, "default.toml")
+        config = CONFIG_DIR_PATH / "default.toml"
         ctrl = AffCtrl(config)
-        assert str(ctrl.config_path) == config
+        assert ctrl.config_path == config
         assert ctrl.dof == 13
         assert ctrl.freq == 30
         assert ctrl.scale_gain == 255 / 600
@@ -73,9 +81,9 @@ class TestAffCtrl:
         )
 
     def test_init_config_alternative(self) -> None:
-        config = os.path.join(CONFIG_DIR_PATH, "alternative.toml")
+        config = CONFIG_DIR_PATH / "alternative.toml"
         ctrl = AffCtrl(config)
-        assert str(ctrl.config_path) == config
+        assert ctrl.config_path == config
         assert ctrl.dof == 14
         assert ctrl.freq == 50
         assert ctrl.scale_gain == 255 / 400
@@ -94,7 +102,7 @@ class TestAffCtrl:
         )
 
     def test_init_config_empty(self) -> None:
-        config = os.path.join(CONFIG_DIR_PATH, "empty.toml")
+        config = CONFIG_DIR_PATH / "empty.toml"
         with pytest.warns() as record:
             ctrl = AffCtrl(config)
         assert len(record) == 2
@@ -103,7 +111,7 @@ class TestAffCtrl:
         assert ctrl.freq == 30
 
     def test_load_inactive_joints(self) -> None:
-        config = os.path.join(CONFIG_DIR_PATH, "default.toml")
+        config = CONFIG_DIR_PATH / "default.toml"
         ctrl = AffCtrl(config)
         inactive_joints = {"inactive_joints": [{"index": 3}, {"index": "9,10-11", "pressure": 400}]}
         ctrl.reset_inactive_joints()
@@ -114,20 +122,20 @@ class TestAffCtrl:
         )
 
     @pytest.mark.parametrize(
-        "input_range,expected",
+        ("input_range", "expected"),
         [
             ((0, 600), 255 / 600),
             ((100, 500), 255 / 400),
         ],
     )
-    def test_set_input_range(self, input_range, expected) -> None:
+    def test_set_input_range(self, input_range: tuple, expected: float) -> None:
         ctrl = AffCtrl()
         ctrl.set_input_range(input_range)
         assert ctrl.input_range == input_range
         assert ctrl.scale_gain == expected
 
     @pytest.mark.parametrize(
-        "i,p",
+        ("i", "p"),
         [
             (1, 10),
             (3, 30),
@@ -135,13 +143,13 @@ class TestAffCtrl:
             ("8", 80),
         ],
     )
-    def test_set_inactive_joints(self, i, p):
+    def test_set_inactive_joints(self, i: int | str, p: float) -> None:
         ctrl = AffCtrl()
         ctrl.set_inactive_joints(i, p)
         assert_array_equal(ctrl.inactive_joints, [[int(i), p, p]])
 
     @pytest.mark.parametrize(
-        "seq,p",
+        ("seq", "p"),
         [
             ([0, 1, 2], 10),
             ([3, 7, 12], 30),
@@ -149,19 +157,19 @@ class TestAffCtrl:
             ((10,), 80),
         ],
     )
-    def test_set_inactive_joints_sequence(self, seq, p):
+    def test_set_inactive_joints_sequence(self, seq: Sequence[int], p: float) -> None:
         ctrl = AffCtrl()
         ctrl.set_inactive_joints(seq, p)
         expected = [[int(i), p, p] for i in seq]
         assert_array_equal(ctrl.inactive_joints, expected)
 
-    def test_set_inactive_joints_default_press(self):
+    def test_set_inactive_joints_default_press(self) -> None:
         ctrl = AffCtrl()
         ctrl.set_inactive_joints(3)
         assert_array_equal(ctrl.inactive_joints, [[3, 0, 0]])
 
     @pytest.mark.parametrize(
-        "pattern,pressure,expected",
+        ("pattern", "pressure", "expected"),
         [
             (1, 10, [[1, 10, 10]]),
             ("2", 20, [[2, 20, 20]]),
@@ -209,12 +217,12 @@ class TestAffCtrl:
             ),
         ],
     )
-    def test_set_inactive_joints_pattern(self, pattern, pressure, expected):
+    def test_set_inactive_joints_pattern(self, pattern: int | str, pressure: float, expected: list[int]) -> None:
         ctrl = AffCtrl()
         ctrl.set_inactive_joints(pattern, pressure)
         assert_array_equal(ctrl.inactive_joints, expected)
 
-    def test_set_inactive_joints_overwrite(self):
+    def test_set_inactive_joints_overwrite(self) -> None:
         ctrl = AffCtrl()
         ctrl.set_inactive_joints(1, 100)
         assert_array_equal(ctrl.inactive_joints, [[1, 100, 100]])
@@ -222,7 +230,7 @@ class TestAffCtrl:
         assert_array_equal(ctrl.inactive_joints, [[2, 200, 200]])
 
     @pytest.mark.parametrize(
-        "pattern,p",
+        ("pattern", "p"),
         [
             ("", 10),
             (",", 20),
@@ -231,13 +239,13 @@ class TestAffCtrl:
             ([], 50),
         ],
     )
-    def test_set_inactive_joints_do_nothing(self, pattern, p):
+    def test_set_inactive_joints_do_nothing(self, pattern: int | str, p: float) -> None:
         ctrl = AffCtrl()
         ctrl.set_inactive_joints(pattern, p)
         expected = np.empty(shape=(0, 3))
         assert_array_equal(ctrl.inactive_joints, expected)
 
-    def test_add_inactive_joints(self):
+    def test_add_inactive_joints(self) -> None:
         ctrl = AffCtrl()
         ctrl.add_inactive_joints(1)
         ctrl.add_inactive_joints("7-12", 100)
@@ -255,13 +263,13 @@ class TestAffCtrl:
         )
 
     @pytest.mark.parametrize(
-        "seq1,seq2,p",
+        ("seq1", "seq2", "p"),
         [
             ([0, 1, 2], (4, 6), 10),
             ([3, 7, 12], (10,), 30),
         ],
     )
-    def test_add_inactive_joints_sequence(self, seq1, seq2, p):
+    def test_add_inactive_joints_sequence(self, seq1: list[int], seq2: tuple[int, ...], p: float) -> None:
         ctrl = AffCtrl()
         ctrl.add_inactive_joints(seq1, p)
         ctrl.add_inactive_joints(seq2, p)
@@ -269,7 +277,7 @@ class TestAffCtrl:
         expected.extend([[int(i), p, p] for i in seq2])
         assert_array_equal(ctrl.inactive_joints, expected)
 
-    def test_add_inactive_joints_overwrite(self):
+    def test_add_inactive_joints_overwrite(self) -> None:
         ctrl = AffCtrl()
         ctrl.add_inactive_joints(1)
         ctrl.add_inactive_joints("7-12", 100)
@@ -288,14 +296,14 @@ class TestAffCtrl:
             ],
         )
 
-    def test_reset_inactive_joints(self):
+    def test_reset_inactive_joints(self) -> None:
         ctrl = AffCtrl()
         ctrl.set_inactive_joints(1)
         assert_array_equal(ctrl.inactive_joints, [[1, 0, 0]])
         ctrl.reset_inactive_joints()
         assert_array_equal(ctrl.inactive_joints, np.empty(shape=(0, 3)))
 
-    def test_get_inactive_joints_index(self):
+    def test_get_inactive_joints_index(self) -> None:
         ctrl = AffCtrl()
         ctrl.set_inactive_joints(1)
         assert ctrl.inactive_joints_index == [1]
@@ -305,7 +313,7 @@ class TestAffCtrl:
         assert ctrl.active_joints_index == [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
 
     @pytest.mark.parametrize(
-        "i,p",
+        ("i", "p"),
         [
             (1, 10),
             (3, 30),
@@ -313,7 +321,7 @@ class TestAffCtrl:
             ("8", 80),
         ],
     )
-    def test_set_active_joints(self, i, p):
+    def test_set_active_joints(self, i: int | str, p: float) -> None:
         ctrl = AffCtrl()
         ctrl.set_active_joints(i, p)
         inactive_index = list(range(13))
@@ -321,22 +329,22 @@ class TestAffCtrl:
         expected = [[i, p, p] for i in inactive_index]
         assert_array_equal(ctrl.inactive_joints, expected)
 
-    def test_set_active_joints_default_press(self):
+    def test_set_active_joints_default_press(self) -> None:
         ctrl = AffCtrl()
         ctrl.set_active_joints(3)
         inactive_index = list(range(13))
-        inactive_index.pop(int(3))
+        inactive_index.pop(3)
         expected = [[i, 0, 0] for i in inactive_index]
         assert_array_equal(ctrl.inactive_joints, expected)
 
     @pytest.mark.parametrize(
-        "seq,p",
+        ("seq", "p"),
         [
             (list(range(10)), 10),
             ((1, 2, 3, 5, 7, 9, 11, 12), 30),
         ],
     )
-    def test_set_active_joints_sequence(self, seq, p):
+    def test_set_active_joints_sequence(self, seq: Sequence[int], p: float) -> None:
         ctrl = AffCtrl()
         ctrl.set_active_joints(seq, p)
         index = list(range(13))
@@ -346,7 +354,7 @@ class TestAffCtrl:
         assert_array_equal(ctrl.inactive_joints, expected)
 
     @pytest.mark.parametrize(
-        "pattern,p",
+        ("pattern", "p"),
         [
             ("", 10),
             (",", 20),
@@ -356,14 +364,14 @@ class TestAffCtrl:
             (None, 60),
         ],
     )
-    def test_set_active_joints_inactivate_all(self, pattern, p):
+    def test_set_active_joints_inactivate_all(self, pattern: str | Sequence | None, p: float) -> None:
         ctrl = AffCtrl()
         ctrl.set_active_joints(pattern, p)
         expected = [[i, p, p] for i in range(13)]
         assert_array_equal(ctrl.inactive_joints, expected)
 
     @pytest.mark.parametrize(
-        "pattern,pressure,expected",
+        ("pattern", "pressure", "expected"),
         [
             ("1-10", 30, [[0, 30, 30], [11, 30, 30], [12, 30, 30]]),
             (
@@ -420,12 +428,12 @@ class TestAffCtrl:
             ("-", 120, np.empty(shape=(0, 3))),
         ],
     )
-    def test_set_active_joints_pattern(self, pattern, pressure, expected):
+    def test_set_active_joints_pattern(self, pattern: str, pressure: float, expected: list) -> None:
         ctrl = AffCtrl()
         ctrl.set_active_joints(pattern, pressure)
         assert_array_equal(ctrl.inactive_joints, expected)
 
-    def test_set_active_joints_overwrite(self):
+    def test_set_active_joints_overwrite(self) -> None:
         ctrl = AffCtrl()
         ctrl.set_active_joints("10-", 100)
         assert_array_equal(
@@ -446,7 +454,7 @@ class TestAffCtrl:
         ctrl.set_active_joints("-10", 200)
         assert_array_equal(ctrl.inactive_joints, [[11, 200, 200], [12, 200, 200]])
 
-    def test_add_active_joints(self):
+    def test_add_active_joints(self) -> None:
         ctrl = AffCtrl()
         ctrl.set_active_joints(1, 100)
         ctrl.add_active_joints("3-7")
@@ -460,12 +468,12 @@ class TestAffCtrl:
             ],
         )
 
-    def test_add_active_joints_do_nothing(self):
+    def test_add_active_joints_do_nothing(self) -> None:
         ctrl = AffCtrl()
         ctrl.add_active_joints(1)
         assert_array_equal(ctrl.inactive_joints, np.empty(shape=(0, 3)))
 
-    def test_get_active_joints(self):
+    def test_get_active_joints(self) -> None:
         ctrl = AffCtrl()
         ctrl.set_active_joints(1)
         assert ctrl.active_joints_index == [1]
@@ -474,23 +482,23 @@ class TestAffCtrl:
         assert ctrl.active_joints_index == [10, 11, 12]
         assert ctrl.inactive_joints_index == [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
 
-    def test_mask(self):
-        config = os.path.join(CONFIG_DIR_PATH, "default.toml")
+    def test_mask(self) -> None:
+        config = CONFIG_DIR_PATH / "default.toml"
         ctrl = AffCtrl(config)
         u1 = np.ones((13,))
         u2 = np.ones((13,))
-        u1, u2 = ctrl.mask(u1, u2)
+        u1, u2 = ctrl.mask(u1, u2)  # type: ignore[arg-type,assignment]
         expected = np.ones((13,))
         expected[1] = 0
         expected[7:] = 100
         assert_array_equal(u1, expected)
         assert_array_equal(u2, expected)
 
-    def test_masked_ctrl_input(self):
+    def test_masked_ctrl_input(self) -> None:
         u = np.ones((13,)) * 150
-        config = os.path.join(CONFIG_DIR_PATH, "default.toml")
+        config = CONFIG_DIR_PATH / "default.toml"
         ctrl = AffCtrl(config)
-        u1, u2 = ctrl.update(0, u, u)
+        u1, u2 = ctrl.update(0, u, u)  # type: ignore[arg-type]
         expected = np.full((13,), 150 * 255 / 600)
         expected[1] = 0
         expected[7:] = 100 * 255 / 600
@@ -502,23 +510,28 @@ class TestAffCtrl:
 @pytest.mark.filterwarnings("ignore:Control frequency is not provided")
 class TestAffCtrlThread:
     def test_init_config(self) -> None:
-        config = os.path.join(CONFIG_DIR_PATH, "default.toml")
+        config = CONFIG_DIR_PATH / "default.toml"
         ctrl = AffCtrlThread(config=config)
         assert ctrl.freq == 30
 
     def test_init_alternative_freq(self) -> None:
-        config = os.path.join(CONFIG_DIR_PATH, "default.toml")
+        config = CONFIG_DIR_PATH / "default.toml"
         ctrl = AffCtrlThread(config=config, freq=50)
         assert ctrl.freq == 50
 
     def test_set_freq(self) -> None:
-        config = os.path.join(CONFIG_DIR_PATH, "default.toml")
+        config = CONFIG_DIR_PATH / "default.toml"
         ctrl = AffCtrlThread(config=config)
         assert ctrl.freq == 30
         ctrl.freq = 50
         assert ctrl.freq == 50
 
     def test_get_current_time(self) -> None:
-        config = os.path.join(CONFIG_DIR_PATH, "default.toml")
+        config = CONFIG_DIR_PATH / "default.toml"
         ctrl = AffCtrlThread(config=config)
         assert ctrl.current_time == 0
+
+
+# Local Variables:
+# jinx-local-words: "arg dt noqa"
+# End:

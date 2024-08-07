@@ -1,17 +1,20 @@
-import os
+# ruff: noqa: PLR2004,SLF001,ANN001
+
+from __future__ import annotations
+
+from pathlib import Path
 
 import numpy as np
 import pytest
-from numpy.testing import assert_array_equal
-
 from affctrllib.affposctrl import (
     AffPosCtrl,
     AffPosCtrlThread,
     FeedbackPID,
     FeedbackPIDF,
 )
+from numpy.testing import assert_array_equal
 
-CONFIG_DIR_PATH = os.path.join(os.path.dirname(__file__), "config")
+CONFIG_DIR_PATH = Path(__file__).parent / "config"
 
 
 class TestFeedbackPID:
@@ -88,7 +91,7 @@ class TestFeedbackPID:
             assert pid.stiff == stiff
 
     @pytest.mark.parametrize(
-        "t,q,dq,qdes,dqdes,expected",
+        ("t", "q", "dq", "qdes", "dqdes", "expected"),
         [
             (0, 0, 0, 5, 0, 5),
             (1, 2, 4, 5, 0, 3),
@@ -103,7 +106,7 @@ class TestFeedbackPID:
         assert u == expected
 
     @pytest.mark.parametrize(
-        "t,q,dq,qdes,dqdes,expected",
+        ("t", "q", "dq", "qdes", "dqdes", "expected"),
         [
             (0, 0, 0, 5, 0, 5),
             (1, 2, 4, 5, 0, -1),
@@ -172,13 +175,13 @@ class TestAffPosCtrl:
         assert ctrl.dt == 1.0 / 30
         assert ctrl.inactive_joints.shape == (0, 3)
 
-    @pytest.mark.parametrize("dt,freq", [(0.01, 100), (0.001, 1000), (0.02, 50)])
+    @pytest.mark.parametrize(("dt", "freq"), [(0.01, 100), (0.001, 1000), (0.02, 50)])
     def test_init_specify_dt(self, dt, freq) -> None:
         ctrl = AffPosCtrl(dt=dt)
         assert ctrl.dt == dt
         assert ctrl.freq == freq
 
-    @pytest.mark.parametrize("freq,dt", [(100, 0.01), (1000, 0.001), (30, 1.0 / 30)])
+    @pytest.mark.parametrize(("freq", "dt"), [(100, 0.01), (1000, 0.001), (30, 1.0 / 30)])
     def test_init_specify_freq(self, freq, dt) -> None:
         ctrl = AffPosCtrl(freq=freq)
         assert ctrl.dt == dt
@@ -187,28 +190,29 @@ class TestAffPosCtrl:
     def test_init_error_both_of_dt_freq_specified(self) -> None:
         dt = 0.01
         freq = 100
-        with pytest.raises(ValueError) as excinfo:
+        msg = "Unable to specify DT and FREQ simultaneously"
+        with pytest.raises(ValueError, match=msg) as excinfo:
             _ = AffPosCtrl(dt=dt, freq=freq)
-        assert "Unable to specify DT and FREQ simultaneously" in str(excinfo.value)
+        assert msg in str(excinfo.value)
 
-    @pytest.mark.parametrize("dt,freq", [(0.01, 100), (0.001, 1000), (0.02, 50)])
-    def test_dt_setter(self, dt, freq):
+    @pytest.mark.parametrize(("dt", "freq"), [(0.01, 100), (0.001, 1000), (0.02, 50)])
+    def test_dt_setter(self, dt, freq) -> None:
         ctrl = AffPosCtrl(dt=0.01)
         ctrl.dt = dt
         assert ctrl.dt == dt
         assert ctrl.freq == freq
 
-    @pytest.mark.parametrize("freq,dt", [(100, 0.01), (1000, 0.001), (30, 1.0 / 30)])
-    def test_freq_setter(self, dt, freq):
+    @pytest.mark.parametrize(("freq", "dt"), [(100, 0.01), (1000, 0.001), (30, 1.0 / 30)])
+    def test_freq_setter(self, dt, freq) -> None:
         ctrl = AffPosCtrl(dt=0.01)
         ctrl.freq = freq
         assert ctrl.dt == dt
         assert ctrl.freq == freq
 
     def test_init_config(self) -> None:
-        config = os.path.join(CONFIG_DIR_PATH, "default.toml")
+        config = CONFIG_DIR_PATH / "default.toml"
         ctrl = AffPosCtrl(config)
-        assert str(ctrl.config_path) == config
+        assert ctrl.config_path == config
         assert ctrl.dof == 13
         assert ctrl.freq == 30
         assert ctrl.scale_gain == 255 / 600
@@ -235,9 +239,9 @@ class TestAffPosCtrl:
         assert_array_equal(ctrl.feedback_scheme.stiff, np.array([150] * 13))
 
     def test_init_config_alternative(self) -> None:
-        config = os.path.join(CONFIG_DIR_PATH, "alternative.toml")
+        config = CONFIG_DIR_PATH / "alternative.toml"
         ctrl = AffPosCtrl(config)
-        assert str(ctrl.config_path) == config
+        assert ctrl.config_path == config
         assert ctrl.dof == 14
         assert ctrl.freq == 50
         assert ctrl.scale_gain == 255 / 400
@@ -267,7 +271,7 @@ class TestAffPosCtrl:
         assert_array_equal(ctrl.feedback_scheme.press_gain, np.array([0.1] * 13))
 
     def test_init_config_empty(self) -> None:
-        config = os.path.join(CONFIG_DIR_PATH, "empty.toml")
+        config = CONFIG_DIR_PATH / "empty.toml"
         with pytest.warns() as record:
             ctrl = AffPosCtrl(config)
         assert len(record) == 2
@@ -276,7 +280,7 @@ class TestAffPosCtrl:
         assert ctrl.freq == 30
 
     def test_load_inactive_joints(self) -> None:
-        config = os.path.join(CONFIG_DIR_PATH, "default.toml")
+        config = CONFIG_DIR_PATH / "default.toml"
         ctrl = AffPosCtrl(config)
         inactive_joints = {"inactive_joints": [{"index": 3}, {"index": "9,10-11", "pressure": 400}]}
         ctrl.reset_inactive_joints()
@@ -287,7 +291,7 @@ class TestAffPosCtrl:
         )
 
     def test_load_feedback_scheme(self) -> None:
-        config = os.path.join(CONFIG_DIR_PATH, "default.toml")
+        config = CONFIG_DIR_PATH / "default.toml"
         ctrl = AffPosCtrl(config)
         ctrl.load_feedback_scheme("pidf")
         assert isinstance(ctrl.feedback_scheme, FeedbackPIDF)
@@ -298,7 +302,7 @@ class TestAffPosCtrl:
         assert_array_equal(ctrl.feedback_scheme.press_gain, np.array([1] * 13))
 
     @pytest.mark.parametrize(
-        "input_range,expected",
+        ("input_range", "expected"),
         [
             ((0, 600), 255 / 600),
             ((100, 500), 255 / 400),
@@ -311,7 +315,7 @@ class TestAffPosCtrl:
         assert ctrl.scale_gain == expected
 
     @pytest.mark.parametrize(
-        "i,p",
+        ("i", "p"),
         [
             (1, 10),
             (3, 30),
@@ -319,13 +323,13 @@ class TestAffPosCtrl:
             ("8", 80),
         ],
     )
-    def test_set_inactive_joints(self, i, p):
+    def test_set_inactive_joints(self, i, p) -> None:
         ctrl = AffPosCtrl()
         ctrl.set_inactive_joints(i, p)
         assert_array_equal(ctrl.inactive_joints, [[int(i), p, p]])
 
     @pytest.mark.parametrize(
-        "seq,p",
+        ("seq", "p"),
         [
             ([0, 1, 2], 10),
             ([3, 7, 12], 30),
@@ -333,19 +337,19 @@ class TestAffPosCtrl:
             ((10,), 80),
         ],
     )
-    def test_set_inactive_joints_sequence(self, seq, p):
+    def test_set_inactive_joints_sequence(self, seq, p) -> None:
         ctrl = AffPosCtrl()
         ctrl.set_inactive_joints(seq, p)
         expected = [[int(i), p, p] for i in seq]
         assert_array_equal(ctrl.inactive_joints, expected)
 
-    def test_set_inactive_joints_default_press(self):
+    def test_set_inactive_joints_default_press(self) -> None:
         ctrl = AffPosCtrl()
         ctrl.set_inactive_joints(3)
         assert_array_equal(ctrl.inactive_joints, [[3, 0, 0]])
 
     @pytest.mark.parametrize(
-        "pattern,pressure,expected",
+        ("pattern", "pressure", "expected"),
         [
             (1, 10, [[1, 10, 10]]),
             ("2", 20, [[2, 20, 20]]),
@@ -393,12 +397,12 @@ class TestAffPosCtrl:
             ),
         ],
     )
-    def test_set_inactive_joints_pattern(self, pattern, pressure, expected):
+    def test_set_inactive_joints_pattern(self, pattern, pressure, expected) -> None:
         ctrl = AffPosCtrl()
         ctrl.set_inactive_joints(pattern, pressure)
         assert_array_equal(ctrl.inactive_joints, expected)
 
-    def test_set_inactive_joints_overwrite(self):
+    def test_set_inactive_joints_overwrite(self) -> None:
         ctrl = AffPosCtrl()
         ctrl.set_inactive_joints(1, 100)
         assert_array_equal(ctrl.inactive_joints, [[1, 100, 100]])
@@ -406,7 +410,7 @@ class TestAffPosCtrl:
         assert_array_equal(ctrl.inactive_joints, [[2, 200, 200]])
 
     @pytest.mark.parametrize(
-        "pattern,p",
+        ("pattern", "p"),
         [
             ("", 10),
             (",", 20),
@@ -415,13 +419,13 @@ class TestAffPosCtrl:
             ([], 50),
         ],
     )
-    def test_set_inactive_joints_do_nothing(self, pattern, p):
+    def test_set_inactive_joints_do_nothing(self, pattern, p) -> None:
         ctrl = AffPosCtrl()
         ctrl.set_inactive_joints(pattern, p)
         expected = np.empty(shape=(0, 3))
         assert_array_equal(ctrl.inactive_joints, expected)
 
-    def test_add_inactive_joints(self):
+    def test_add_inactive_joints(self) -> None:
         ctrl = AffPosCtrl()
         ctrl.add_inactive_joints(1)
         ctrl.add_inactive_joints("7-12", 100)
@@ -439,13 +443,13 @@ class TestAffPosCtrl:
         )
 
     @pytest.mark.parametrize(
-        "seq1,seq2,p",
+        ("seq1", "seq2", "p"),
         [
             ([0, 1, 2], (4, 6), 10),
             ([3, 7, 12], (10,), 30),
         ],
     )
-    def test_add_inactive_joints_sequence(self, seq1, seq2, p):
+    def test_add_inactive_joints_sequence(self, seq1, seq2, p) -> None:
         ctrl = AffPosCtrl()
         ctrl.add_inactive_joints(seq1, p)
         ctrl.add_inactive_joints(seq2, p)
@@ -453,7 +457,7 @@ class TestAffPosCtrl:
         expected.extend([[int(i), p, p] for i in seq2])
         assert_array_equal(ctrl.inactive_joints, expected)
 
-    def test_reset_inactive_joints(self):
+    def test_reset_inactive_joints(self) -> None:
         ctrl = AffPosCtrl()
         ctrl.set_inactive_joints(1)
         assert_array_equal(ctrl.inactive_joints, [[1, 0, 0]])
@@ -461,7 +465,7 @@ class TestAffPosCtrl:
         assert_array_equal(ctrl.inactive_joints, np.empty(shape=(0, 3)))
 
     @pytest.mark.parametrize(
-        "i,p",
+        ("i", "p"),
         [
             (1, 10),
             (3, 30),
@@ -469,7 +473,7 @@ class TestAffPosCtrl:
             ("8", 80),
         ],
     )
-    def test_set_active_joints(self, i, p):
+    def test_set_active_joints(self, i, p) -> None:
         ctrl = AffPosCtrl()
         ctrl.set_active_joints(i, p)
         inactive_index = list(range(13))
@@ -477,22 +481,22 @@ class TestAffPosCtrl:
         expected = [[i, p, p] for i in inactive_index]
         assert_array_equal(ctrl.inactive_joints, expected)
 
-    def test_set_active_joints_default_press(self):
+    def test_set_active_joints_default_press(self) -> None:
         ctrl = AffPosCtrl()
         ctrl.set_active_joints(3)
         inactive_index = list(range(13))
-        inactive_index.pop(int(3))
+        inactive_index.pop(3)
         expected = [[i, 0, 0] for i in inactive_index]
         assert_array_equal(ctrl.inactive_joints, expected)
 
     @pytest.mark.parametrize(
-        "seq,p",
+        ("seq", "p"),
         [
             (list(range(10)), 10),
             ((1, 2, 3, 5, 7, 9, 11, 12), 30),
         ],
     )
-    def test_set_active_joints_sequence(self, seq, p):
+    def test_set_active_joints_sequence(self, seq, p) -> None:
         ctrl = AffPosCtrl()
         ctrl.set_active_joints(seq, p)
         index = list(range(13))
@@ -502,7 +506,7 @@ class TestAffPosCtrl:
         assert_array_equal(ctrl.inactive_joints, expected)
 
     @pytest.mark.parametrize(
-        "pattern,p",
+        ("pattern", "p"),
         [
             ("", 10),
             (",", 20),
@@ -512,14 +516,14 @@ class TestAffPosCtrl:
             (None, 60),
         ],
     )
-    def test_set_active_joints_inactivate_all(self, pattern, p):
+    def test_set_active_joints_inactivate_all(self, pattern, p) -> None:
         ctrl = AffPosCtrl()
         ctrl.set_active_joints(pattern, p)
         expected = [[i, p, p] for i in range(13)]
         assert_array_equal(ctrl.inactive_joints, expected)
 
     @pytest.mark.parametrize(
-        "pattern,pressure,expected",
+        ("pattern", "pressure", "expected"),
         [
             ("1-10", 30, [[0, 30, 30], [11, 30, 30], [12, 30, 30]]),
             (
@@ -576,12 +580,12 @@ class TestAffPosCtrl:
             ("-", 120, np.empty(shape=(0, 3))),
         ],
     )
-    def test_set_active_joints_pattern(self, pattern, pressure, expected):
+    def test_set_active_joints_pattern(self, pattern, pressure, expected) -> None:
         ctrl = AffPosCtrl()
         ctrl.set_active_joints(pattern, pressure)
         assert_array_equal(ctrl.inactive_joints, expected)
 
-    def test_set_active_joints_overwrite(self):
+    def test_set_active_joints_overwrite(self) -> None:
         ctrl = AffPosCtrl()
         ctrl.set_active_joints("10-", 100)
         assert_array_equal(
@@ -602,7 +606,7 @@ class TestAffPosCtrl:
         ctrl.set_active_joints("-10", 200)
         assert_array_equal(ctrl.inactive_joints, [[11, 200, 200], [12, 200, 200]])
 
-    def test_add_active_joints(self):
+    def test_add_active_joints(self) -> None:
         ctrl = AffPosCtrl()
         ctrl.set_active_joints(1, 100)
         ctrl.add_active_joints("3-7")
@@ -616,28 +620,28 @@ class TestAffPosCtrl:
             ],
         )
 
-    def test_add_active_joints_do_nothing(self):
+    def test_add_active_joints_do_nothing(self) -> None:
         ctrl = AffPosCtrl()
         ctrl.add_active_joints(1)
         assert_array_equal(ctrl.inactive_joints, np.empty(shape=(0, 3)))
 
-    def test_mask(self):
-        config = os.path.join(CONFIG_DIR_PATH, "default.toml")
+    def test_mask(self) -> None:
+        config = CONFIG_DIR_PATH / "default.toml"
         ctrl = AffPosCtrl(config)
         u1 = np.ones((13,))
         u2 = np.ones((13,))
-        u1, u2 = ctrl.mask(u1, u2)
+        u1, u2 = ctrl.mask(u1, u2)  # type: ignore[assignment,arg-type]
         expected = np.ones((13,))
         expected[1] = 0
         expected[7:] = 100
         assert_array_equal(u1, expected)
         assert_array_equal(u2, expected)
 
-    def test_masked_ctrl_input(self):
+    def test_masked_ctrl_input(self) -> None:
         z = np.zeros((13,))
-        config = os.path.join(CONFIG_DIR_PATH, "default.toml")
+        config = CONFIG_DIR_PATH / "default.toml"
         ctrl = AffPosCtrl(config)
-        u1, u2 = ctrl.update(0, z, z, z, z, z, z)
+        u1, u2 = ctrl.update(0, z, z, z, z, z, z)  # type: ignore[arg-type]
         expected = np.full((13,), 150 * 255 / 600)
         expected[1] = 0
         expected[7:] = 100 * 255 / 600
@@ -648,29 +652,29 @@ class TestAffPosCtrl:
 @pytest.mark.filterwarnings("ignore:Control frequency is not provided")
 class TestAffPosCtrlThread:
     def test_init_config(self) -> None:
-        config = os.path.join(CONFIG_DIR_PATH, "default.toml")
+        config = CONFIG_DIR_PATH / "default.toml"
         ctrl = AffPosCtrlThread(config=config)
         assert ctrl.freq == 30
 
     def test_init_alternative_freq(self) -> None:
-        config = os.path.join(CONFIG_DIR_PATH, "default.toml")
+        config = CONFIG_DIR_PATH / "default.toml"
         ctrl = AffPosCtrlThread(config=config, freq=50)
         assert ctrl.freq == 50
 
     def test_set_freq(self) -> None:
-        config = os.path.join(CONFIG_DIR_PATH, "default.toml")
+        config = CONFIG_DIR_PATH / "default.toml"
         ctrl = AffPosCtrlThread(config=config)
         assert ctrl.freq == 30
         ctrl.freq = 50
         assert ctrl.freq == 50
 
     def test_get_current_time(self) -> None:
-        config = os.path.join(CONFIG_DIR_PATH, "default.toml")
+        config = CONFIG_DIR_PATH / "default.toml"
         ctrl = AffPosCtrlThread(config=config)
         assert ctrl.current_time == 0
 
     def test_reset_trajectory(self) -> None:
-        config = os.path.join(CONFIG_DIR_PATH, "default.toml")
+        config = CONFIG_DIR_PATH / "default.toml"
         ctrl = AffPosCtrlThread(config=config)
         ctrl.reset_trajectory()
         assert len(ctrl._qdes_func(0)) == ctrl.dof
@@ -679,7 +683,7 @@ class TestAffPosCtrlThread:
         assert_array_equal(ctrl._dqdes_func(0), 0)
 
     def test_reset_trajectory_float(self) -> None:
-        config = os.path.join(CONFIG_DIR_PATH, "default.toml")
+        config = CONFIG_DIR_PATH / "default.toml"
         ctrl = AffPosCtrlThread(config=config)
         ctrl.reset_trajectory(50)
         assert len(ctrl._qdes_func(0)) == ctrl.dof
@@ -688,7 +692,7 @@ class TestAffPosCtrlThread:
         assert_array_equal(ctrl._dqdes_func(0), 0)
 
     def test_reset_trajectory_ndarray(self) -> None:
-        config = os.path.join(CONFIG_DIR_PATH, "default.toml")
+        config = CONFIG_DIR_PATH / "default.toml"
         ctrl = AffPosCtrlThread(config=config)
         q0 = np.arange(ctrl.dof) * 10
         ctrl.reset_trajectory(q0)
@@ -696,3 +700,8 @@ class TestAffPosCtrlThread:
         assert_array_equal(ctrl._qdes_func(0), q0)
         assert len(ctrl._dqdes_func(0)) == ctrl.dof
         assert_array_equal(ctrl._dqdes_func(0), 0)
+
+
+# Local Variables:
+# jinx-local-words: "arg dq dqdes dt kD kI kP noqa pid pidf qdes"
+# End:
