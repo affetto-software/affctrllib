@@ -1,7 +1,9 @@
 #!/usr/bin/env python
+# ruff: noqa: NPY002
+
+from __future__ import annotations
 
 import numpy as np
-
 from affctrllib import Filter, Logger
 
 N = 1000  # number of samples
@@ -24,3 +26,7 @@ for i in range(N):
     output_signal[i] = filt.update(input_signal[i])
     logger.store_data(np.concatenate(([i], input_signal[i], output_signal[i])))
 logger.dump()
+
+# Local Variables:
+# jinx-local-words: "env noqa usr"
+# End:

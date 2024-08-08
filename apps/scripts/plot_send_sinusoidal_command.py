@@ -1,4 +1,7 @@
 #!/usr/bin/env python
+# ruff: noqa: ANN001,ANN003,PLR2004,T201
+
+from __future__ import annotations
 
 import argparse
 from pathlib import Path
@@ -14,11 +17,12 @@ sfparam_tmpl = {
 }
 
 
-def savefig(fig, **sfparam):
+def savefig(fig, **sfparam) -> None:
     if not sfparam.get("savefig", False):
         return
-    if not "filename" in sfparam:
-        raise KeyError(f"filename is required in sfparam.")
+    if "filename" not in sfparam:
+        msg = "filename is required in sfparam."
+        raise KeyError(msg)
 
     # Join basedir and filename.
     path = Path(sfparam.get("basedir", "fig")) / Path(sfparam["filename"])
@@ -27,12 +31,12 @@ def savefig(fig, **sfparam):
     # Save figures in specified formats.
     for ext in sfparam.get("extensions", ["svg"]):
         if not ext.startswith("."):
-            ext = f".{ext}"
+            ext = f".{ext}"  # noqa: PLW2901
         fname = path.with_suffix(ext)
         fig.savefig(str(fname), bbox_inches="tight")
 
 
-def plot_command(data, joints, **sfparam):
+def plot_command(data, joints, **sfparam) -> None:
     fig, ax = plt.subplots()
     for i in joints:
         ax.plot(data.t, getattr(data, f"ca{i}"), label=f"ca[{i}]")
@@ -49,7 +53,7 @@ def plot_command(data, joints, **sfparam):
     savefig(fig, **sfparam)
 
 
-def plot_pressure(data, joints, **sfparam):
+def plot_pressure(data, joints, **sfparam) -> None:
     fig, ax = plt.subplots()
     for i in joints:
         ax.plot(data.t, getattr(data, f"pa{i}"), label=f"pa[{i}]")
@@ -66,7 +70,7 @@ def plot_pressure(data, joints, **sfparam):
     savefig(fig, **sfparam)
 
 
-def plot_q(data, joints, **sfparam):
+def plot_q(data, joints, **sfparam) -> None:
     fig, ax = plt.subplots()
     for i in joints:
         ax.plot(data.t, getattr(data, f"q{i}"), label=f"q[{i}]")
@@ -82,7 +86,7 @@ def plot_q(data, joints, **sfparam):
     savefig(fig, **sfparam)
 
 
-def parse():
+def parse() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Plot script for send_sinusoidal_command.py")
     parser.add_argument("data", help="path to data file")
     parser.add_argument(
@@ -105,7 +109,7 @@ def parse():
     return parser.parse_args()
 
 
-def main():
+def main() -> None:
     args = parse()
     sfparam = sfparam_tmpl.copy()
     sfparam["savefig"] = args.savefig
@@ -124,3 +128,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+# Local Variables:
+# jinx-local-words: "args basedir cb dq dqdes env noqa noshow pb png py qdes savefig sfparam usr xlabel ylabel"
+# End:

@@ -1,4 +1,7 @@
 #!/usr/bin/env python
+# ruff: noqa: ANN001,T201,ERA001,PTH123,NPY002,S311,PLR2004
+
+from __future__ import annotations
 
 import argparse
 import random
@@ -6,7 +9,6 @@ import time
 from pathlib import Path
 
 import numpy as np
-
 from affctrllib import PTP, AffPosCtrlThread, Logger
 
 DEFAULT_CONFIG_PATH = Path(__file__).parent.joinpath("config.toml")
@@ -40,7 +42,7 @@ class RandomTrajectory:
         q_limit: tuple[float, float],
         profile: str = "trapezoidal",
         seed: int | None = None,
-    ):
+    ) -> None:
         self.joints = joints
         self.q0 = q0.copy()
         self.t0 = t0
@@ -94,7 +96,10 @@ class RandomTrajectory:
                 new_t0 = ptp.t0 + ptp.T
                 new_q0 = ptp.qF
                 new_T, new_qdes = self._get_new_T_qdes(
-                    new_q0, self.update_t_range, self.update_q_range, self.q_limits[i]
+                    new_q0,
+                    self.update_t_range,
+                    self.update_q_range,
+                    self.q_limits[i],
                 )
                 new_ptp = PTP(new_q0, new_qdes, new_T, new_t0, profile_name=self.profile)
                 self.ptp_list[i] = new_ptp
@@ -118,7 +123,7 @@ def check_trajectory(
     q_range: tuple[float, float] = DEFAULT_UPDATE_Q_RANGE,
     q_limit: tuple[float, float] = DEFAULT_Q_LIMIT,
     output: str | None = None,
-):
+) -> None:
     T = 12
     q0 = np.full((13,), 50, dtype=float)
     traj = RandomTrajectory(joints, q0, 0, t_range, q_range, q_limit)
@@ -148,7 +153,7 @@ def mainloop(
     duration: float | None = None,
     output: str | None = None,
     inactive_pressure: float = 400,
-):
+) -> None:
     # Start AffPosCtrlThread.
     actrl = AffPosCtrlThread(config=config, freq=cfreq, sensor_freq=sfreq, output=output)
     actrl.set_active_joints(None, inactive_pressure)
@@ -181,7 +186,7 @@ def mainloop(
         actrl.join()
 
 
-def parse():
+def parse() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Get joints to move at random.")
     parser.add_argument("-c", "--config", default=DEFAULT_CONFIG_PATH, help="config file")
     parser.add_argument("-o", "--output", default=None, help="output filename")
@@ -239,7 +244,7 @@ def parse():
     return parser.parse_args()
 
 
-def main():
+def main() -> None:
     args = parse()
     # check_trajectory(
     #     args.joints,
@@ -264,3 +269,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+# Local Variables:
+# jinx-local-words: "Aff Ctrl Pos args cfreq dq env noqa numpy sfreq usr"
+# End:

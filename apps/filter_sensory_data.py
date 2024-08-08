@@ -1,14 +1,15 @@
 #!/usr/bin/env python
+# ruff: noqa: ANN001,PLR2004,T201
+
+from __future__ import annotations
 
 import argparse
-import os
+from pathlib import Path
 
 import numpy as np
-
-import affctrllib as acl
 from affctrllib import AffComm, AffState, Logger, Timer
 
-DEFAULT_CONFIG_PATH = os.path.join(os.path.dirname(__file__), "config.toml")
+DEFAULT_CONFIG_PATH = Path(__file__) / "config.toml"
 DOF = 13
 LABELS = ["t"]
 # raw data
@@ -23,16 +24,16 @@ LABELS.extend([f"pb{i}" for i in range(DOF)])
 BUFSIZE = 1024
 
 
-def report_statistics(received_time_series, freq):
+def report_statistics(received_time_series, freq) -> None:
     if len(received_time_series) == 0:
         return
 
     time_series = np.array(received_time_series)
-    time_delta = time_series[1:] - time_series[:-1]  # type: ignore
+    time_delta = time_series[1:] - time_series[:-1]
     mean = np.mean(time_delta)
     var = np.var(time_delta)
     std = np.std(time_delta)
-    print(f"Statistics:")
+    print("Statistics:")
     print(f"            Assumed frequency: {freq}")
     print(f"  Number of collected samples: {len(received_time_series)}")
     print(f"     Mean of time differences: {mean:.5f}[s] ({mean*1000:.2f}[ms])")
@@ -41,7 +42,7 @@ def report_statistics(received_time_series, freq):
     print(f"   Std deviation of time diff: {std:.6f}[s] ({std*1000:.3f}[ms])")
 
 
-def logging(logger, t, astate):
+def logging(logger, t, astate) -> None:
     logger.store_data([t])
     logger.extend_data(astate.raw_q)
     logger.extend_data(astate.raw_pa)
@@ -52,11 +53,11 @@ def logging(logger, t, astate):
     logger.extend_data(astate.pb)
 
 
-def mainloop(config, output, freq, period):
+def mainloop(config, output, freq, period) -> None:
     acom = AffComm(config)
     print(acom)
     if period == 0:
-        print(f"To finish process, type Ctrl-C.")
+        print("To finish process, type Ctrl-C.")
 
     astate = AffState(config)
     if freq > 0:
@@ -64,9 +65,9 @@ def mainloop(config, output, freq, period):
     logger = Logger(output)
     logger.set_labels(LABELS)
 
-    received_time_series = []
+    received_time_series: list[float] = []
 
-    def cleanup():
+    def cleanup() -> None:
         acom.close()
         logger.dump()
         report_statistics(received_time_series, astate.freq)
@@ -74,11 +75,11 @@ def mainloop(config, output, freq, period):
     astate.idle(acom)
     timer = Timer(rate=astate.freq)
     timer.start()
-    t = 0
+    t: float = 0
     try:
         while period == 0 or t < period:
             t = timer.elapsed_time()
-            data = acom.receive_as_list()
+            data: list = acom.receive_as_list()
             astate.update(data)
             logging(logger, t, astate)
             received_time_series.append(t)
@@ -86,11 +87,11 @@ def mainloop(config, output, freq, period):
         print()
 
     except KeyboardInterrupt:
-        print(f"\nFinishing process by KeyboardInterrupt.")
+        print("\nFinishing process by KeyboardInterrupt.")
     cleanup()
 
 
-def parse():
+def parse() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Read sensory data forever.")
     parser.add_argument("-c", "--config", default=DEFAULT_CONFIG_PATH, help="config file")
     parser.add_argument("-o", "--output", default=None, help="output filename")
@@ -99,10 +100,14 @@ def parse():
     return parser.parse_args()
 
 
-def main():
+def main() -> None:
     args = parse()
     mainloop(args.config, args.output, args.freq, args.period)
 
 
 if __name__ == "__main__":
     main()
+
+# Local Variables:
+# jinx-local-words: "Ctrl dq env hz noqa pb rpa rpb rq usr"
+# End:

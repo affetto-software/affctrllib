@@ -1,23 +1,26 @@
 #!/usr/bin/env python
+# ruff: noqa: ANN001
+
+from __future__ import annotations
 
 import argparse
-import os
+from pathlib import Path
 
 from affctrllib.affmock import AffMock
 
-DEFAULT_CONFIG_PATH = os.path.join(os.path.dirname(__file__), "config.toml")
+DEFAULT_CONFIG_PATH = Path(__file__) / "config.toml"
 
 
-def mainloop(config, freq, quiet):
+def mainloop(config, freq, quiet) -> None:
     mock = AffMock(config)
     if freq is not None:
         mock.sensor_rate = freq
-    mock.start(freq, quiet)
+    mock.start(freq, quiet=quiet)
 
 
-def parse():
+def parse() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Spawn mock Affetto.")
-    parser.add_argument("-c", "--config", default=DEFAULT_CONFIG_PATH, help="config file")
+    parser.add_argument("-c", "--config", default=str(DEFAULT_CONFIG_PATH), help="config file")
     parser.add_argument(
         "-H",
         "--hz",
@@ -29,10 +32,14 @@ def parse():
     return parser.parse_args()
 
 
-def main():
+def main() -> None:
     args = parse()
     mainloop(args.config, args.freq, args.quiet)
 
 
 if __name__ == "__main__":
     main()
+
+# Local Variables:
+# jinx-local-words: "env hz noqa usr"
+# End:

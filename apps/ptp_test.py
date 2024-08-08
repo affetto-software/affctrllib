@@ -1,7 +1,9 @@
 #!/usr/bin/env python
+# ruff: noqa: ERA001,N816
+
+from __future__ import annotations
 
 import numpy as np
-
 from affctrllib import PTP, Logger
 
 q0 = np.array([0, 0, 127])
@@ -21,7 +23,7 @@ else:
 logger = Logger()
 logger.set_labels(["t", "q0", "q1", "q2", "dq0", "dq1", "dq2", "ddq0", "ddq1", "ddq2"])
 dt = (t0 + T) / N
-dq_prev = 0
+dq_prev: float | np.ndarray = 0
 for i in range(N):
     t = i * dt
     q = ptp.q(t)
@@ -31,3 +33,7 @@ for i in range(N):
     dq_prev = dq
     logger.store_data(np.concatenate(([t], q, dq, ddq)))
 logger.dump()
+
+# Local Variables:
+# jinx-local-words: "ddq dq dt env noqa prev ptp qF trapez tri usr"
+# End:

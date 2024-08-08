@@ -1,11 +1,13 @@
 #!/usr/bin/env python
+# ruff: noqa: ANN001,T201,ERA001,PTH123,NPY002,S311,PLR2004
+
+from __future__ import annotations
 
 import argparse
 import time
 from pathlib import Path
 
 import numpy as np
-
 from affctrllib import PTP, AffPosCtrlThread, Logger
 
 DEFAULT_CONFIG_PATH = Path(__file__).parent.joinpath("config.toml")
@@ -81,7 +83,8 @@ class Trajectory:
             if t >= self.passing_times[self.ptp_i + 1]:
                 self.ptp_i += 1
         except AttributeError:
-            raise RuntimeError("Trajectory.create_trajedtory() must be called")
+            msg = "Trajectory.create_trajectory() must be called"
+            raise RuntimeError(msg) from None
         except IndexError:
             pass
         try:
@@ -96,7 +99,7 @@ class Trajectory:
         return np.array(self.get_trajectory(t).dq(t))
 
 
-def check_trajectory(joint: int = 0, output: str | None = None):
+def check_trajectory(joint: int = 0, output: str | None = None) -> None:
     T = 12
     q0 = np.full((13,), 50)
     waypoints = [0, 100, q0[joint]]
@@ -124,7 +127,7 @@ def mainloop(
     cfreq: float | None = None,
     profile: str = "trapezoidal",
     inactive_pressure: float = 400,
-):
+) -> None:
     # Start AffPosCtrlThread.
     actrl = AffPosCtrlThread(config=config, freq=cfreq, sensor_freq=sfreq, output=output)
     actrl.set_active_joints(None, inactive_pressure)
@@ -157,7 +160,7 @@ def mainloop(
         actrl.join()
 
 
-def parse():
+def parse() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Let single joint move from 0 to 100")
     parser.add_argument("-c", "--config", default=DEFAULT_CONFIG_PATH, help="config file")
     parser.add_argument("-o", "--output", default=None, help="output filename")
@@ -185,7 +188,7 @@ def parse():
     return parser.parse_args()
 
 
-def main():
+def main() -> None:
     args = parse()
     # check_trajectory(args.joint, args.output)  # for debug
     mainloop(
@@ -200,3 +203,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+# Local Variables:
+# jinx-local-words: "Aff Ctrl Pos args cfreq dqdes env len noqa numpy qdes sfreq usr waypoint waypoints"
+# End:

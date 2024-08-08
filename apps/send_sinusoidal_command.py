@@ -1,13 +1,15 @@
 #!/usr/bin/env python
+# ruff: noqa: ANN001,PLR2004,T201,PTH123,ERA001
+
+from __future__ import annotations
 
 import argparse
 import copy
-import os
 import sys
+from pathlib import Path
 from typing import Any
 
 import numpy as np
-
 from affctrllib import AffComm, Logger, Timer
 
 if sys.version_info < (3, 11):
@@ -16,7 +18,7 @@ else:
     import tomllib
 
 
-DEFAULT_CONFIG_PATH = os.path.join(os.path.dirname(__file__), "config.toml")
+DEFAULT_CONFIG_PATH = Path(__file__) / "config.toml"
 DOF = 13
 LABELS = ["t"]
 for i in range(DOF):
@@ -46,7 +48,7 @@ DEFAULT_PROFILE = "constant"
 def sinusoidal(t, amplitude=1.0, period=1.0, base=0.0, idletime=0.0, phase=0.0) -> int:
     omega = 2.0 * np.pi / period
     if isinstance(phase, str):
-        phase = eval(phase)
+        phase = eval(phase)  # noqa: S307
     if t < idletime:
         x = 0.0
     else:
@@ -58,12 +60,12 @@ def constant(_, value=0.0) -> int:
     return round(value)
 
 
-def print_parameters(default_params, specific_params_list):
-    print(f"Default parameters:")
+def print_parameters(default_params, specific_params_list) -> None:
+    print("Default parameters:")
     print(f'  profile: {default_params["profile"]}')
     print(f'  params: {default_params["params"]}')
     if len(specific_params_list) > 0:
-        print(f"Joint-specific parameters:")
+        print("Joint-specific parameters:")
     for p in specific_params_list:
         print(f"  Joint {p[0]}:")
         print(f'    profile: {p[1]["profile"]}')
@@ -75,13 +77,14 @@ def print_parameters(default_params, specific_params_list):
                 print(f'      params: {p[1][side]["params"]}')
 
 
-def load_parameters(config):
+def load_parameters(config):  # noqa: ANN201,PLR0915,PLR0912,C901
     with open(config, "rb") as f:
         config_dict = tomllib.load(f)
     try:
         command = config_dict["command"]
-    except KeyError:
-        raise KeyError(f"No 'command' in {str(config)}")
+    except KeyError as e:
+        msg = f"No 'command' in {config!s}"
+        raise KeyError(msg) from e
 
     # Load default values for each profile.
     default_profiles: dict[str, dict[str, Any]] = copy.deepcopy(DEFAULT_PROFILES)
@@ -94,8 +97,9 @@ def load_parameters(config):
     # Load default values for Affetto.
     try:
         affetto = command.get("affetto", {})
-    except KeyError:
-        raise KeyError(f"No definitions for 'affetto' in {str(config)}")
+    except KeyError as e:
+        msg = f"No definitions for 'affetto' in {config!s}"
+        raise KeyError(msg) from e
 
     default_params: dict[str, str | dict[str, Any]] = {}
     if "profile" in affetto:
@@ -104,7 +108,7 @@ def load_parameters(config):
     else:
         default_params["profile"] = DEFAULT_PROFILE
         default_params["params"] = default_profiles[DEFAULT_PROFILE].copy()
-    default_params["params"].update(affetto.get("params", {}))
+    default_params["params"].update(affetto.get("params", {}))  # type: ignore[union-attr]
 
     # Load specific values for each joint.
     specific_params_list: list[tuple[int, dict[str, str | dict[str, Any]]]] = []
@@ -117,13 +121,13 @@ def load_parameters(config):
         if "profile" in affetto[ith]:
             ith_params["profile"] = affetto[ith]["profile"]
             if ith_params["profile"] == default_params["profile"]:
-                ith_params["params"] = default_params["params"].copy()
+                ith_params["params"] = default_params["params"].copy()  # type: ignore[union-attr]
             else:
                 ith_params["params"] = default_profiles[affetto[ith]["profile"]].copy()
         else:
             ith_params["profile"] = default_params["profile"]
-            ith_params["params"] = default_params["params"].copy()
-        ith_params["params"].update(affetto[ith].get("params", {}))
+            ith_params["params"] = default_params["params"].copy()  # type: ignore[union-attr]
+        ith_params["params"].update(affetto[ith].get("params", {}))  # type: ignore[union-attr]
 
         for side in ("ca", "cb"):
             if side in affetto[ith]:
@@ -131,13 +135,13 @@ def load_parameters(config):
                 if "profile" in affetto[ith][side]:
                     ith_params_side["profile"] = affetto[ith][side]["profile"]
                     if ith_params_side["profile"] == ith_params["profile"]:
-                        ith_params_side["params"] = ith_params["params"].copy()
+                        ith_params_side["params"] = ith_params["params"].copy()  # type: ignore[union-attr]
                     else:
                         ith_params_side["params"] = default_profiles[affetto[ith][side]["profile"]].copy()
                 else:
                     ith_params_side["profile"] = ith_params["profile"]
-                    ith_params_side["params"] = ith_params["params"].copy()
-                ith_params_side["params"].update(affetto[ith][side].get("params", {}))
+                    ith_params_side["params"] = ith_params["params"].copy()  # type: ignore[union-attr]
+                ith_params_side["params"].update(affetto[ith][side].get("params", {}))  # type: ignore[union-attr]
                 ith_params[side] = ith_params_side.copy()
         specific_params_list.append((int(ith), ith_params.copy()))
     print_parameters(default_params, specific_params_list)  # for debug
@@ -152,22 +156,22 @@ PROFILE_TO_FUNC_MAP = {
 
 def generate_commands(t, default_params, specific_params_list) -> tuple[np.ndarray, np.ndarray]:
     # Set default values.
-    val = PROFILE_TO_FUNC_MAP[default_params["profile"]](t, **default_params["params"])
+    val = PROFILE_TO_FUNC_MAP[default_params["profile"]](t, **default_params["params"])  # type: ignore[operator]
     ca = np.full((DOF,), val)
     cb = np.full((DOF,), val)
     # Set joint-specific values.
     for i, params in specific_params_list:
-        val = PROFILE_TO_FUNC_MAP[params["profile"]](t, **params["params"])
+        val = PROFILE_TO_FUNC_MAP[params["profile"]](t, **params["params"])  # type: ignore[operator]
         ca[i] = val
         cb[i] = val
         if "ca" in params:
-            ca[i] = PROFILE_TO_FUNC_MAP[params["ca"]["profile"]](t, **params["ca"]["params"])
+            ca[i] = PROFILE_TO_FUNC_MAP[params["ca"]["profile"]](t, **params["ca"]["params"])  # type: ignore[operator]
         if "cb" in params:
-            cb[i] = PROFILE_TO_FUNC_MAP[params["cb"]["profile"]](t, **params["cb"]["params"])
+            cb[i] = PROFILE_TO_FUNC_MAP[params["cb"]["profile"]](t, **params["cb"]["params"])  # type: ignore[operator]
     return (ca, cb)
 
 
-def mainloop(config, output, freq, time, default_params, specific_params_list):
+def mainloop(config, output, freq, time, default_params, specific_params_list) -> None:
     acom = AffComm(config)
     print(acom)
 
@@ -175,11 +179,11 @@ def mainloop(config, output, freq, time, default_params, specific_params_list):
     logger = Logger(output)
     logger.set_labels(LABELS)
 
-    def cleanup():
+    def cleanup() -> None:
         acom.close()
         logger.dump()
 
-    t = 0
+    t: float = 0
     timer = Timer(rate=freq)
     timer.start()
     while t < time:
@@ -187,7 +191,7 @@ def mainloop(config, output, freq, time, default_params, specific_params_list):
         t = timer.elapsed_time()
 
         # Receive sensory data.
-        sdata = acom.receive_as_list()
+        sdata: list = acom.receive_as_list()
 
         # Generate pressure values to send.
         ca, cb = generate_commands(t, default_params, specific_params_list)
@@ -196,7 +200,7 @@ def mainloop(config, output, freq, time, default_params, specific_params_list):
         acom.send_commands(ca, cb)
 
         # Logging.
-        logger.store_data([t] + sdata + list(ca) + list(cb))
+        logger.store_data([t] + sdata + list(ca) + list(cb))  # noqa: RUF005
         print(f"\rt = {t:.2f}", end="")
 
         # Block process for a certain period.
@@ -206,9 +210,9 @@ def mainloop(config, output, freq, time, default_params, specific_params_list):
     cleanup()
 
 
-def parse():
+def parse() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Send sinusoidal actuation commands.")
-    parser.add_argument("-c", "--config", default=DEFAULT_CONFIG_PATH, help="config file")
+    parser.add_argument("-c", "--config", default=str(DEFAULT_CONFIG_PATH), help="config file")
     parser.add_argument("-o", "--output", default=None, help="output filename")
     parser.add_argument(
         "-C",
@@ -248,7 +252,7 @@ def parse():
     return parser.parse_args()
 
 
-def main():
+def main() -> None:
     # Parse arguments.
     args = parse()
 
@@ -274,3 +278,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+# Local Variables:
+# jinx-local-words: "attr cb env hz idletime ith mainloop noqa params pb rb str usr"
+# End:

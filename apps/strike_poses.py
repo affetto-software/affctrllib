@@ -1,11 +1,13 @@
 #!/usr/bin/env python
+# ruff: noqa: ANN001,T201,ERA001
+
+from __future__ import annotations
 
 import argparse
-import os
 import sys
+from pathlib import Path
 
 import numpy as np
-
 from affctrllib import PTP, AffComm, AffPosCtrl, AffState, Logger, Timer
 
 if sys.version_info < (3, 11):
@@ -13,7 +15,7 @@ if sys.version_info < (3, 11):
 else:
     import tomllib
 
-DEFAULT_CONFIG_PATH = os.path.join(os.path.dirname(__file__), "config.toml")
+DEFAULT_CONFIG_PATH = Path(__file__) / "config.toml"
 DOF = 13
 LABELS = ["t"]
 # raw data
@@ -33,7 +35,7 @@ LABELS.extend([f"cb{i}" for i in range(DOF)])
 BUFSIZE = 1024
 
 
-def logging(logger, t, astate, qdes, dqdes, ca, cb):
+def logging(logger, t, astate, qdes, dqdes, ca, cb) -> None:
     logger.store_data([t])
     logger.extend_data(astate.raw_q)
     logger.extend_data(astate.raw_pa)
@@ -48,7 +50,7 @@ def logging(logger, t, astate, qdes, dqdes, ca, cb):
     logger.extend_data(cb)
 
 
-def mainloop(config, output, freq, keyframes, initial=None, profile="tri"):
+def mainloop(config, output, freq, keyframes, initial=None, profile="tri") -> None:
     acom = AffComm(config)
     print(acom)
 
@@ -64,11 +66,11 @@ def mainloop(config, output, freq, keyframes, initial=None, profile="tri"):
     actrl = AffPosCtrl(config)
     timer = Timer(rate=astate.freq)
 
-    def cleanup():
+    def cleanup() -> None:
         acom.close()
         logger.dump()
 
-    def moveto(t0, q0, T, qF, profile, msg=None):
+    def moveto(t0, q0, T, qF, profile, msg=None) -> None:
         if msg:
             print(msg, flush=True)
         t = t0
@@ -76,13 +78,13 @@ def mainloop(config, output, freq, keyframes, initial=None, profile="tri"):
         timer.start()
         while t < t0 + T:
             t = t0 + timer.elapsed_time()
-            sarr = acom.receive_as_list()
+            sarr: list[float] = acom.receive_as_list()
             astate.update(sarr)
             qdes = ptp.q(t)
             dqdes = ptp.dq(t)
             # dqdes = np.zeros(shape=(actrl.dof,))
-            ca, cb = actrl.update(t, astate.q, astate.dq, astate.pa, astate.pb, qdes, dqdes)
-            acom.send_commands(ca, cb)
+            ca, cb = actrl.update(t, astate.q, astate.dq, astate.pa, astate.pb, qdes, dqdes)  # type: ignore[arg-type]
+            acom.send_commands(ca, cb)  # type: ignore[arg-type]
             logging(logger, t, astate, qdes, dqdes, ca, cb)
             print(f"\rt = {t:.2f}", end="")
             # timer.block()
@@ -90,8 +92,8 @@ def mainloop(config, output, freq, keyframes, initial=None, profile="tri"):
 
     q0 = acom.receive_as_2darray()[0]
     if initial:
-        t0 = -5
-        time = 5
+        t0: float = -5
+        time: float = 5
         msg = f"\nMoving to initial pose (in {time} sec.) ..."
         moveto(t0, q0, time, np.array(initial), profile, msg)
         q0 = np.array(initial)
@@ -107,21 +109,21 @@ def mainloop(config, output, freq, keyframes, initial=None, profile="tri"):
     cleanup()
 
 
-def load_keyframe(keyframe):
-    with open(keyframe, "rb") as f:
+def load_keyframe(keyframe) -> tuple[str, list[float], list]:
+    with Path.open(keyframe, "rb") as f:
         d = tomllib.load(f)
     k = d["keyframe"]
     profile = k["profile"]
     q0 = k["initial"]["q"]
     frames = []
     for kf in k["frames"]:
-        frames.append((kf["T"], kf["q"]))
+        frames.append((kf["T"], kf["q"]))  # noqa: PERF401
     return profile, q0, frames
 
 
-def parse():
+def parse() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Strike poses")
-    parser.add_argument("-c", "--config", default=DEFAULT_CONFIG_PATH, help="config file")
+    parser.add_argument("-c", "--config", default=str(DEFAULT_CONFIG_PATH), help="config file")
     parser.add_argument("-k", "--keyframe", required=True, help="keyframe file")
     parser.add_argument("-o", "--output", default=None, help="output filename")
     parser.add_argument(
@@ -141,7 +143,7 @@ def parse():
     return parser.parse_args()
 
 
-def main():
+def main() -> None:
     args = parse()
     profile, q0, keyframes = load_keyframe(args.keyframe)
     if args.profile:
@@ -158,3 +160,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+# Local Variables:
+# jinx-local-words: "actrl arg cb dof dq dqdes env hz keyframe noqa np pb qdes rb rpa rpb rq tri usr"
+# End:
