@@ -51,6 +51,7 @@ dev-dependencies = [
     "pytest-xdist>=3.6.1",
     "mypy>=1.11.1",
     "nox>=2024.4.15",
+    "pyplotutil @ git+https://github.com/hrshtst/pyplotutil.git@develop",
 ]
 
 [tool.hatch.metadata]
