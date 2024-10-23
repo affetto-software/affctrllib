@@ -60,6 +60,23 @@ class Profile(ABC, Generic[JointT]):
         return (self._qF - self._q0) * self.dds(t)
 
 
+class StepProfile(Profile, Generic[JointT]):
+    def __init__(self, q0: JointT, qF: JointT, T: float, t0: float) -> None:
+        Profile.__init__(self, q0, qF, T, t0)
+
+    def s(self, t: float) -> float:
+        _ = t
+        return 1.0
+
+    def ds(self, t: float) -> float:
+        _ = t
+        return 0
+
+    def dds(self, t: float) -> float:
+        _ = t
+        return 0
+
+
 class ConstVelocityProfile(Profile, Generic[JointT]):
     def __init__(self, q0: JointT, qF: JointT, T: float, t0: float) -> None:
         Profile.__init__(self, q0, qF, T, t0)
@@ -340,6 +357,7 @@ class FifthDegreePolynomialProfile(Profile, Generic[JointT]):
 
 
 PTP_ACCEPTABLE_PROFILE_NAMES = {
+    "step": StepProfile,
     "constant velocity": ConstVelocityProfile,
     "const velocity": ConstVelocityProfile,
     "constant": ConstVelocityProfile,

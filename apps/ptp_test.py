@@ -16,11 +16,11 @@ t0 = 0
 profile = "trapez"  # or "5th" or "tri" or "sin" or "con"
 N = 1000
 
-if profile in ["tri", "5th", "sin", "con"]:
-    ptp = PTP(q0, qF, T, t0, profile_name=profile)
-else:
+if profile in ["trapez"]:
     ptp = PTP(q0, qF, T, t0, vmax=vmax, profile_name=profile)
     # ptp = PTP(q0, qF, T, t0, tb=tb, profile_name=profile)
+else:
+    ptp = PTP(q0, qF, T, t0, profile_name=profile)
 logger = Logger()
 logger.set_labels(["t", "q0", "q1", "q2", "dq0", "dq1", "dq2", "ddq0", "ddq1", "ddq2"])
 dt = (t0 + T) / N
