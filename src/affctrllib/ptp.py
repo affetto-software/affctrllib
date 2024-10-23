@@ -68,10 +68,12 @@ class ConstVelocityProfile(Profile, Generic[JointT]):
         t_rel = t - self._t0
         return t_rel / self._T
 
-    def ds(self, _: float) -> float:
+    def ds(self, t: float) -> float:
+        _ = t
         return 1.0 / self._T
 
-    def dds(self, _: float) -> float:
+    def dds(self, t: float) -> float:
+        _ = t
         return 0
 
 

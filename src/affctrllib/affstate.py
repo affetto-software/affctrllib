@@ -61,8 +61,8 @@ class AffState(Affetto, PeriodicRunner):
                 Butterworth(cutoff, self.freq, order),
             ]
 
-    def load_config(self, config: dict[str, Any]) -> None:
-        super().load_config(config)
+    def load_config(self, config_dict: dict[str, Any]) -> None:
+        super().load_config(config_dict)
         self.load_state_config()
 
     def load_state_config(self, config: dict[str, Any] | None = None) -> None:

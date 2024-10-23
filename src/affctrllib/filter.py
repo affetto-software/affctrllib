@@ -54,7 +54,8 @@ class LiveFilter(Generic[T]):
     def __call__(self, x: T) -> T:
         return self.process(x)
 
-    def _process(self, _: T) -> T:
+    def _process(self, x: T) -> T:
+        _ = x
         msg = "Derived class must implement _process"
         raise NotImplementedError(msg)
 

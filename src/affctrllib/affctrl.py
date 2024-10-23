@@ -53,8 +53,8 @@ class AffCtrl(Affetto, PeriodicRunner, Generic[JointT]):
     def __str__(self) -> str:
         return ""
 
-    def load_config(self, config: dict[str, Any]) -> None:
-        super().load_config(config)
+    def load_config(self, config_dict: dict[str, Any]) -> None:
+        super().load_config(config_dict)
         self.load_ctrl_config()
 
     def load_ctrl_config(self, config: dict[str, Any] | None = None) -> None:

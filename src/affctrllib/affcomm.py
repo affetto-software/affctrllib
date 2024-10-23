@@ -120,8 +120,8 @@ AffComm configuration:
       Send to: {self.command_socket!s}
 """
 
-    def load_config(self, config: dict[str, Any]) -> None:
-        super().load_config(config)
+    def load_config(self, config_dict: dict[str, Any]) -> None:
+        super().load_config(config_dict)
         self.load_comm_config()
 
     def load_comm_config(self, config: dict[str, Any] | None = None) -> None:

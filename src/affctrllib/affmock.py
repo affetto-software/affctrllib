@@ -63,8 +63,8 @@ class AffMock(Affetto):
     def __repr__(self) -> str:
         return f"{self.__class__.__module__}.{self.__class__.__qualname__}()"
 
-    def load_config(self, config: dict[str, Any]) -> None:
-        super().load_config(config)
+    def load_config(self, config_dict: dict[str, Any]) -> None:
+        super().load_config(config_dict)
         self.load_mock_config()
 
     def load_mock_config(self, config: dict[str, Any] | None = None) -> None:
