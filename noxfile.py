@@ -32,6 +32,7 @@ def fetch(session: nox.Session) -> None:
 @nox.session(reuse_venv=True)
 def lint(session: nox.Session) -> None:
     session.install("-r", "requirements-dev.lock")
+    session.run("ruff", "--version")
     session.run("ruff", "check", *session.posargs)
 
 
@@ -45,5 +46,5 @@ def tests(session: nox.Session) -> None:
 
 
 # Local Variables:
-# jinx-local-words: "dev pytest uv virtualenv"
+# jinx-local-words: "dev py pytest uv virtualenv"
 # End:
