@@ -340,7 +340,9 @@ class FifthDegreePolynomialProfile(Profile, Generic[JointT]):
 
 
 PTP_ACCEPTABLE_PROFILE_NAMES = {
+    "constant velocity": ConstVelocityProfile,
     "const velocity": ConstVelocityProfile,
+    "constant": ConstVelocityProfile,
     "const": ConstVelocityProfile,
     "con": ConstVelocityProfile,
     "triangular velocity": TriangularVelocityProfile,
