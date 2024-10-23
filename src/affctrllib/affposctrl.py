@@ -251,7 +251,7 @@ class AffPosCtrl(AffCtrl[JointT]):
 
 
 class AffPosCtrlThread(AffCtrlThread):
-    _aposctrl: AffPosCtrl
+    _actrl: AffPosCtrl
     _qdes_func: Callable[[float], np.ndarray]
     _dqdes_func: Callable[[float], np.ndarray]
 
@@ -280,7 +280,7 @@ class AffPosCtrlThread(AffCtrlThread):
             butterworth=butterworth,
         )
         del self._actrl
-        self._aposctrl = AffPosCtrl(config, dt, freq)
+        self._actrl = AffPosCtrl(config, dt, freq)  # type: ignore[reportIncompatibleVariableOverride]
         self.reset_trajectory()
 
     def _create_state_estimator(
@@ -296,8 +296,8 @@ class AffPosCtrlThread(AffCtrlThread):
     def _create_logger(self, output: str | Path) -> Logger:  # type: ignore[override]
         super()._create_logger(output)
         self._logger.extend_labels(
-            [f"qdes{i}" for i in range(self._aposctrl.dof)],
-            [f"dqdes{i}" for i in range(self._aposctrl.dof)],
+            [f"qdes{i}" for i in range(self._actrl.dof)],
+            [f"dqdes{i}" for i in range(self._actrl.dof)],
         )
         return self._logger
 
@@ -327,7 +327,7 @@ class AffPosCtrlThread(AffCtrlThread):
                 self._current_time = t
                 qdes = self._qdes_func(t)
                 dqdes = self._dqdes_func(t)
-                ca, cb = self._aposctrl.update(t, q, dq, pa, pb, qdes, dqdes)
+                ca, cb = self._actrl.update(t, q, dq, pa, pb, qdes, dqdes)
             self._acom.send_commands(ca, cb)
             try:
                 self._logger.store(t, rq, rdq, rpa, rpb, q, dq, pa, pb, ca, cb, qdes, dqdes)
@@ -342,11 +342,11 @@ class AffPosCtrlThread(AffCtrlThread):
     @property
     def feedback_scheme(self) -> Feedback:
         with self._lock:
-            return self._aposctrl.feedback_scheme
+            return self._actrl.feedback_scheme
 
     def load_feedback_scheme(self, scheme: str, ctrl_config: dict[str, Any] | None = None) -> None:
         with self._lock:
-            self._aposctrl.load_feedback_scheme(scheme, ctrl_config)
+            self._actrl.load_feedback_scheme(scheme, ctrl_config)
 
     def set_qdes_func(self, qdes_func: Callable[[float], np.ndarray]) -> None:
         with self._lock:
@@ -366,7 +366,7 @@ class AffPosCtrlThread(AffCtrlThread):
             self._dqdes_func = dqdes_func
 
     def reset_trajectory(self, q0: float | np.ndarray = 0) -> None:
-        dof = self._aposctrl.dof
+        dof = self._actrl.dof
         self.set_trajectory(
             lambda _: np.full((dof,), q0),
             lambda _: np.zeros((dof,)),
