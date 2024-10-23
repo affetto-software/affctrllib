@@ -189,5 +189,5 @@ module = [
 ignore_missing_imports = true
 
 # Local Variables:
-# jinx-local-words: "McCabe Pyflakes addopts backend bzr cov defs dev direnv doctests hatchling hg ini ipynb isort md mixedCase mypy nox numpy pycache pycodestyle pydocstyle pyenv pypackages pyright pytest pytype ra reStructuredText rgx scipy src svn testpaths tomli tox unfixable untyped urls vcs venv venvPath vscode xdist zA"
+# jinx-local-words: "McCabe Pyflakes addopts backend bzr cov defs dev direnv doctests hatchling hg ini ipynb isort md mixedCase mypy nox numpy pycache pycodestyle pydocstyle pyenv pypackages pyplotutil pyright pytest pytype ra reStructuredText rgx scipy src svn testpaths tomli tox unfixable untyped urls vcs venv venvPath vscode xdist zA"
 # End:

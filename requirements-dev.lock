@@ -40,7 +40,7 @@ mypy==1.11.1
 mypy-extensions==1.0.0
     # via mypy
 nox==2024.4.15
-numpy==2.0.1
+numpy==2.1.2
     # via affctrllib
     # via contourpy
     # via matplotlib
