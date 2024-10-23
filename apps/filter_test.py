@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import numpy as np
+
 from affctrllib import Filter, Logger
 
 N = 1000  # number of samples

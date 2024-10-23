@@ -46,7 +46,7 @@ def plot(data, i, **sfparam) -> None:
         "xlabel": "samples",
     }
     ax.set(**pparam)
-    if sfparam.get("filename", None) is None:
+    if sfparam.get("filename") is None:
         sfparam["filename"] = f"filter-{i}"
     savefig(fig, **sfparam)
 

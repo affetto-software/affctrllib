@@ -6,13 +6,14 @@ from pathlib import Path
 
 import numpy as np
 import pytest
+from numpy.testing import assert_array_equal
+
 from affctrllib.affposctrl import (
     AffPosCtrl,
     AffPosCtrlThread,
     FeedbackPID,
     FeedbackPIDF,
 )
-from numpy.testing import assert_array_equal
 
 CONFIG_DIR_PATH = Path(__file__).parent / "config"
 

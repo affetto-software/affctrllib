@@ -7,8 +7,9 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 import pytest
-from affctrllib.affctrl import AffCtrl, AffCtrlThread
 from numpy.testing import assert_array_equal
+
+from affctrllib.affctrl import AffCtrl, AffCtrlThread
 
 if TYPE_CHECKING:
     from collections.abc import Sequence

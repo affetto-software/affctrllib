@@ -7,6 +7,7 @@ import argparse
 from pathlib import Path
 
 import numpy as np
+
 from affctrllib import AffComm, AffState, Logger, Timer
 
 DEFAULT_CONFIG_PATH = Path(__file__) / "config.toml"

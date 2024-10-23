@@ -8,6 +8,7 @@ import sys
 from pathlib import Path
 
 import numpy as np
+
 from affctrllib import PTP, AffComm, AffPosCtrl, AffState, Logger, Timer
 
 if sys.version_info < (3, 11):

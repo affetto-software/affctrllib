@@ -47,7 +47,7 @@ def plot_q(data, **sfparam) -> None:
         "ylabel": "q",
     }
     ax.set(**pparam)
-    if sfparam.get("filename", None) is None:
+    if sfparam.get("filename") is None:
         sfparam["filename"] = "q"
     savefig(fig, **sfparam)
 
@@ -63,7 +63,7 @@ def plot_dq(data, **sfparam) -> None:
         "ylabel": "dq",
     }
     ax.set(**pparam)
-    if sfparam.get("filename", None) is None:
+    if sfparam.get("filename") is None:
         sfparam["filename"] = "dq"
     savefig(fig, **sfparam)
 
@@ -79,7 +79,7 @@ def plot_ddq(data, **sfparam) -> None:
         "ylabel": "ddq",
     }
     ax.set(**pparam)
-    if sfparam.get("filename", None) is None:
+    if sfparam.get("filename") is None:
         sfparam["filename"] = "ddq"
     savefig(fig, **sfparam)
 

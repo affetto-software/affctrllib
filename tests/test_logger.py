@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 import pytest
+
 from affctrllib.logger import Logger
 
 if TYPE_CHECKING:

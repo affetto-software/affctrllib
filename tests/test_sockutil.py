@@ -3,6 +3,7 @@ from __future__ import annotations
 import socket
 
 import pytest
+
 from affctrllib._sockutil import Socket
 
 

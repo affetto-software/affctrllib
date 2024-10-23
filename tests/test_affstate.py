@@ -5,8 +5,9 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
-from affctrllib.affstate import AffState, AffStateThread
 from numpy.testing import assert_array_equal
+
+from affctrllib.affstate import AffState, AffStateThread
 
 CONFIG_DIR_PATH = Path(__file__).parent / "config"
 

@@ -61,7 +61,7 @@ pluggy==1.5.0
     # via pytest
 pyparsing==3.1.2
     # via matplotlib
-pyplotutil @ git+https://github.com/hrshtst/pyplotutil.git@44f254b2ed448e25c21cec52f800e9117291a333
+pyplotutil @ git+https://github.com/hrshtst/pyplotutil.git@d544d794c57a52acfe7151f6b96edb93381c0f19
 pytest==8.3.2
     # via pytest-cov
     # via pytest-randomly

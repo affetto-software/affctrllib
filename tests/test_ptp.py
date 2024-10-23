@@ -6,6 +6,8 @@ import re
 
 import numpy as np
 import pytest
+from numpy.testing import assert_array_almost_equal, assert_array_equal
+
 from affctrllib.ptp import (
     PTP,
     FifthDegreePolynomialProfile,
@@ -13,7 +15,6 @@ from affctrllib.ptp import (
     TrapezoidalVelocityProfile,
     TriangularVelocityProfile,
 )
-from numpy.testing import assert_array_almost_equal, assert_array_equal
 
 PIx2 = 2.0 * np.pi
 

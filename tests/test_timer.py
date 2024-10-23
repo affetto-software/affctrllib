@@ -4,6 +4,7 @@ import time
 from typing import TYPE_CHECKING
 
 import pytest
+
 from affctrllib.timer import Timer
 
 if TYPE_CHECKING:

@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Any
 
 import numpy as np
+
 from affctrllib import AffComm, Logger, Timer
 
 if sys.version_info < (3, 11):

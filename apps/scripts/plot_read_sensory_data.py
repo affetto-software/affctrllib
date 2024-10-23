@@ -48,7 +48,7 @@ def plot_pressure(data, joints, **sfparam) -> None:
         "ylabel": "pressure [kPa]",
     }
     ax.set(**pparam)
-    if sfparam.get("filename", None) is None:
+    if sfparam.get("filename") is None:
         sfparam["filename"] = "pressure"
     savefig(fig, **sfparam)
 
@@ -64,7 +64,7 @@ def plot_q(data, joints, **sfparam) -> None:
         "ylabel": "position [0-100]",
     }
     ax.set(**pparam)
-    if sfparam.get("filename", None) is None:
+    if sfparam.get("filename") is None:
         sfparam["filename"] = "q"
     savefig(fig, **sfparam)
 

@@ -2,8 +2,9 @@ from __future__ import annotations
 
 import numpy as np
 import pytest
-from affctrllib.filter import DEFAULT_FILTER_N_POINTS, Filter
 from numpy.testing import assert_array_equal
+
+from affctrllib.filter import DEFAULT_FILTER_N_POINTS, Filter
 
 
 class TestFilter:

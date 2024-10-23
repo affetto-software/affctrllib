@@ -6,6 +6,7 @@ import sys
 from pathlib import Path
 
 import pytest
+
 from affctrllib.affetto import Affetto, Chain
 
 if sys.version_info < (3, 11):
