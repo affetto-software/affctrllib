@@ -53,7 +53,6 @@ dev-dependencies = [
     "nox>=2024.4.15",
     "pyplotutil @ git+https://github.com/hrshtst/pyplotutil.git@develop",
     "ruff>=0.7.0",
-    "pyqt6>=6.7.1",
 ]
 
 [tool.hatch.metadata]
