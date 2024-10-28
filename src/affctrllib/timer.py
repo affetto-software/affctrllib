@@ -12,6 +12,7 @@ class Timer:
     _rate: float | None
     _period: float | None
     _period_ns: int
+    _n_step: int
     _time_started_ns: int
     _time_last_blocked_ns: int
     _time_ns_func: Callable[[], int]
@@ -24,6 +25,7 @@ class Timer:
             self.rate = rate
         if period is not None:
             self.period = period
+        self._n_step = 0
         self._time_started_ns = 0
         self._time_ns_func = time.time_ns
 
@@ -63,11 +65,16 @@ class Timer:
     def period_ns(self) -> int:
         return self._period_ns
 
+    @property
+    def n_step(self) -> int:
+        return self._n_step
+
     def start(self) -> None:
         self._time_started_ns = self._time_ns_func()
         self._time_last_blocked_ns = self._time_started_ns
 
     def reset(self) -> None:
+        self._n_step = 0
         self.start()
 
     def elapsed_time(self) -> float:
@@ -75,6 +82,16 @@ class Timer:
 
     def elapsed_time_ns(self) -> int:
         return self._time_ns_func() - self._time_started_ns
+
+    def accumulated_time(self) -> float:
+        t = self.period * self._n_step
+        self._n_step += 1
+        return t
+
+    def accumulated_time_ns(self) -> int:
+        t = self.period_ns * self._n_step
+        self._n_step += 1
+        return t
 
     def sleep(self) -> None:
         time.sleep(self._period if self._period is not None else 0)

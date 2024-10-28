@@ -17,6 +17,7 @@ class TestTimer:
     def test_init(self) -> None:
         timer = Timer()
         assert timer.period_ns == 0
+        assert timer.n_step == 0
 
     def test_error_when_rate_is_not_set(self) -> None:
         timer = Timer()
@@ -112,6 +113,43 @@ class TestTimer:
         time.sleep(dt)
         t = timer.elapsed_time()
         assert t == pytest.approx(2 * dt, rel=TOL)
+
+    def test_reset_for_accumulated_time(self) -> None:
+        dt = 0.01
+        timer = Timer(period=dt)
+        assert timer.n_step == 0
+        t = timer.accumulated_time()
+        assert t == pytest.approx(0.0, rel=TOL)
+        assert timer.n_step == 1
+
+        timer.reset()
+        assert timer.n_step == 0
+        t = timer.accumulated_time()
+        assert t == pytest.approx(0.0, rel=TOL)
+        assert timer.n_step == 1
+
+    def test_accumulated_time(self) -> None:
+        dt = 0.01
+        timer = Timer(period=dt)
+        t = timer.accumulated_time()
+        assert t == pytest.approx(0.0, rel=TOL)
+        assert timer.n_step == 1
+        t = timer.accumulated_time()
+        assert t == pytest.approx(dt, rel=TOL)
+        assert timer.n_step == 1 + 1
+
+    def test_accumulated_time2(self) -> None:
+        dt = 0.01
+        timer = Timer(period=dt)
+        t = timer.accumulated_time()
+        assert t == pytest.approx(0.0, rel=TOL)
+        assert timer.n_step == 1
+        t = timer.accumulated_time()
+        assert t == pytest.approx(dt, rel=TOL)
+        assert timer.n_step == 1 + 1
+        t = timer.accumulated_time()
+        assert t == pytest.approx(2.0 * dt, rel=TOL)
+        assert timer.n_step == 1 + 1 + 1
 
     def test_block(self) -> None:
         timer = Timer(period=0.01)
