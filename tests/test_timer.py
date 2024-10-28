@@ -117,39 +117,55 @@ class TestTimer:
     def test_reset_for_accumulated_time(self) -> None:
         dt = 0.01
         timer = Timer(period=dt)
-        assert timer.n_step == 0
+        timer.start()
         t = timer.accumulated_time()
-        assert t == pytest.approx(0.0, rel=TOL)
+        assert t == 0.0
+        assert timer.n_step == 0
+        timer.block()
+        t = timer.accumulated_time()
+        assert t == pytest.approx(dt, rel=TOL)
         assert timer.n_step == 1
 
         timer.reset()
-        assert timer.n_step == 0
         t = timer.accumulated_time()
-        assert t == pytest.approx(0.0, rel=TOL)
+        assert t == 0.0
+        assert timer.n_step == 0
+        timer.block()
+        t = timer.accumulated_time()
+        assert t == pytest.approx(dt, rel=TOL)
         assert timer.n_step == 1
 
     def test_accumulated_time(self) -> None:
         dt = 0.01
         timer = Timer(period=dt)
+        timer.start()
         t = timer.accumulated_time()
-        assert t == pytest.approx(0.0, rel=TOL)
-        assert timer.n_step == 1
+        assert t == 0.0
+        assert timer.n_step == 0
+        timer.block()
         t = timer.accumulated_time()
         assert t == pytest.approx(dt, rel=TOL)
-        assert timer.n_step == 1 + 1
+        assert timer.n_step == 1
 
     def test_accumulated_time2(self) -> None:
         dt = 0.01
         timer = Timer(period=dt)
+        timer.start()
         t = timer.accumulated_time()
-        assert t == pytest.approx(0.0, rel=TOL)
-        assert timer.n_step == 1
+        assert t == 0.0
+        assert timer.n_step == 0
+        timer.block()
         t = timer.accumulated_time()
         assert t == pytest.approx(dt, rel=TOL)
-        assert timer.n_step == 1 + 1
+        assert timer.n_step == 1
+        timer.block()
         t = timer.accumulated_time()
         assert t == pytest.approx(2.0 * dt, rel=TOL)
-        assert timer.n_step == 1 + 1 + 1
+        assert timer.n_step == 1 + 1
+        # Ensure consistency before calling timer.block()
+        t = timer.accumulated_time()
+        assert t == pytest.approx(2.0 * dt, rel=TOL)
+        assert timer.n_step == 1 + 1
 
     def test_block(self) -> None:
         timer = Timer(period=0.01)

@@ -84,9 +84,7 @@ class Timer:
         return self._time_ns_func() - self._time_started_ns
 
     def accumulated_time(self) -> float:
-        t = self.period * self._n_step
-        self._n_step += 1
-        return t
+        return self.period * self._n_step
 
     def accumulated_time_ns(self) -> int:
         t = self.period_ns * self._n_step
@@ -110,3 +108,4 @@ class Timer:
             msg = f"It took longer than specified period at t={self.elapsed_time()}"
             warnings.warn(msg, RuntimeWarning, stacklevel=2)
         self._time_last_blocked_ns = self._time_ns_func()
+        self._n_step += 1
