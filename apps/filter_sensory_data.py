@@ -60,7 +60,7 @@ def mainloop(config, output, freq, period) -> None:
     if period == 0:
         print("To finish process, type Ctrl-C.")
 
-    astate = AffState(config)
+    astate = AffState(config, butterworth=False)
     if freq > 0:
         astate.freq = freq
     logger = Logger(output)
