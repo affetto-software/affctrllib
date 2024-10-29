@@ -1,3 +1,6 @@
+# configuration file in apps/ directoy
+apps/config.toml
+
 # python generated files
 __pycache__/
 *.py[oc]
