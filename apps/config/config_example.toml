@@ -122,7 +122,7 @@ host = "192.168.5.10"
 port = 50010
 
 [affetto.comm.local]
-host = "192.168.5.109"
+host = "192.168.5.77"
 port = 50000
 
 [affetto.mock]
@@ -142,10 +142,11 @@ rate = 30
 
 
 [affetto.state]
-freq = 30
+freq = 100
 
 
 [affetto.ctrl]
+freq = 30
 scheme = "PID"
 input_range = [0, 600]  # kPa
 
