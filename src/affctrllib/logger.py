@@ -6,6 +6,8 @@ from pathlib import Path
 from threading import Lock
 from typing import TYPE_CHECKING, Any
 
+from numpy import floating
+
 if TYPE_CHECKING:
     from collections.abc import Iterable
 
@@ -91,8 +93,8 @@ class Logger:
         except IndexError:
             self.store_data(data)
 
-    def store(self, *args: float | Iterable[Any]) -> None:
-        listed = [[arg] if isinstance(arg, float | int) else arg for arg in args]
+    def store(self, *args: float | floating[Any] | Iterable[Any]) -> None:
+        listed = [[arg] if isinstance(arg, float | floating | int) else arg for arg in args]
         data = [x for s in listed for x in s]
         self.store_data(data)
 
