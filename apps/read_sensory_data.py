@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# ruff: noqa: ANN001,T201
+# ruff: noqa: ANN001
 
 from __future__ import annotations
 
@@ -29,10 +29,10 @@ def report_statistics(received_time_series) -> None:
     std = np.std(time_delta)
     print("Statistics:")
     print(f"  Number of collected samples: {len(received_time_series)}")
-    print(f"     Mean of time differences: {mean:.5f}[s] ({mean*1000:.2f}[ms])")
+    print(f"     Mean of time differences: {mean:.5f}[s] ({mean * 1000:.2f}[ms])")
     print(f"            Mean of frequency: {1.0 / mean:.2f}[Hz]")
-    print(f"        Variance of time diff: {var:.4e}[s^2] ({var*1e6:.2e}[ms^2])")
-    print(f"   Std deviation of time diff: {std:.6f}[s] ({std*1000:.3f}[ms])")
+    print(f"        Variance of time diff: {var:.4e}[s^2] ({var * 1e6:.2e}[ms^2])")
+    print(f"   Std deviation of time diff: {std:.6f}[s] ({std * 1000:.3f}[ms])")
 
 
 def mainloop(config, output, period) -> None:

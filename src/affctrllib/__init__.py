@@ -30,6 +30,7 @@ from affctrllib.ptp import PTP
 from affctrllib.timer import Timer
 
 __all__ = [
+    "PTP",
     "AffComm",
     "AffCtrl",
     "AffCtrl",
@@ -42,7 +43,6 @@ __all__ = [
     "AffStateThread",
     "Filter",
     "Logger",
-    "PTP",
     "Timer",
     "convert_array_to_bytes",
     "convert_array_to_string",

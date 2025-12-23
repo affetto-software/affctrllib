@@ -40,7 +40,7 @@ class Socket:
         elif socket_type == sock.SOCK_STREAM:
             socket_type_append = " (TCP)"
         elif isinstance(socket_type, sock.SocketKind):
-            socket_type_append = f' ({str(socket_type).split(".")[1]})'
+            socket_type_append = f" ({str(socket_type).split('.')[1]})"
         try:
             return f"{self.host}:{self.port!s}" + socket_type_append
         except AttributeError:

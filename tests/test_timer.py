@@ -215,7 +215,7 @@ class TestTimer:
         ],
     )
     def test_alternative_time_ns_function(self, time_ns_func: Callable[[], int]) -> None:
-        # ruff: noqa: SLF001,ERA001
+        # ruff: noqa: SLF001,PT031
         timer = Timer(rate=100)
         timer._time_ns_func = time_ns_func
         timer.start()

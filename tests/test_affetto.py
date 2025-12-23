@@ -122,7 +122,7 @@ class TestAffetto:
 
     def test_set_config_warning(self) -> None:
         affetto = Affetto()  # type: ignore[abstract]
-        with pytest.warns(UserWarning) as record:
+        with pytest.warns(UserWarning) as record:  # noqa: PT030
             affetto.load_config({"affetto": {}})
         assert str(record[0].message) == "'chain' field is not defined"
 

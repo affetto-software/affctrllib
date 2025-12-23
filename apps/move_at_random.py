@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# ruff: noqa: ANN001,T201,ERA001,PTH123,NPY002,S311,PLR2004
+# ruff: noqa: NPY002,S311,PLR2004
 
 from __future__ import annotations
 

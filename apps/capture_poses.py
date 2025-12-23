@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# ruff: noqa: ANN001,T201,ERA001,PTH123
+# ruff: noqa: ANN001
 
 from __future__ import annotations
 
@@ -32,8 +32,8 @@ def usage() -> None:
     maxlen = maxlen_key + maxlen_desc + len(sep)
     title = "Operations"
     header = (
-        f"{' ' + title[:int(len(title)/2)]:=>{int(maxlen/2)}}"
-        f"{title[int(len(title)/2):] + ' ':=<{int(maxlen/2+maxlen%2)}}"
+        f"{' ' + title[: int(len(title) / 2)]:=>{int(maxlen / 2)}}"
+        f"{title[int(len(title) / 2) :] + ' ':=<{int(maxlen / 2 + maxlen % 2)}}"
     )
     menu = header + "\n"
     for key, desc in MENU:

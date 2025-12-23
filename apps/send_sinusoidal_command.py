@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# ruff: noqa: ANN001,PLR2004,T201,PTH123,ERA001
+# ruff: noqa: ANN001
 
 from __future__ import annotations
 
@@ -63,19 +63,19 @@ def constant(_, value=0.0) -> int:
 
 def print_parameters(default_params, specific_params_list) -> None:
     print("Default parameters:")
-    print(f'  profile: {default_params["profile"]}')
-    print(f'  params: {default_params["params"]}')
+    print(f"  profile: {default_params['profile']}")
+    print(f"  params: {default_params['params']}")
     if len(specific_params_list) > 0:
         print("Joint-specific parameters:")
     for p in specific_params_list:
         print(f"  Joint {p[0]}:")
-        print(f'    profile: {p[1]["profile"]}')
-        print(f'    params: {p[1]["params"]}')
+        print(f"    profile: {p[1]['profile']}")
+        print(f"    params: {p[1]['params']}")
         for side in ("ca", "cb"):
             if side in p[1]:
                 print(f"    A-side of joint {p[0]}:")
-                print(f'      profile: {p[1][side]["profile"]}')
-                print(f'      params: {p[1][side]["params"]}')
+                print(f"      profile: {p[1][side]['profile']}")
+                print(f"      params: {p[1][side]['params']}")
 
 
 def load_parameters(config):  # noqa: ANN201,PLR0915,PLR0912,C901

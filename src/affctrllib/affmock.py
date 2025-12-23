@@ -1,4 +1,4 @@
-# ruff: noqa: T201,NPY002
+# ruff: noqa: NPY002
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any

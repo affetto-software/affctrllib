@@ -191,7 +191,7 @@ def test_unzip_array_as_ndarray(arr: list, expected: np.ndarray) -> None:
         (range(10), np.array([[0, 3, 6, 9], [1, 4, 7, 0], [2, 5, 8, 0]])),
     ],
 )
-def test_unzip_array_as_ndarray_not_divisible(arr: list, _: np.ndarray) -> None:  # noqa: PT019
+def test_unzip_array_as_ndarray_not_divisible(arr: list, _: np.ndarray) -> None:
     msg = r"cannot reshape array of size"
     with pytest.raises(ValueError, match=msg) as excinfo:
         _ = unzip_array_as_ndarray(arr)

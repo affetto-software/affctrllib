@@ -1,4 +1,4 @@
-# ruff: noqa: SIM105,ERA001
+# ruff: noqa: SIM105
 
 from __future__ import annotations
 
